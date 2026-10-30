@@ -39,6 +39,8 @@ Studio currently offers `npm run build` (TypeScript project build plus Vite), `n
 
 ## Documentation discipline
 
+Write and maintain all project documentation in English, including READMEs, contribution guides, architectural documents, and agent instructions. Preserve this rule in future documentation changes.
+
 Update documentation when an approved architectural decision changes. Do not silently convert proposals into confirmed decisions. Keep implemented functionality clearly separated from planned functionality. Record unresolved choices rather than inventing contracts.
 
 ## Task boundaries

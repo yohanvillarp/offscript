@@ -1,6 +1,6 @@
 # offscript
 
-Aplicación Studio de offscript.
+The OFFSCRIPT Studio application.
 
 ```sh
 npm install
