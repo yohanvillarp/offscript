@@ -74,7 +74,15 @@ The envelope carries event identity, type, schema version, UTC timestamp, simula
 
 See [CONTRACTS.md](CONTRACTS.md) for field definitions, validation, serialization, and public functions. IDs, statuses, and failure semantics reuse the domain; no domain source was changed. Parsed snapshots are detached and frozen. Version 1 rejects unknown fields, event types, unsupported versions, invalid timestamps, and inconsistent subject IDs/statuses.
 
-Validation establishes message shape, not event truth, authorization, membership, valid lifecycle history, or actual interruption of external work. Events do not execute transitions, publish themselves, or confirm goal achievement. Observations, investigations, and their DTOs remain deferred until their domain rules are defined.
+Validation establishes message shape, not event truth, authorization, membership, valid lifecycle history, or actual interruption of external work. Events do not execute transitions, publish themselves, or confirm goal achievement. Investigations and their DTOs remain deferred until their domain rules are defined.
+
+## Implemented observation foundation
+
+The domain now includes branded observation/evidence identities and an immutable observation value with agent/simulation provenance, canonical UTC observation time, description, opaque location, and unique evidence references. An empty evidence list is allowed; references do not establish resource existence or a confirmed finding. The factory has no infrastructure dependencies, side effects, or lifecycle requirements.
+
+Contracts expose `ObservationSummary` and `observation.created` through an opt-in `SemanticEvent` union and creation/parsing/serialization functions. Existing lifecycle entry points remain unchanged and reject observation events. The new event uses the existing version-1 envelope; validation checks matching simulation and agent-origin authorship. A system may record an observation while preserving its agent author. No existing payload schema changes, so existing lifecycle schemas remain version 1. See [OBSERVATIONS.md](OBSERVATIONS.md) for the field rules, compatibility boundary, and unresolved evidence/time guarantees.
+
+Observations do not trigger investigations in this implementation. Domain values and contracts remain independent of Mozaik, Playwright, persistence, CLI, and Studio. Tests are included in the existing domain/contracts validation commands.
 
 Root `npm run typecheck:contracts` and `npm run test:contracts` validate this module. `npm test` runs domain and contracts tests; `npm run lint` covers internal modules and Studio. The existing `npm run check` entry point includes all these checks and the Studio build, so the existing GitHub workflow validates this milestone without a second pipeline.
 
