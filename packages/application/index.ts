@@ -5,3 +5,8 @@ export type {
   SimulationReader, ObservationReader, InvestigationWriter, InvestigationRequestedPublisher,
   InvestigationRequestedEvent, RequestInvestigationCommand, RequestInvestigationDependencies, RequestInvestigationResult,
 } from "./request-investigation/ports.ts";
+export { executeAssignInvestigation } from "./assign-investigation/execute.ts";
+export type {
+  VersionedInvestigation, InvestigationAssignedEvent, InvestigationAssignmentStore, InvestigationAssignedPublisher,
+  AssignInvestigationCommand, AssignInvestigationDependencies, AssignInvestigationResult,
+} from "./assign-investigation/ports.ts";

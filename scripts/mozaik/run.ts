@@ -27,6 +27,7 @@ try {
   const result = await session.waitForIdle();
   console.log(JSON.stringify({
     model, observations: result.observations.length, investigations: result.investigations.length,
+    assignedAgents: result.investigations.reduce((count, investigation) => count + (investigation.lifecycle.status === "requested" ? 0 : investigation.lifecycle.agentIds.length), 0),
     turns: result.turns, failures: result.failures.map((failure) => ({ stage: failure.stage, agentId: failure.agentId })),
     simulationStatus: result.simulation.lifecycle.status,
   }, null, 2));

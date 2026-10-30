@@ -5,6 +5,7 @@ import type { AgentId } from "../../domain/index.ts";
 import { parseSemanticEvent } from "../../contracts/index.ts";
 import type { SemanticEvent } from "../../contracts/index.ts";
 import { executeRequestInvestigation } from "../../application/index.ts";
+import { sessionInvestigationStore } from "../investigation-store.ts";
 import type { ExplorationState, ToolName } from "../state.ts";
 import { argumentsObject, argumentText } from "./arguments.ts";
 
@@ -65,12 +66,7 @@ export function explorationTools(
       }, {
         simulations: { async findSimulation(key) { return key === state.simulation.id ? state.simulation : undefined; } },
         observations: { async findObservation(key) { return state.observations.get(key); } },
-        investigations: { async createInvestigation(investigation) {
-          if (state.closed) throw new Error("Session closed before saving.");
-          if (state.investigations.has(investigation.id)) return "already-exists";
-          state.investigations.set(investigation.id, investigation);
-          return "created";
-        } },
+        investigations: sessionInvestigationStore(state),
         events: { async publishInvestigationRequested(event) { publish(event); } },
       });
       return { investigationId: result.investigation.id, publication: result.publication.status };
