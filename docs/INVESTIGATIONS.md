@@ -62,6 +62,6 @@ This domain/contracts milestone provides no execution, policy engine, event bus,
 
 ## Validation
 
-The application now exposes the single request use case described in [APPLICATION.md](APPLICATION.md), which checks loaded simulation/requester/observation context before calling the domain. Assignment/completion use cases and all runtime execution remain deferred. Existing contracts and pure domain operations are unchanged.
+The application now exposes the single request use case described in [APPLICATION.md](APPLICATION.md), which checks loaded simulation/requester/observation context before calling the domain. The assignment application case is now described in [ASSIGNMENTS.md](ASSIGNMENTS.md), including active-member validation and optimistic storage revisions. The completion application case remains deferred; the controlled runtime records peer participation before its contribution. Existing contracts and pure domain operations are unchanged.
 
 The existing `typecheck:domain`, `test:domain`, `typecheck:contracts`, and `test:contracts` commands include these files. Tests cover lifecycle operations, collaborative assignment, reference integrity checks, timestamp rules, immutable snapshots, discriminated payload types, invalid inputs, and serialization compatibility. `npm run check` also validates Studio and the production build without external services or browser automation.

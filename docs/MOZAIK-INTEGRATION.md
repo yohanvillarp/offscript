@@ -12,9 +12,9 @@ The investigation tool invokes `executeRequestInvestigation` through its existin
 
 Provide a running domain simulation with ready/running agents, a model name, and an explicit per-agent tool allowlist. The adapter creates a fresh Mozaik runtime per session and maps domain agent IDs to generated participant IDs. Joining a configured ready agent explicitly activates its domain participation. Terminal participation cannot be activated.
 
-Each agent gets its own Mozaik memory and handlers. Starting a busy agent is rejected; investigation reactions received while it is busy are queued within its turn budget. A guarded `model.answer` handler releases admission on the next event-loop iteration, after the installed implementation advances to idle. Neither a model answer nor `waitForIdle` completes domain participation, goals, investigations, or simulations.
+Each agent gets its own Mozaik memory and handlers. Starting a busy agent is rejected; investigation reactions received while it is busy are queued within its turn budget only after assignment is saved; pending assignments reserve capacity so simultaneous callbacks cannot overbook it. A guarded `model.answer` handler releases admission on the next event-loop iteration, after the installed implementation advances to idle. Neither a model answer nor `waitForIdle` completes domain participation, goals, investigations, or simulations.
 
-An `investigation.requested` event can start independent inspection by other configured users. Reactions are keyed by recipient and investigation identity; replays do not schedule repeated investigation work. There is no exclusive leader, forced specialization, automatic assignment, or automatic result confirmation. This verifies collaboration without implementing the future assignment/completion application cases.
+An `investigation.requested` event can lead configured peers to register their participation through `executeAssignInvestigation` before starting independent inspection. Reactions are keyed by recipient and investigation identity; replays do not schedule repeated investigation work. The current reaction is a minimal peer self-assignment policy, without an exclusive leader, specialist selection, or automatic result confirmation. Registration uses a versioned session-memory store with atomic compare-and-set; conflicts do not start work or retry automatically. Assignment failures remain deduplicated until an explicit recovery decision. See [ASSIGNMENTS.md](ASSIGNMENTS.md); the completion application case remains deferred.
 
 ## Event bridge and publication
 
@@ -60,7 +60,7 @@ From the repository root:
 npm run demo:mozaik
 ```
 
-This uses the real Mozaik runtime with a deterministic inference fixture. Two agents run concurrently, notice a simulated cart discrepancy, and react to an investigation request. The expected deterministic result is three observations, one investigation request, and no failures. The domain simulation remains running. The fixture intentionally supplies scripted inference responses for reproducible integration verification; it is not evidence of autonomous discovery by an LLM or testing of real software.
+This uses the real Mozaik runtime with a deterministic inference fixture. Two agents run concurrently, notice a simulated cart discrepancy, and react to an investigation request. The expected deterministic result is three observations, one investigation request, one registered collaborator with an `investigation.assigned` event, and no failures. The domain simulation remains running. The fixture intentionally supplies scripted inference responses for reproducible integration verification; it is not evidence of autonomous discovery by an LLM or testing of real software.
 
 For optional live inference:
 
