@@ -74,7 +74,7 @@ The envelope carries event identity, type, schema version, UTC timestamp, simula
 
 See [CONTRACTS.md](CONTRACTS.md) for field definitions, validation, serialization, and public functions. IDs, statuses, and failure semantics reuse the domain; no domain source was changed. Parsed snapshots are detached and frozen. Version 1 rejects unknown fields, event types, unsupported versions, invalid timestamps, and inconsistent subject IDs/statuses.
 
-Validation establishes message shape, not event truth, authorization, membership, valid lifecycle history, or actual interruption of external work. Events do not execute transitions, publish themselves, or confirm goal achievement. Investigations and their DTOs remain deferred until their domain rules are defined.
+Validation establishes message shape, not event truth, authorization, membership, valid lifecycle history, or actual interruption of external work. Events do not execute transitions, publish themselves, or confirm goal achievement.
 
 ## Implemented observation foundation
 
@@ -86,6 +86,12 @@ Observations do not trigger investigations in this implementation. Domain values
 
 Root `npm run typecheck:contracts` and `npm run test:contracts` validate this module. `npm test` runs domain and contracts tests; `npm run lint` covers internal modules and Studio. The existing `npm run check` entry point includes all these checks and the Studio build, so the existing GitHub workflow validates this milestone without a second pipeline.
 
+## Implemented investigation foundation
+
+`packages/domain` now includes immutable investigation requests, collaborative assignment, and completion with hypothesis assessments (`supported`, `contradicted`, or `inconclusive`). A request requires unique observations from the same simulation. Multiple agents may be assigned without an exclusive leader; one assigned agent presents the completion result. This records authorship, not consensus or authorization. Supported/contradicted assessments require evidence references but do not certify a confirmed finding.
+
+`packages/contracts` exposes investigation summaries, result validation, and the version-1 `investigation.requested`, `investigation.assigned`, and `investigation.completed` events through `SemanticEvent`. Existing event schemas and lifecycle entry points retain their behavior. The semantic union gains discriminators, so exhaustive consumers must adopt the expanded union explicitly. No execution, reference storage, automatic close, or policy enforcement is implemented. See [INVESTIGATIONS.md](INVESTIGATIONS.md) for lifecycle, provenance, time, and validation boundaries.
+
 ## Proposed details and open questions
 
 Outside the domain and lifecycle contracts described above, no further internal package tree, exported API, event catalog, table schema, or independent package manifest is finalized. Decide these incrementally when needed:
@@ -93,10 +99,10 @@ Outside the domain and lifecycle contracts described above, no further internal 
 - CLI entry point, configuration format, and runtime lifecycle.
 - Studio transport, process topology, and event delivery/replay behavior.
 - Mozaik adapter implementation, version selection, model-provider selection, concurrency limits, and actual cancellation. Documented API behavior and unproven guarantees are separated in [MOZAIK.md](MOZAIK.md).
-- Shared-state consistency, investigation ownership, and duplicate handling.
+- Shared-state consistency, concurrent investigation updates, authorization of assignment/completion, automatic-close policy, and duplicate handling. The initial roster permits multiple assigned agents without an exclusive leader.
 - Confirmation criteria, evidence formats, retention, and sensitive-data redaction.
 - Authorization representation, target isolation, and credential handling.
 
 ## Future capabilities
 
-Adapters for non-web software and broader collaboration are future possibilities. Do not implement them speculatively. Current implementation is limited to the Studio, domain, and lifecycle contract foundations described in PROJECT.md.
+Adapters for non-web software and broader collaboration are future possibilities. Do not implement them speculatively. Current implementation is limited to the Studio, domain, and lifecycle/observation/investigation contract foundations described in PROJECT.md.

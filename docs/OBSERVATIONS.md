@@ -40,10 +40,10 @@ These consistency checks do not prove that the behavior occurred or authorize ac
 
 The addition is opt-in: existing `LifecycleEvent` types and lifecycle parsing/serialization functions retain their eight event types, exact version-1 shape, and rejection of observation events. They have not been widened silently.
 
-The new `SemanticEvent` discriminated union includes those eight lifecycle events and `ObservationCreatedEvent`. Use `createSemanticEvent`, `parseSemanticEvent`, `serializeSemanticEvent`, and `deserializeSemanticEvent` for that broader union. Both families share envelope validation. Unknown event types, unsupported versions, invalid JSON, and inconsistent payloads raise `ContractValidationError` with a failing path.
+The `SemanticEvent` discriminated union includes those eight lifecycle events, `ObservationCreatedEvent`, and the investigation events described in [INVESTIGATIONS.md](INVESTIGATIONS.md). Use `createSemanticEvent`, `parseSemanticEvent`, `serializeSemanticEvent`, and `deserializeSemanticEvent` for that broader union. Event families share envelope validation. Unknown event types, unsupported versions, invalid JSON, and inconsistent payloads raise `ContractValidationError` with a failing path.
 
 Schema version remains `1` because no existing event schema has changed. Consumers must explicitly adopt the new semantic entry points before receiving observations; legacy consumers do not acquire forward compatibility automatically. Future changes to existing payload meanings or required fields need an explicit versioning decision.
 
 ## Deferred work
 
-Investigation identity, hypotheses, assignment, lifecycle, conclusions, and events require a separate domain milestone. Evidence storage/collection, deduplication, confirmation policy, runtime authorization, event routing, Mozaik integration, browser automation, persistence, CLI commands, and Studio presentation are outside this foundation.
+Investigation domain operations and contracts are now documented in [INVESTIGATIONS.md](INVESTIGATIONS.md); observations do not trigger them automatically. Evidence storage/collection, deduplication, confirmation policy, runtime authorization, event routing, Mozaik integration, browser automation, persistence, CLI commands, and Studio presentation are outside this foundation.
