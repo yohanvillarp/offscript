@@ -51,4 +51,4 @@ Rejected assignments and conflicts record a diagnostic and start no turn. Reacti
 
 Application tests cover initial/additional assignments, context validation, terminal investigations, duplicate references, read/save/publication failures, CAS conflicts, deliberate reload, immutable inputs, and type discrimination. Runtime tests verify assignment before work, capacity checks, failed-assignment suppression, deduplication, correlation, closing sessions, independent reservations, and the real session-memory CAS behavior. Existing module commands and `npm run check` include these tests.
 
-Completion/result application cases, smart collaborator selection, automatic conflict retries, authorization policies, SQLite, Playwright, and UI changes remain outside this milestone.
+Completion/result application cases, smart collaborator selection, automatic conflict retries, authorization policies, Playwright, and UI changes remain outside this milestone. A later SQLite adapter now implements the same revision contract; see [PERSISTENCE.md](PERSISTENCE.md).

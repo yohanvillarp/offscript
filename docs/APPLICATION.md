@@ -2,7 +2,7 @@
 
 ## Scope and dependencies
 
-`packages/application/index.ts` exposes `executeRequestInvestigation` and `executeAssignInvestigation`. This document details requesting; [ASSIGNMENTS.md](ASSIGNMENTS.md) describes assignment, context validation, storage revisions, and optimistic concurrency. Application code depends on the public domain and contracts entry points. Its asynchronous ports describe only the reads, create, and publication required by this operation; the application module itself imports no concrete adapter, framework, database, event bus, or runtime. The Mozaik adapter now composes these ports with session-memory storage and local runtime publication; see [MOZAIK-INTEGRATION.md](MOZAIK-INTEGRATION.md).
+`packages/application/index.ts` exposes `executeRequestInvestigation` and `executeAssignInvestigation`. This document details requesting; [ASSIGNMENTS.md](ASSIGNMENTS.md) describes assignment, context validation, storage revisions, and optimistic concurrency. Application code depends on the public domain and contracts entry points. Its asynchronous ports describe only the reads, create, and publication required by this operation; the application module itself imports no concrete adapter, framework, database, event bus, or runtime. The Mozaik adapter composes these ports with session-memory storage and local runtime publication; SQLite repositories now implement the storage ports separately and pass application integration tests, without replacing runtime memory yet. See [PERSISTENCE.md](PERSISTENCE.md); see [MOZAIK-INTEGRATION.md](MOZAIK-INTEGRATION.md).
 
 The module has no independent package manifest. Test adapters live under `packages/application/tests`, not in the production public API. They are in-memory implementations for behavior/failure tests, not a persistence solution.
 
@@ -40,7 +40,7 @@ Atomic create-if-absent prevents competing requests from overwriting the same id
 
 Ports are trusted application dependencies and must return immutable domain values. Runtime contract parsing belongs at external entry boundaries. Membership and lifecycle checks do not authenticate a requester or enforce tool/action policy. Hypotheses and observations remain untrusted content; this use case performs no model inference or target interaction.
 
-Investigation completion/result use cases, real-software execution, general policy enforcement, transactions across context reads/writes, durable event delivery, production adapters, evidence storage, CLI commands, Studio integration, and HTTP endpoints remain unimplemented.
+Investigation completion/result use cases, real-software execution, general policy enforcement, transactions across context reads/writes, durable event delivery, server composition, evidence-resource storage, CLI commands, Studio integration, and HTTP endpoints remain unimplemented.
 
 ## Validation
 
