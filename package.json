@@ -6,11 +6,11 @@
     "prepare": "husky",
     "lint": "npm run lint:packages && npm --prefix apps/studio run lint",
     "build": "npm --prefix apps/studio run build",
-    "check": "npm run typecheck:domain && npm run typecheck:contracts && npm run typecheck:application && npm run typecheck:orchestration && npm run typecheck:persistence && npm run typecheck:runtime && npm run db:check && npm --prefix apps/studio run typecheck:tests && npm test && npm run lint && npm run build",
+    "check": "npm run typecheck:domain && npm run typecheck:contracts && npm run typecheck:application && npm run typecheck:orchestration && npm run typecheck:persistence && npm run typecheck:runtime && npm run typecheck:server && npm run db:check && npm --prefix apps/studio run typecheck:tests && npm test && npm run lint && npm run build",
     "commitlint": "commitlint",
     "typecheck:domain": "tsc -p packages/domain/tsconfig.json && tsc -p packages/domain/tests/tsconfig.json",
     "test:domain": "node --test packages/domain/tests/*.test.ts",
-    "test": "npm run test:domain && npm run test:contracts && npm run test:application && npm run test:orchestration && npm run test:persistence && npm run test:runtime && npm --prefix apps/studio test",
+    "test": "npm run test:domain && npm run test:contracts && npm run test:application && npm run test:orchestration && npm run test:persistence && npm run test:runtime && npm run test:server && npm --prefix apps/studio test",
     "typecheck:application": "tsc -p packages/application/tsconfig.json && tsc -p packages/application/tests/tsconfig.json",
     "test:application": "node --test packages/application/tests/*.test.ts",
     "typecheck:contracts": "tsc -p packages/contracts/tsconfig.json && tsc -p packages/contracts/tests/tsconfig.json",
@@ -24,7 +24,10 @@
     "db:check": "drizzle-kit check",
     "lint:packages": "npm exec --prefix apps/studio --offline -- oxlint packages scripts drizzle.config.ts",
     "typecheck:runtime": "tsc -p packages/runtime/tsconfig.json && tsc -p packages/runtime/tests/tsconfig.json",
-    "test:runtime": "node --test packages/runtime/tests/*.test.ts"
+    "test:runtime": "node --test packages/runtime/tests/*.test.ts",
+    "typecheck:server": "tsc -p packages/server/tsconfig.json && tsc -p packages/server/tests/tsconfig.json",
+    "test:server": "node --test packages/server/tests/*.test.ts",
+    "dev:server": "node scripts/server/run.ts"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",
@@ -38,7 +41,8 @@
   "dependencies": {
     "@mozaik-ai/core": "4.2.0",
     "better-sqlite3": "13.0.3",
-    "drizzle-orm": "0.45.4"
+    "drizzle-orm": "0.45.4",
+    "fastify": "5.12.7"
   },
   "overrides": {
     "@esbuild-kit/core-utils": {

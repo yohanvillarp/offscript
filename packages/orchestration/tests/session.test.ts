@@ -113,5 +113,6 @@ test("session construction requires explicit cloud opt-out, active simulation, a
   } finally { process.env.MOZAIK_API_KEY = previous ?? ""; }
   assert.throws(() => createExplorationSession({ ...options, durationMs: 0 }), /positive integer/);
   assert.throws(() => createExplorationSession({ ...options, maxTurnsPerAgent: -1 }), /positive integer/);
+  assert.throws(() => createExplorationSession({ ...options, outboxMode: "external" }), /supplied storage/);
   assert.throws(() => createExplorationSession({ ...options, simulation: { ...fixture.simulation, lifecycle: { status: "completed" } } }), /running simulation/);
 });

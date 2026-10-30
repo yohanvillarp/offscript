@@ -27,6 +27,7 @@ export type SessionOptions = Readonly<{
   durationMs?: number;
   onEvent?: (event: SemanticEvent) => void | Promise<void>;
   storage?: ExplorationStorage;
+  outboxMode?: "session" | "external";
 }>;
 
 function positive(value: number, label: string): number {
@@ -42,6 +43,7 @@ export function createExplorationSession(options: SessionOptions) {
     throw new Error("Session requires a running simulation with configured agents.");
   }
   if (!options.model.trim()) throw new Error("A model identifier is required.");
+  if (options.outboxMode === "external" && !options.storage) throw new Error("External dispatch requires supplied storage.");
   const maxTurns = positive(options.maxTurnsPerAgent ?? 3, "Turn budget");
   const maxCalls = positive(options.maxInferenceCallsPerTurn ?? 12, "Inference budget");
   const inferenceTimeout = positive(options.inferenceTimeoutMs ?? 15_000, "Inference timeout");
@@ -133,17 +135,17 @@ export function createExplorationSession(options: SessionOptions) {
     return !state.closed && event.simulationId === state.simulation.id &&
       (event.origin.kind === "system" || state.agents.has(event.origin.agentId));
   }
-  const dispatcher = createOutboxDispatcher({ store: storage.outbox,
+  const dispatcher = options.outboxMode === "external" ? undefined : createOutboxDispatcher({ store: storage.outbox,
     publisher: createMozaikOutboxPublisher(id => id === state.simulation.id ? { canAcceptEvent, publishEvent } : undefined),
     onError: cause => state.fail("outbox-dispatch", undefined, cause),
   });
-  dispatcher.start();
+  dispatcher?.start();
   const deadline = setTimeout(close, duration);
   let closing: Promise<void> | undefined;
   function close(): Promise<void> {
     if (state.closed) return closing ?? Promise.resolve();
     state.closed = true;
-    closing = dispatcher.stop().catch(cause => state.fail("outbox-stop", undefined, cause));
+    closing = dispatcher?.stop().catch(cause => state.fail("outbox-stop", undefined, cause)) ?? Promise.resolve();
     clearTimeout(deadline);
     for (const agent of state.agents.values()) api.leave(agent);
     api.leave(observer);
@@ -162,7 +164,7 @@ export function createExplorationSession(options: SessionOptions) {
     const until = Date.now() + positive(timeoutMs, "Wait timeout");
     while (true) {
       if (state.closed) throw new Error("Session closed before turn settlement.");
-      await dispatcher.runOnce();
+      await dispatcher?.runOnce();
       const pending = await storage.outbox.hasPending(state.simulation.id);
       if (![...state.turns.values()].some((turn) => turn.busy || turn.pending.length || turn.reservations) && state.pendingCallbacks === 0 && !pending) return snapshot();
       if (Date.now() >= until) { close(); throw new Error("Session settlement timed out; in-flight provider work is not guaranteed cancelled."); }
