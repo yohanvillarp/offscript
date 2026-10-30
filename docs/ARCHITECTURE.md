@@ -37,7 +37,7 @@ The diagram is conceptual. Studio-to-runtime transport and process boundaries ar
 
 ## Required boundaries
 
-**Coordination:** concurrent agents exchange typed semantic events and shared observations. Avoid coupling domain events to vendor payloads. Shared state needs explicit ownership and consistency rules before implementation.
+**Coordination:** use Mozaik's concurrent runtime, semantic events, and situation handlers for reactive collaboration. Do not build a parallel inference/tool loop or assume a sequential agent pipeline. OFFSCRIPT owns domain rules and lifecycle decisions; the adapter maps these to runtime participants and events. Shared state needs explicit ownership and consistency rules before implementation. See [Mozaik alignment](MOZAIK.md) for the documented contracts and open guarantees.
 
 **Security:** authorize tool actions at an enforced boundary before execution. LLM output and target content are untrusted. A profile, prompt, or shared observation cannot grant permissions. Potentially destructive actions against external software require explicit authorization.
 
@@ -72,7 +72,7 @@ Outside the domain foundation described above, no internal package tree, exporte
 
 - CLI entry point, configuration format, and runtime lifecycle.
 - Studio transport, process topology, and event delivery/replay behavior.
-- Mozaik integration, model-provider selection, concurrency limits, and cancellation.
+- Mozaik adapter implementation, version selection, model-provider selection, concurrency limits, and actual cancellation. Documented API behavior and unproven guarantees are separated in [MOZAIK.md](MOZAIK.md).
 - Shared-state consistency, investigation ownership, and duplicate handling.
 - Confirmation criteria, evidence formats, retention, and sensitive-data redaction.
 - Authorization representation, target isolation, and credential handling.
