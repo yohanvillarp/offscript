@@ -2,9 +2,9 @@
 
 ## Scope and reference
 
-This note records OFFSCRIPT's alignment with the locally supplied Mozaik v4 documentation in `context/mozaik`. That reference directory is ignored by Git and may be unavailable in another clone; the contracts needed for architectural decisions are summarized here. This is a documentation review, not a runtime experiment or an installed-package verification.
+This note records OFFSCRIPT's alignment with the locally supplied Mozaik v4 documentation in `context/mozaik`. That reference directory is ignored by Git and may be unavailable in another clone; the contracts needed for architectural decisions are summarized here. The initial review has now been checked against installed @mozaik-ai/core 4.2.0 and automated integration tests; the local reference remains useful but is not the package API source of truth.
 
-Relevant source documents: `Runtime.md`, `RuntimeState.md`, `Participants.md`, `ConcurrentAgents.md`, `TheAgentLoop.md`, `SituationHandlers.md`, `SemanticEvents.md`, `Interception.md`, and `Tool.md`. No other application is used as an integration specification. Mozaik is not installed in OFFSCRIPT; an exact version remains to be selected and checked during integration.
+Relevant source documents: `Runtime.md`, `RuntimeState.md`, `Participants.md`, `ConcurrentAgents.md`, `TheAgentLoop.md`, `SituationHandlers.md`, `SemanticEvents.md`, `Interception.md`, and `Tool.md`. No other application is used as an integration specification. Mozaik is installed at the repository root with exact version 4.2.0. Published dist/index.d.ts and dist/index.mjs were inspected; the adapter and reproducible execution are described in [MOZAIK-INTEGRATION.md](MOZAIK-INTEGRATION.md).
 
 ## Documented contracts
 
@@ -44,8 +44,18 @@ Do not invent APIs or assume the following without checking the selected impleme
 - `leave` cancelling in-flight inference, tool effects, or cleaning up external resources.
 - A `model.answer` event proving goals were achieved, a session is finished, or every effect has settled.
 - Loop identity isolating concurrent writes to the same agent memory. A distinct `loopId` does not establish memory synchronization.
-- All events carrying a loop ID: the event reference explicitly identifies it on message-received payloads, not every event payload.
+- All event families carrying a loop ID: the installed loop visitor adds it to its loop-produced events, while custom and membership events do not acquire one automatically. Do not infer session lifecycle from that field.
 - Durable event delivery, replay, backpressure, async processor error routing, or transactional shared-state updates.
 - Interception exposing a dedicated veto, pause, or shutdown API beyond its documented transition-rewrite contract.
 
-Domain cancellation updates snapshots only. It cannot establish that external work stopped. The future adapter must address interruption, late events, per-agent overlap, resource cleanup, and error handling explicitly. No policy engine, scheduler, runtime adapter, or verification experiment is implemented by this note.
+Domain cancellation updates snapshots only. It cannot establish that external work stopped. The initial adapter now handles bounded admission, per-agent overlap prevention, controlled error capture, and late inference results. It does not guarantee provider interruption or durable recovery. No general policy engine is implemented.
+
+## Verified 4.2.0 differences and constraints
+
+- ModelContext exposes addContextItem/addContextItems; the reference addItem example does not match the installed API.
+- runLoop discards the internal async AgentLoop.run promise. Inference failures require containment at the runner boundary; handlers must catch their own async failures.
+- The tool runner catches malformed argument JSON and invoke errors. The loop selects only the first function call from an output, so the initial adapter rejects multiple actionable items instead of silently dropping work.
+- The runtime constructs its own default runner/validator. OFFSCRIPT decorates that session-owned runner's public run method; it does not duplicate provider validation or the inference loop.
+- The package includes @mozaik-ai/cloud-sdk and initializes cloud export per loop when credentials are discovered. This local adapter requires an explicit empty MOZAIK_API_KEY; entry points set it to prevent env-file/cached credential fallback.
+
+Tests verify concurrent agents, cross-agent investigation reactions, mapped identities, event correlation, isolated sessions, runtime-bound publication, and controlled failures. This verifies integration against a simulated fixture, not autonomous exploration of a real application or universal cancellation guarantees.

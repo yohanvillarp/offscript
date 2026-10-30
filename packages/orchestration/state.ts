@@ -1,0 +1,32 @@
+import { RuntimeState } from "@mozaik-ai/core";
+import type { Agent } from "@mozaik-ai/core";
+import type { AgentId, InvestigationId, Observation, ObservationId, RequestedInvestigation, Simulation } from "../domain/index.ts";
+import type { SemanticEvent } from "../contracts/index.ts";
+
+export type ToolName = "inspect_application" | "record_observation" | "request_investigation";
+export type RuntimeFailure = Readonly<{ stage: string; agentId: AgentId | undefined; cause: unknown }>;
+export type TurnState = { busy: boolean; turns: number; inferenceCalls: number; pending: string[] };
+
+export class ExplorationState extends RuntimeState {
+  readonly observations = new Map<ObservationId, Observation>();
+  readonly investigations = new Map<InvestigationId, RequestedInvestigation>();
+  readonly events: SemanticEvent[] = [];
+  readonly failures: RuntimeFailure[] = [];
+  readonly agents = new Map<AgentId, Agent>();
+  readonly domainIds = new Map<string, AgentId>();
+  readonly turns = new Map<AgentId, TurnState>();
+  readonly permissions = new Map<AgentId, ReadonlySet<ToolName>>();
+  readonly reactions = new Set<string>();
+  readonly seenEvents = new Set<string>();
+  closed = false;
+  pendingCallbacks = 0;
+  systemId = "";
+
+  simulation: Simulation;
+
+  constructor(simulation: Simulation) { super(); this.simulation = simulation; }
+
+  fail(stage: string, agentId: AgentId | undefined, cause: unknown): void {
+    this.failures.push(Object.freeze({ stage, agentId, cause }));
+  }
+}

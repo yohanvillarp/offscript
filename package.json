@@ -6,14 +6,19 @@
     "prepare": "husky",
     "lint": "npm run lint:packages && npm --prefix apps/studio run lint",
     "build": "npm --prefix apps/studio run build",
-    "check": "npm run typecheck:domain && npm run typecheck:contracts && npm --prefix apps/studio run typecheck:tests && npm test && npm run lint && npm run build",
+    "check": "npm run typecheck:domain && npm run typecheck:contracts && npm run typecheck:application && npm run typecheck:orchestration && npm --prefix apps/studio run typecheck:tests && npm test && npm run lint && npm run build",
     "commitlint": "commitlint",
     "typecheck:domain": "tsc -p packages/domain/tsconfig.json && tsc -p packages/domain/tests/tsconfig.json",
     "test:domain": "node --test packages/domain/tests/*.test.ts",
-    "test": "npm run test:domain && npm run test:contracts && npm --prefix apps/studio test",
+    "test": "npm run test:domain && npm run test:contracts && npm run test:application && npm run test:orchestration && npm --prefix apps/studio test",
+    "typecheck:application": "tsc -p packages/application/tsconfig.json && tsc -p packages/application/tests/tsconfig.json",
+    "test:application": "node --test packages/application/tests/*.test.ts",
     "typecheck:contracts": "tsc -p packages/contracts/tsconfig.json && tsc -p packages/contracts/tests/tsconfig.json",
     "test:contracts": "node --test packages/contracts/tests/*.test.ts",
-    "lint:packages": "npm exec --prefix apps/studio --offline -- oxlint packages"
+    "typecheck:orchestration": "tsc -p packages/orchestration/tsconfig.json && tsc -p packages/orchestration/tests/tsconfig.json",
+    "test:orchestration": "node --import ./packages/orchestration/tests/setup.ts --test packages/orchestration/tests/*.test.ts",
+    "demo:mozaik": "node scripts/mozaik/run.ts",
+    "lint:packages": "npm exec --prefix apps/studio --offline -- oxlint packages scripts"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",
@@ -21,5 +26,8 @@
     "@types/node": "^24.19.2",
     "husky": "^9.1.7",
     "typescript": "~7.0.2"
+  },
+  "dependencies": {
+    "@mozaik-ai/core": "4.2.0"
   }
 }

@@ -13,7 +13,7 @@ Read [PROJECT.md](PROJECT.md) for product semantics and implementation status.
 - Explicit security policy enforcement and investigation/evidence management.
 - Runtime composition connecting application behavior to replaceable infrastructure adapters.
 
-These technology choices are intended direction. Mozaik, Playwright, SQLite, and Drizzle are not installed or integrated in the repository. Their APIs and integration requirements must be verified when implementation is requested.
+The root package now pins @mozaik-ai/core 4.2.0, integrated through packages/orchestration against a controlled local fixture. Playwright, SQLite, and Drizzle remain uninstalled; their APIs and integration requirements must be verified when implementation is requested.
 
 ## Dependency direction and responsibilities
 
@@ -64,7 +64,7 @@ Terminal states cannot transition, including to themselves. Failure requires a n
 
 Simulation completion requires every agent to be terminal (`completed`, `failed`, or `cancelled`), rather than requiring successful goals. Goal descriptions carry no achievement verdict. An individual agent failure does not automatically fail the simulation: the caller explicitly chooses the session outcome. Cancelling or failing a simulation records cancellation for ready/running agents and preserves existing terminal outcomes. These pure snapshot operations cannot stop external work: future integration must enforce cancellation and handle late results, rather than equating a domain transition or `leave` with an abort. There is no pause, retry, automatic failure propagation, or global cross-simulation membership registry.
 
-Root commands `npm run typecheck:domain` and `npm run test:domain` validate the module and run Node's built-in unit tests. `npm run check` includes both alongside existing Studio validation. No orchestration, policies, persistence, or application services are implemented.
+Root commands `npm run typecheck:domain` and `npm run test:domain` validate the module and run Node's built-in unit tests. `npm run check` includes both alongside the other module and Studio checks. The domain implements no orchestration, policies, persistence, or application services.
 
 ## Implemented lifecycle contracts
 
@@ -92,17 +92,29 @@ Root `npm run typecheck:contracts` and `npm run test:contracts` validate this mo
 
 `packages/contracts` exposes investigation summaries, result validation, and the version-1 `investigation.requested`, `investigation.assigned`, and `investigation.completed` events through `SemanticEvent`. Existing event schemas and lifecycle entry points retain their behavior. The semantic union gains discriminators, so exhaustive consumers must adopt the expanded union explicitly. No execution, reference storage, automatic close, or policy enforcement is implemented. See [INVESTIGATIONS.md](INVESTIGATIONS.md) for lifecycle, provenance, time, and validation boundaries.
 
+## Implemented application foundation
+
+`packages/application/index.ts` exposes `executeRequestInvestigation` and its narrow read/create/publication ports. It resolves a running simulation, checks requester membership and active participation, resolves observation identities/simulation/authors, invokes the existing domain operation, validates the requested event, and saves before publication. Its dependencies point inward to domain and contracts; no infrastructure module is imported or implemented.
+
+The writer requires atomic create-if-absent by investigation ID. Publication failure returns the saved investigation/event with unconfirmed delivery; read/save failures raise application errors, and no automatic retry occurs. Context reads, saving, and publication are not one transaction. In-memory adapters are test-only. [APPLICATION.md](APPLICATION.md) documents port obligations, error semantics, concurrency/crash limitations, and deferred execution. The root check includes strict application typechecks and unit tests.
+
+## Implemented Mozaik integration
+
+`packages/orchestration` owns the adapter to installed Mozaik 4.2.0, one real runtime per simulation, mapped participant identities, session-owned shared state, and controlled local tools. Domain and contracts do not import it. Its investigation tool invokes the application request case using session-memory adapters and a publisher backed by Mozaik `sendEvent`. Situation handlers can react to peer requests; no separate event bus or inference/tool loop is introduced.
+
+The bridge preserves validated OFFSCRIPT envelopes inside a Mozaik event and checks producer/session consistency. Guarded callbacks, per-agent admission, inference budgets/deadlines, and late-result rejection cover controlled failure paths. Completion of a turn does not complete a simulation or confirm a finding. Cloud export is explicitly disabled in the entry point. Tests use the real runtime with deterministic inference and blocked network; optional live inference is available but unexecuted. See [MOZAIK-INTEGRATION.md](MOZAIK-INTEGRATION.md) for verified APIs, boundaries, limitations, and commands.
+
 ## Proposed details and open questions
 
-Outside the domain and lifecycle contracts described above, no further internal package tree, exported API, event catalog, table schema, or independent package manifest is finalized. Decide these incrementally when needed:
+Outside the implemented domain, contracts, single application use case, and initial Mozaik adapter described here, no further internal package tree, exported API, event catalog, table schema, or independent package manifest is finalized. Decide these incrementally when needed:
 
 - CLI entry point, configuration format, and runtime lifecycle.
 - Studio transport, process topology, and event delivery/replay behavior.
-- Mozaik adapter implementation, version selection, model-provider selection, concurrency limits, and actual cancellation. Documented API behavior and unproven guarantees are separated in [MOZAIK.md](MOZAIK.md).
+- Live model/provider selection, production runtime composition, expanded output patterns, provider cancellation, and durable coordination. The initial adapter pins Mozaik 4.2.0 and bounds local admission; verified behavior and unresolved guarantees are separated in [MOZAIK.md](MOZAIK.md).
 - Shared-state consistency, concurrent investigation updates, authorization of assignment/completion, automatic-close policy, and duplicate handling. The initial roster permits multiple assigned agents without an exclusive leader.
 - Confirmation criteria, evidence formats, retention, and sensitive-data redaction.
 - Authorization representation, target isolation, and credential handling.
 
 ## Future capabilities
 
-Adapters for non-web software and broader collaboration are future possibilities. Do not implement them speculatively. Current implementation is limited to the Studio, domain, and lifecycle/observation/investigation contract foundations described in PROJECT.md.
+Adapters for non-web software and broader collaboration are future possibilities. Do not implement them speculatively. Current implementation is limited to Studio, domain, contracts, a single application use case, and the controlled Mozaik integration described in PROJECT.md.
