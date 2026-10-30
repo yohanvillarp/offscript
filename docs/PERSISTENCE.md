@@ -26,6 +26,7 @@ The implementation uses synchronous SQLite calls behind asynchronous application
 | `investigations` | Request metadata, existing domain lifecycle fields, and storage-only revision. |
 | `investigation_observations` | Ordered, unique links to observations from the same simulation. |
 | `investigation_agents` | Ordered, unique collaborator roster within that simulation. |
+| `event_outbox` | Validated request/assignment events, revision ordering, leases, attempts, and acceptance metadata. |
 
 Composite foreign keys enforce simulation scope for observation authors, requesters, collaborators, and related observations. Unique constraints preserve identity and relationship positions. Indexes support observation lookup by simulation/time and investigations by simulation/status. Status/reason and JSON-shape checks complement domain/contract validation; SQL constraints alone do not certify a valid domain history.
 
@@ -35,7 +36,8 @@ Profiles, goals, declared capabilities, lifecycle reasons, literal descriptions,
 
 - `simulations` implements `SimulationReader` and adds `createSimulation(snapshot)` for explicit snapshot creation. It creates the roster in the same transaction. It does not upsert, mutate lifecycle, start agents, or resume a session.
 - `observations` implements `ObservationReader` and adds `createObservation(value)`.
-- `investigations` implements the existing create-if-absent writer and assignment store. New requests start at revision 0; assignment uses atomic compare-and-set and increments that revision.
+- `investigations` implements the low-level create/assignment ports and atomic `commitRequest`/`commitAssignment` ports. Application commits include the snapshot and pending event; low-level writes deliberately do not enqueue events. New requests start at revision 0.
+- `outbox` implements reservation, acknowledgement, deferral, rejection, inspection, and per-simulation pending checks. See [OUTBOX.md](OUTBOX.md) for ordering/retry semantics.
 
 Creation returns `already-exists` for an existing identity without overwriting it. Foreign-key failures are not treated as successful creation. Aggregate writes roll back on failure. Reads involving multiple tables use a transaction so roster/relationship data comes from one SQLite snapshot.
 
@@ -43,7 +45,7 @@ Simulation loading validates profiles and summaries, reconstructs immutable snap
 
 Assignment acquires an immediate transaction, validates the current snapshot/revision, and verifies that the requested update is the domain's additive assignment operation. It cannot replace the hypothesis, change simulation, drop existing collaborators, or overwrite a competing revision. A failed collaborator insert rolls back both roster and revision. Missing records and conflicts preserve the existing port results. SQLite/Drizzle operation errors retain their underlying causes for application-level error mapping.
 
-Simulation lifecycle updates, observation edits, investigation completion writes, paginated history, and production runtime wiring are not exposed speculatively. In particular, Mozaik still owns its current integration session state in memory; this persistence adapter is verified against the application ports but is not yet the runtime's authoritative store.
+Simulation lifecycle updates, observation edits, investigation completion writes, paginated history, and production runtime wiring are not exposed speculatively. Mozaik runtime state and agent memories remain session-owned. Optional `SessionOptions.storage` now supplies these durable investigation/observation/outbox adapters to an explicitly prepared session; it does not restore runtime state or resume agents. Await session closure before closing its supplied database.
 
 ## Migrations
 
@@ -59,4 +61,4 @@ There is no automatic downgrade, destructive reset, backup mechanism, or live da
 
 `npm run typecheck:persistence`, `npm run test:persistence`, and `npm run db:check` are included in root validation. Tests use temporary disk-backed databases, independent connections, restart/reopen, rollback injection, scope constraints, corruption rejection, migration upgrades/checksums, CAS conflicts, and bounded lock contention. The existing request/assignment application cases run against the real repositories without external services or a browser.
 
-This milestone deliberately leaves saving and event publication separate. It does not fix the existing crash gap or provide durable delivery. The next increment must atomically commit domain changes and pending events through a transaction boundary before adding an outbox dispatcher. Server composition and Fastify HTTP/security follow that work. No server, endpoints, CLI commands, Studio changes, or provider calls are introduced here.
+The transactional outbox closes the investigation snapshot/event insertion crash gap; original snapshot-only records are not backfilled. Dispatcher acknowledgement and handler execution remain distinct. Server composition and Fastify HTTP/security follow this foundation. No server, endpoints, CLI commands, Studio changes, or real provider calls are introduced here. See [OUTBOX.md](OUTBOX.md).
