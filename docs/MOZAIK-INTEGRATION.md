@@ -75,3 +75,7 @@ Set `OFFSCRIPT_MODEL` to a model supported by installed Mozaik and supply its pr
 `npm run typecheck:orchestration` checks production, tests, and demo scripts. `npm run test:orchestration` uses the installed runtime with deterministic/injected runners; test setup disables cloud export and blocks `fetch`. Both commands are included in root validation. Tests cover concurrent agents, session isolation, mapping, correlation, replays, invalid arguments, permissions, tool/application wiring, async failures, bounded activations, inference limits, late results, and closure.
 
 SQLite-backed request/assignment delivery is now verified by deterministic integration tests. Observation facts retain direct publication and are outside the transactional outbox. Playwright, real target discovery, durable handler recovery, MCP, general policy enforcement, cancellation guarantees, full investigation execution, and new CLI/Studio features remain deferred. Await `session.close()` before closing supplied storage.
+
+## Hosted dispatch
+
+The local host can own one dispatcher across explicitly prepared sessions. Pass its factory context (`storage` and `outboxMode: "external"`) to `createExplorationSession`; external sessions neither create a dispatcher nor claim events while waiting for idle. The default session-owned mode remains unchanged for the controlled demo. Host startup does not create agents or resume saved sessions. See [LOCAL-HOST.md](LOCAL-HOST.md).

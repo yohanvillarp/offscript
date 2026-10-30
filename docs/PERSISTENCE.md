@@ -6,7 +6,7 @@ The root npm package pins `drizzle-orm` 0.45.4 and `better-sqlite3` 13.0.3. Deve
 
 The stable Drizzle version does not export the `node:sqlite` adapter shown by newer prerelease documentation, so this implementation uses its verified `drizzle-orm/better-sqlite3` API. A narrowly scoped override updates the legacy esbuild dependency under `@esbuild-kit/core-utils` to 0.25.12; migration generation/checks are tested with that override. No internal npm package or workspace is introduced.
 
-`packages/persistence/index.ts` exposes `openPersistence`, options, repository interfaces, and persistence errors. Infrastructure imports domain/contracts/application public entry points; those modules do not import SQLite, Drizzle, or row types. Fastify is approved for the later local HTTP server but is not installed or implemented by this increment.
+`packages/persistence/index.ts` exposes `openPersistence`, options, repository interfaces, and persistence errors. Infrastructure imports domain/contracts/application public entry points; those modules do not import SQLite, Drizzle, or row types. The local Fastify host now owns a persistence connection and shared dispatch; see [LOCAL-HOST.md](LOCAL-HOST.md).
 
 ## Connection and lifecycle
 
@@ -61,4 +61,4 @@ There is no automatic downgrade, destructive reset, backup mechanism, or live da
 
 `npm run typecheck:persistence`, `npm run test:persistence`, and `npm run db:check` are included in root validation. Tests use temporary disk-backed databases, independent connections, restart/reopen, rollback injection, scope constraints, corruption rejection, migration upgrades/checksums, CAS conflicts, and bounded lock contention. The existing request/assignment application cases run against the real repositories without external services or a browser.
 
-The transactional outbox closes the investigation snapshot/event insertion crash gap; original snapshot-only records are not backfilled. Dispatcher acknowledgement and handler execution remain distinct. Server composition and Fastify HTTP/security follow this foundation. No server, endpoints, CLI commands, Studio changes, or real provider calls are introduced here. See [OUTBOX.md](OUTBOX.md).
+The transactional outbox closes the investigation snapshot/event insertion crash gap; original snapshot-only records are not backfilled. Dispatcher acknowledgement and handler execution remain distinct. The local host now composes storage with protected health endpoints and explicit startup/shutdown; simulation-control endpoints, CLI distribution, Studio changes, and real browser exploration remain deferred. See [OUTBOX.md](OUTBOX.md).

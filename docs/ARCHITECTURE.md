@@ -8,12 +8,12 @@ Read [PROJECT.md](PROJECT.md) for product semantics and implementation status.
 - A CLI plus the existing React/Vite Studio. Do not relocate the CLI or restructure Studio without explicit authorization.
 - Internal modular code under `packages/`, with hexagonal boundaries and dependency inversion where meaningful. Directories outside the implemented domain and contracts remain provisional scaffolding, not a finalized package design.
 - Mozaik for concurrent multi-agent coordination and Playwright for browser automation.
-- SQLite with Drizzle for local persistence. Fastify is approved for the later local HTTP server; no HTTP adapter is implemented yet.
+- SQLite with Drizzle for local persistence. Fastify provides the initial protected local health interface; simulation-control HTTP and Studio transport remain deferred.
 - Typed semantic events and shared state for coordination and visibility.
 - Explicit security policy enforcement and investigation/evidence management.
 - Runtime composition connecting application behavior to replaceable infrastructure adapters.
 
-The root package now pins @mozaik-ai/core 4.2.0, integrated through packages/orchestration against a controlled local fixture. SQLite persistence now uses exact root dependencies drizzle-orm 0.45.4 and better-sqlite3 13.0.3, with versioned migrations. Playwright and Fastify remain uninstalled; server and real browser integration are deferred.
+The root package now pins @mozaik-ai/core 4.2.0, integrated through packages/orchestration against a controlled local fixture. SQLite persistence now uses exact root dependencies drizzle-orm 0.45.4 and better-sqlite3 13.0.3, with versioned migrations. Fastify 5.12.7 is installed for the local host. Playwright remains uninstalled; real browser integration is deferred.
 
 ## Dependency direction and responsibilities
 
@@ -33,7 +33,7 @@ flowchart TD
   RUNTIME --> ADAPTERS
 ```
 
-The diagram is conceptual. Studio-to-runtime transport and process boundaries are not selected. Arrows express dependencies or composition, not a finalized message flow or module tree.
+The diagram is conceptual. The local host now composes runtime resources and protected health routes; Studio transport is not implemented. Arrows express dependencies or composition, not a finalized message flow or module tree.
 
 ## Required boundaries
 
@@ -110,11 +110,17 @@ The bridge preserves validated OFFSCRIPT envelopes inside a Mozaik event and che
 
 Connections are project-scoped, use local WAL files, foreign keys, FULL synchronization, and bounded busy timeouts. Migrations are explicit and transactional, with checksummed version history and rejection of incompatible databases. Synchronous database calls and immediate write transactions are deliberately short; this does not provide multiple simultaneous writers or distributed storage.
 
-Investigation commits atomically update snapshots/relationships and insert validated events. Reservations, fenced acknowledgements, bounded retries, and per-investigation dispatch ordering support recovery after dispatcher loss. Acceptance acknowledges dispatch rather than asynchronous processing; duplicate delivery remains possible. SQLite-backed Mozaik composition is verified with deterministic inference, without automatic participant restoration. Studio remains disconnected. Server composition, Fastify HTTP, and durable handler recovery are deferred. See [PERSISTENCE.md](PERSISTENCE.md) and [OUTBOX.md](OUTBOX.md).
+Investigation commits atomically update snapshots/relationships and insert validated events. Reservations, fenced acknowledgements, bounded retries, and per-investigation dispatch ordering support recovery after dispatcher loss. Acceptance acknowledges dispatch rather than asynchronous processing; duplicate delivery remains possible. SQLite-backed Mozaik composition is verified with deterministic inference, without automatic participant restoration. Studio remains disconnected. The local host composes these resources; simulation-control HTTP, Studio transport, and durable handler recovery are deferred. See [PERSISTENCE.md](PERSISTENCE.md) and [OUTBOX.md](OUTBOX.md).
+
+## Implemented local host
+
+`packages/runtime/host.ts` is the host composition entry point. It owns SQLite, a single dispatcher, explicitly registered session handles, and the Fastify adapter in `packages/server`. No Mozaik implementation is imported by the host: a local factory supplies a prepared session using guarded storage and external dispatch. Standalone sessions retain their own dispatcher. Startup and persisted events never construct agents automatically.
+
+The host binds loopback, authenticates health requests with an instance-specific token, validates Host/Origin, and exposes no simulation controls. Shutdown stops admission, releases HTTP/sessions/publication, drains storage, and closes SQLite. A deadline reports uncertainty without force-closing pending work. The development entry is `scripts/server/run.ts`, not a new CLI directory. See [LOCAL-HOST.md](LOCAL-HOST.md) for the contract, configuration, resource ownership, security boundary, and actual verification scope.
 
 ## Proposed details and open questions
 
-Outside the implemented domain, contracts, request/assignment application cases, Mozaik adapter, SQLite repositories, and outbox scheduler described here, no further internal package tree, exported API, event catalog, table schema, or independent package manifest is finalized. Decide these incrementally when needed:
+Outside the implemented domain, contracts, request/assignment application cases, Mozaik adapter, SQLite repositories, outbox scheduler, and local host described here, no further internal package tree, exported API, event catalog, table schema, or independent package manifest is finalized. Decide these incrementally when needed:
 
 - CLI entry point, configuration format, and runtime lifecycle.
 - Studio transport, process topology, and event delivery/replay behavior.
@@ -125,4 +131,4 @@ Outside the implemented domain, contracts, request/assignment application cases,
 
 ## Future capabilities
 
-Adapters for non-web software and broader collaboration are future possibilities. Do not implement them speculatively. Current implementation is limited to Studio, domain, contracts, request/assignment application cases, controlled Mozaik integration, SQLite repositories, and transactional investigation delivery described in PROJECT.md.
+Adapters for non-web software and broader collaboration are future possibilities. Do not implement them speculatively. Current implementation is limited to Studio, domain, contracts, request/assignment application cases, controlled Mozaik integration, SQLite repositories, transactional investigation delivery, and the protected local host described in PROJECT.md.

@@ -1,5 +1,6 @@
 # Keep text identical across Windows, macOS, and Linux, regardless of core.autocrlf.
 * text=auto eol=lf
+Makefile text eol=lf
 
 # Hooks have no extension and must remain executable by a POSIX shell.
 .husky/** text eol=lf
