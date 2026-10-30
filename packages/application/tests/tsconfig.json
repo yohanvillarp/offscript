@@ -1,5 +1,5 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": { "types": ["node"] },
-  "include": ["../*.ts", "../request-investigation/*.ts", "*.ts"]
+  "include": ["../*.ts", "../request-investigation/*.ts", "../assign-investigation/*.ts", "*.ts"]
 }

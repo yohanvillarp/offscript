@@ -94,9 +94,11 @@ Root `npm run typecheck:contracts` and `npm run test:contracts` validate this mo
 
 ## Implemented application foundation
 
-`packages/application/index.ts` exposes `executeRequestInvestigation` and its narrow read/create/publication ports. It resolves a running simulation, checks requester membership and active participation, resolves observation identities/simulation/authors, invokes the existing domain operation, validates the requested event, and saves before publication. Its dependencies point inward to domain and contracts; no infrastructure module is imported or implemented.
+`packages/application/index.ts` exposes the request and assignment use cases through narrow context/storage/publication ports. `executeRequestInvestigation` resolves a running simulation, checks requester membership and active participation, resolves observation identities/simulation/authors, invokes the existing domain operation, validates the requested event, and saves before publication. Its dependencies point inward to domain and contracts; no infrastructure module is imported or implemented.
 
-The writer requires atomic create-if-absent by investigation ID. Publication failure returns the saved investigation/event with unconfirmed delivery; read/save failures raise application errors, and no automatic retry occurs. Context reads, saving, and publication are not one transaction. In-memory adapters are test-only. [APPLICATION.md](APPLICATION.md) documents port obligations, error semantics, concurrency/crash limitations, and deferred execution. The root check includes strict application typechecks and unit tests.
+The writer requires atomic create-if-absent by investigation ID. Publication failure returns the saved investigation/event with unconfirmed delivery; read/save failures raise application errors, and no automatic retry occurs. Context reads, saving, and publication are not one transaction. In-memory adapters support tests and the controlled Mozaik session. [APPLICATION.md](APPLICATION.md) documents port obligations, error semantics, concurrency/crash limitations, and deferred execution. The root check includes strict application typechecks and unit tests.
+
+Assignment loads a versioned investigation and active simulation/agents, invokes the domain operation, validates `investigation.assigned`, and uses atomic compare-and-set before publication. Storage revisions remain outside domain/event schemas. Conflicts do not publish or automatically retry. The runtime peer reaction reserves capacity and registers participation before admitting work. These operations do not authenticate callers, transact across simulation state, or provide durable event delivery. See [ASSIGNMENTS.md](ASSIGNMENTS.md).
 
 ## Implemented Mozaik integration
 
@@ -106,7 +108,7 @@ The bridge preserves validated OFFSCRIPT envelopes inside a Mozaik event and che
 
 ## Proposed details and open questions
 
-Outside the implemented domain, contracts, single application use case, and initial Mozaik adapter described here, no further internal package tree, exported API, event catalog, table schema, or independent package manifest is finalized. Decide these incrementally when needed:
+Outside the implemented domain, contracts, request/assignment application cases, and Mozaik adapter described here, no further internal package tree, exported API, event catalog, table schema, or independent package manifest is finalized. Decide these incrementally when needed:
 
 - CLI entry point, configuration format, and runtime lifecycle.
 - Studio transport, process topology, and event delivery/replay behavior.
@@ -117,4 +119,4 @@ Outside the implemented domain, contracts, single application use case, and init
 
 ## Future capabilities
 
-Adapters for non-web software and broader collaboration are future possibilities. Do not implement them speculatively. Current implementation is limited to Studio, domain, contracts, a single application use case, and the controlled Mozaik integration described in PROJECT.md.
+Adapters for non-web software and broader collaboration are future possibilities. Do not implement them speculatively. Current implementation is limited to Studio, domain, contracts, request/assignment application cases, and the controlled Mozaik integration described in PROJECT.md.

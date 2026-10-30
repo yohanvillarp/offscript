@@ -24,6 +24,13 @@ test("two Mozaik agents explore concurrently and react to an investigation throu
   assert.equal(session.startTurn(fixture.beginner, "Overlapping turn"), false);
   const result = await session.waitForIdle();
   assert.equal(result.investigations.length, 1);
+  const investigation = result.investigations[0];
+  assert.equal(investigation?.lifecycle.status, "assigned");
+  if (investigation?.lifecycle.status === "assigned") assert.deepEqual(investigation.lifecycle.agentIds, [fixture.explorer]);
+  const assignmentIndex = result.events.findIndex((event) => event.type === "investigation.assigned");
+  const requestIndex = result.events.findIndex((event) => event.type === "investigation.requested");
+  assert.ok(assignmentIndex > requestIndex);
+  assert.ok(result.events.findLastIndex((event) => event.type === "observation.created") > assignmentIndex);
   assert.equal(result.observations.length, 3);
   assert.equal(new Set(result.observations.map((observation) => observation.agentId)).size, 2);
   assert.equal(result.failures.length, 0);
@@ -84,6 +91,7 @@ test("turn budget bounds reactive activations and rejects new work after close",
   session.startTurn(fixture.explorer, "Explore");
   const result = await session.waitForIdle();
   assert.deepEqual(result.turns.map((turn) => turn.count), [1, 1]);
+  assert.equal(result.investigations[0]?.lifecycle.status, "requested");
   assert.equal(session.startTurn(fixture.beginner, "Another turn"), false);
   assert.throws(() => session.startTurn(agentId("outsider"), "Explore"), /not mapped/);
   session.close();
