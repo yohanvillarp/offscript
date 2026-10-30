@@ -5,6 +5,8 @@ import type { EventMetadata, LifecycleEvent } from "./events.ts";
 import { parseObservationSummary } from "./observation-summary.ts";
 import type { ObservationSummary } from "./observation-summary.ts";
 import { record } from "./validation.ts";
+import { parseInvestigationEvent } from "./investigation-events.ts";
+import type { InvestigationEvent } from "./investigation-events.ts";
 
 export type ObservationCreatedEvent = Readonly<EventMetadata & {
   type: "observation.created";
@@ -12,11 +14,14 @@ export type ObservationCreatedEvent = Readonly<EventMetadata & {
   payload: Readonly<{ observation: ObservationSummary }>;
 }>;
 
-export type SemanticEvent = LifecycleEvent | ObservationCreatedEvent;
+export type SemanticEvent = LifecycleEvent | ObservationCreatedEvent | InvestigationEvent;
 export type SemanticEventType = SemanticEvent["type"];
 
 export function parseSemanticEvent(value: unknown): SemanticEvent {
   const { input, base } = parseEventEnvelope(value);
+  if (input.type === "investigation.requested" || input.type === "investigation.assigned" || input.type === "investigation.completed") {
+    return parseInvestigationEvent(value);
+  }
   if (input.type !== "observation.created") return parseLifecycleEvent(value);
 
   const payload = record(input.payload, "event.payload", ["observation"]);

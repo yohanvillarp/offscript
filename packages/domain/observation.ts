@@ -1,6 +1,7 @@
 import { DomainError, nonBlank } from "./errors.ts";
 import { agentId, evidenceId, observationId, simulationId } from "./identity.ts";
 import type { AgentId, EvidenceId, ObservationId, SimulationId } from "./identity.ts";
+import { utcTimestamp } from "./timestamp.ts";
 
 export type ObservationContext = Readonly<{
   location: string;
@@ -17,11 +18,7 @@ export type Observation = Readonly<{
 }>;
 
 export function createObservation(input: Observation): Observation {
-  const date = new Date(input.observedAt);
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(input.observedAt) ||
-      !Number.isFinite(date.getTime()) || date.toISOString() !== input.observedAt) {
-    throw new DomainError("INVALID_VALUE", "Observation time must be a canonical UTC timestamp.");
-  }
+  utcTimestamp(input.observedAt, "Observation time");
   const evidenceIds = input.evidenceIds.map(evidenceId);
   if (new Set(evidenceIds).size !== evidenceIds.length) {
     throw new DomainError("INVALID_VALUE", "Evidence references must be unique within an observation.");

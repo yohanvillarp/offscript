@@ -9,3 +9,7 @@ export type { ObservationSummary } from "./observation-summary.ts";
 export { parseObservationSummary } from "./observation-summary.ts";
 export type { ObservationCreatedEvent, SemanticEvent, SemanticEventType } from "./semantic-events.ts";
 export { parseSemanticEvent, createSemanticEvent, serializeSemanticEvent, deserializeSemanticEvent } from "./semantic-events.ts";
+export type { InvestigationSummary } from "./investigation-summary.ts";
+export { parseInvestigationSummary, parseInvestigationResult } from "./investigation-summary.ts";
+export type { InvestigationEvent, InvestigationPayloads } from "./investigation-events.ts";
+export { parseInvestigationEvent } from "./investigation-events.ts";
