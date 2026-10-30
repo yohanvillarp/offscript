@@ -1,0 +1,6 @@
+branch=$(git symbolic-ref --quiet --short HEAD) || exit 1
+if [ "$branch" = "main" ]; then
+  echo "Create a branch and open a pull request; main is production." >&2
+  exit 1
+fi
+npm run lint

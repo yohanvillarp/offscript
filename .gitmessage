@@ -1,0 +1,8 @@
+
+# <type>(<scope>): <description>
+# Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
+# Optional scope: studio, cli, docs, tooling, etc.
+# Header: imperative, concise, no final period, maximum 100 characters.
+# Separate the body and footer with blank lines. Explain why when useful.
+# Breaking change: add ! before : and describe it in a BREAKING CHANGE: footer.
+# Reference an issue in the footer when applicable: Closes #123

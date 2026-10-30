@@ -1,0 +1,17 @@
+{
+  "name": "offscript",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare": "husky",
+    "lint": "npm --prefix apps/studio run lint",
+    "build": "npm --prefix apps/studio run build",
+    "check": "npm run lint && npm run build",
+    "commitlint": "commitlint"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "husky": "^9.1.7"
+  }
+}
