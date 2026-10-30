@@ -38,4 +38,4 @@ Acceptance means `sendEvent` returned, not that asynchronous situation handlers 
 
 Root checks include application, persistence, orchestration, and runtime typechecks/tests. Disk-backed tests cover atomic rollback, original-schema upgrades, reopen, competing connections, stale tokens, lost acknowledgements, ordering, deferral, corrupt events, bounded retries, and exhaustion. A real Mozaik runtime with deterministic inference exercises SQLite request/assignment composition without model API calls or a browser.
 
-Fastify server composition, HTTP authentication, CLI/Studio transport, durable handler processing/recovery, automatic agent resumption, investigation completion use cases, evidence resources, cleanup/retention, and operator retry controls remain deferred.
+The local Fastify host now owns shared dispatch and protected health routes; hosted sessions use explicit external dispatch. See [LOCAL-HOST.md](LOCAL-HOST.md). Simulation-control HTTP, CLI/Studio transport, durable handler processing/recovery, automatic agent resumption, investigation completion use cases, evidence resources, cleanup/retention, and operator retry controls remain deferred.
