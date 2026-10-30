@@ -12,8 +12,10 @@ export interface InvestigationAssignmentStore {
   saveAssignment(investigation: AssignedInvestigation, expectedRevision: number): Promise<"saved" | "conflict" | "not-found">;
 }
 
-export interface InvestigationAssignedPublisher {
-  publishInvestigationAssigned(event: InvestigationAssignedEvent): Promise<void>;
+
+export interface InvestigationAssignmentCommitter {
+  findInvestigation(id: InvestigationId): Promise<VersionedInvestigation | undefined>;
+  commitAssignment(event: InvestigationAssignedEvent, expectedRevision: number): Promise<"saved" | "duplicate" | "conflict" | "not-found" | "event-conflict">;
 }
 
 export type AssignInvestigationCommand = Readonly<{
@@ -28,13 +30,12 @@ export type AssignInvestigationCommand = Readonly<{
 
 export type AssignInvestigationDependencies = Readonly<{
   simulations: SimulationReader;
-  investigations: InvestigationAssignmentStore;
-  events: InvestigationAssignedPublisher;
+  investigations: InvestigationAssignmentCommitter;
 }>;
 
 export type AssignInvestigationResult = Readonly<{
   investigation: AssignedInvestigation;
   revision: number;
   event: InvestigationAssignedEvent;
-  publication: Readonly<{ status: "published" }> | Readonly<{ status: "unconfirmed"; cause: unknown }>;
+  publication: Readonly<{ status: "queued" | "already-recorded" }>;
 }>;

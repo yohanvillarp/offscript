@@ -28,19 +28,15 @@ export async function executeRequestInvestigation(
   if (event.type !== "investigation.requested") {
     throw new ApplicationError("INVALID_REFERENCE", "Unexpected event type returned by the contract parser.");
   }
-  let saved: "created" | "already-exists";
+  let saved: "created" | "duplicate" | "already-exists" | "event-conflict";
   try {
-    saved = await dependencies.investigations.createInvestigation(investigation);
+    saved = await dependencies.investigations.commitRequest(event);
   } catch (cause) {
     throw new ApplicationError("SAVE_FAILED", "Investigation save failed; its commit outcome may be unknown.", { cause });
   }
   if (saved === "already-exists") {
     throw new ApplicationError("INVESTIGATION_ALREADY_EXISTS", "An investigation with this identity already exists.");
   }
-  try {
-    await dependencies.events.publishInvestigationRequested(event);
-  } catch (cause) {
-    return Object.freeze({ investigation, event, publication: Object.freeze({ status: "unconfirmed" as const, cause }) });
-  }
-  return Object.freeze({ investigation, event, publication: Object.freeze({ status: "published" }) });
+  if (saved === "event-conflict") throw new ApplicationError("EVENT_ID_CONFLICT", "Event identity already has different content.");
+  return Object.freeze({ investigation, event, publication: Object.freeze({ status: saved === "duplicate" ? "already-recorded" as const : "queued" as const }) });
 }

@@ -13,7 +13,8 @@ export type ApplicationErrorCode =
   | "ASSIGNER_NOT_FOUND"
   | "ASSIGNER_NOT_RUNNING"
   | "READ_FAILED"
-  | "SAVE_FAILED";
+  | "SAVE_FAILED"
+  | "EVENT_ID_CONFLICT";
 
 export class ApplicationError extends Error {
   readonly code: ApplicationErrorCode;

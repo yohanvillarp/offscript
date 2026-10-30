@@ -4,6 +4,8 @@ import { migrateDatabase } from "./migrate.ts";
 import { simulationRepository } from "./repositories/simulations.ts";
 import { observationRepository } from "./repositories/observations.ts";
 import { investigationRepository } from "./repositories/investigations.ts";
+import { investigationCommitter } from "./outbox/committer.ts";
+import { outboxStore } from "./outbox/store.ts";
 
 export function openPersistence(options: PersistenceOptions) {
   const connection = openConnection(options);
@@ -11,7 +13,8 @@ export function openPersistence(options: PersistenceOptions) {
     databasePath: connection.databasePath,
     migrate() { migrateDatabase(connection.db); },
     simulations: simulationRepository(connection.db), observations: observationRepository(connection.db),
-    investigations: investigationRepository(connection.db),
+    investigations: Object.freeze({ ...investigationRepository(connection.db), ...investigationCommitter(connection.db) }),
+    outbox: outboxStore(connection.db),
     close() { if (connection.client.open) connection.client.close(); },
   });
 }

@@ -19,15 +19,16 @@ export interface InvestigationWriter {
   createInvestigation(investigation: RequestedInvestigation): Promise<"created" | "already-exists">;
 }
 
-export interface InvestigationRequestedPublisher {
-  publishInvestigationRequested(event: InvestigationRequestedEvent): Promise<void>;
+
+export interface InvestigationRequestCommitter {
+  // Commit the requested snapshot and its exact event in one transaction.
+  commitRequest(event: InvestigationRequestedEvent): Promise<"created" | "duplicate" | "already-exists" | "event-conflict">;
 }
 
 export type RequestInvestigationDependencies = Readonly<{
   simulations: SimulationReader;
   observations: ObservationReader;
-  investigations: InvestigationWriter;
-  events: InvestigationRequestedPublisher;
+  investigations: InvestigationRequestCommitter;
 }>;
 
 export type RequestInvestigationCommand = Readonly<{
@@ -44,5 +45,5 @@ export type RequestInvestigationCommand = Readonly<{
 export type RequestInvestigationResult = Readonly<{
   investigation: RequestedInvestigation;
   event: InvestigationRequestedEvent;
-  publication: Readonly<{ status: "published" }> | Readonly<{ status: "unconfirmed"; cause: unknown }>;
+  publication: Readonly<{ status: "queued" | "already-recorded" }>;
 }>;

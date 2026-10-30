@@ -23,47 +23,38 @@ test("save failures retain their cause, do not publish, and are not automaticall
   const context = memoryContext();
   const cause = new Error("Commit failed");
   let saves = 0;
-  const dependencies = { ...context.dependencies, investigations: { async createInvestigation() { saves++; throw cause; } } };
+  const dependencies = { ...context.dependencies, investigations: { async commitRequest() { saves++; throw cause; } } };
   await assert.rejects(executeRequestInvestigation(command(), dependencies), (error: unknown) =>
     error instanceof ApplicationError && error.code === "SAVE_FAILED" && error.cause === cause);
   assert.equal(saves, 1);
   assert.equal(context.events.length, 0);
 });
 
-test("publication rejection returns the saved request and exact event for explicit recovery", async () => {
+test("a request queues its exact immutable event without a publication dependency", async () => {
   const context = memoryContext();
-  const cause = new Error("Delivery not acknowledged");
-  const result = await executeRequestInvestigation(command(), {
-    ...context.dependencies, events: { async publishInvestigationRequested(event) {
-      // A rejection can happen after delivery, so the result must not claim non-delivery.
-      context.events.push(event);
-      throw cause;
-    } },
-  });
-  assert.equal(context.investigations.size, 1);
-  assert.equal(context.events.length, 1);
-  assert.equal(context.events[0], result.event);
-  assert.equal(result.publication.status, "unconfirmed");
-  if (result.publication.status === "unconfirmed") assert.equal(result.publication.cause, cause);
-  assert.ok(Object.isFrozen(result.publication));
+  const first = await executeRequestInvestigation(command(), context.dependencies);
+  const second = await executeRequestInvestigation(command(), context.dependencies);
+  assert.equal(first.publication.status, "queued");
+  assert.equal(second.publication.status, "already-recorded");
+  assert.deepEqual(context.events, [first.event]);
 });
 
-test("duplicate requests never overwrite the saved value or publish a second event", async () => {
+test("conflicting request events never overwrite the snapshot or enqueue a second event", async () => {
   const context = memoryContext();
   const first = await executeRequestInvestigation(command(), context.dependencies);
   await assert.rejects(executeRequestInvestigation({ ...command(), hypothesis: "Different hypothesis" }, context.dependencies),
-    (error: unknown) => error instanceof ApplicationError && error.code === "INVESTIGATION_ALREADY_EXISTS");
-  assert.equal(context.investigations.get(command().investigationId), first.investigation);
+    (error: unknown) => error instanceof ApplicationError && error.code === "EVENT_ID_CONFLICT");
+  assert.deepEqual(context.investigations.get(command().investigationId), first.investigation);
   assert.equal(context.events.length, 1);
 });
 
-test("concurrent create-if-absent calls produce one investigation and one publication", async () => {
+test("concurrent identical requests record one snapshot/event and return idempotent commit results", async () => {
   const context = memoryContext();
   const results = await Promise.allSettled([
     executeRequestInvestigation(command(), context.dependencies), executeRequestInvestigation(command(), context.dependencies),
   ]);
-  assert.equal(results.filter((result) => result.status === "fulfilled").length, 1);
-  assert.equal(results.filter((result) => result.status === "rejected").length, 1);
+  assert.equal(results.filter((result) => result.status === "fulfilled").length, 2);
+  assert.equal(results.filter((result) => result.status === "rejected").length, 0);
   assert.equal(context.investigations.size, 1);
   assert.equal(context.events.length, 1);
 });

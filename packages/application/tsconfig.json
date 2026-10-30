@@ -1,4 +1,4 @@
 {
   "extends": "../domain/tsconfig.json",
-  "include": ["*.ts", "request-investigation/*.ts", "assign-investigation/*.ts"]
+  "include": ["outbox/*.ts", "*.ts", "request-investigation/*.ts", "assign-investigation/*.ts"]
 }

@@ -5,12 +5,14 @@ import type { AgentId } from "../../domain/index.ts";
 import { parseSemanticEvent } from "../../contracts/index.ts";
 import type { SemanticEvent } from "../../contracts/index.ts";
 import { executeRequestInvestigation } from "../../application/index.ts";
-import { sessionInvestigationStore } from "../investigation-store.ts";
+import { sessionStorage } from "../session-storage.ts";
+import type { ExplorationStorage } from "../session-storage.ts";
 import type { ExplorationState, ToolName } from "../state.ts";
 import { argumentsObject, argumentText } from "./arguments.ts";
 
 export function explorationTools(
   state: ExplorationState, id: AgentId, publish: (event: SemanticEvent) => void,
+  storage: ExplorationStorage = sessionStorage(state),
 ): Tool[] {
   function tool(name: ToolName, description: string, properties: Record<string, unknown>, invoke: (args: unknown) => Promise<unknown>): Tool {
     return {
@@ -45,6 +47,7 @@ export function explorationTools(
         observedAt: new Date().toISOString(), description: argumentText(args.description),
         context: { location: argumentText(args.location) }, evidenceIds: [],
       });
+      if (await storage.observations.createObservation(observation) !== "created") throw new Error("Observation identity already exists.");
       state.observations.set(observation.id, observation);
       publish(parseSemanticEvent({
         eventId: randomUUID(), type: "observation.created", schemaVersion: 1, occurredAt: observation.observedAt,
@@ -65,9 +68,8 @@ export function explorationTools(
         eventId: randomUUID(), correlationId: state.simulation.id,
       }, {
         simulations: { async findSimulation(key) { return key === state.simulation.id ? state.simulation : undefined; } },
-        observations: { async findObservation(key) { return state.observations.get(key); } },
-        investigations: sessionInvestigationStore(state),
-        events: { async publishInvestigationRequested(event) { publish(event); } },
+        observations: storage.observations,
+        investigations: storage.investigations,
       });
       return { investigationId: result.investigation.id, publication: result.publication.status };
     }),

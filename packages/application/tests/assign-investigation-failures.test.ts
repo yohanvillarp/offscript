@@ -24,7 +24,7 @@ for (const outcome of ["conflict", "not-found"] as const) {
   test(`CAS ${outcome} cannot publish an unsaved assignment`, async () => {
     const context = assignmentContext();
     const dependencies = { ...context.dependencies, investigations: {
-      ...context.dependencies.investigations, async saveAssignment() { return outcome; },
+      ...context.dependencies.investigations, async commitAssignment() { return outcome; },
     } };
     await assert.rejects(executeAssignInvestigation(assignmentCommand(), dependencies), (error: unknown) =>
       error instanceof ApplicationError && error.code === (outcome === "conflict" ? "INVESTIGATION_CONFLICT" : "INVESTIGATION_NOT_FOUND"));
@@ -33,15 +33,15 @@ for (const outcome of ["conflict", "not-found"] as const) {
   });
 }
 
-test("save rejection after a possible commit reports uncertainty, does not publish, and does not retry", async () => {
+test("lost commit acknowledgement preserves the atomic snapshot/event and does not retry", async () => {
   const context = assignmentContext();
   const cause = new Error("Acknowledgement lost");
   let calls = 0;
   const dependencies = { ...context.dependencies, investigations: {
     ...context.dependencies.investigations,
-    async saveAssignment(...args: Parameters<typeof context.dependencies.investigations.saveAssignment>) {
+    async commitAssignment(...args: Parameters<typeof context.dependencies.investigations.commitAssignment>) {
       calls++;
-      await context.dependencies.investigations.saveAssignment(...args);
+      await context.dependencies.investigations.commitAssignment(...args);
       throw cause;
     },
   } };
@@ -49,20 +49,16 @@ test("save rejection after a possible commit reports uncertainty, does not publi
     error instanceof ApplicationError && error.code === "SAVE_FAILED" && error.cause === cause);
   assert.equal(calls, 1);
   assert.equal(context.records.get(context.requested.id)?.revision, 1);
-  assert.equal(context.events.length, 0);
+  assert.equal(context.events.length, 1);
 });
 
-test("publisher failure returns the saved snapshot, revision, and exact event with unconfirmed delivery", async () => {
+test("assignments queue the exact snapshot and revision atomically", async () => {
   const context = assignmentContext();
-  const cause = new Error("Delivery acknowledgement lost");
-  const result = await executeAssignInvestigation(assignmentCommand(), {
-    ...context.dependencies, events: { async publishInvestigationAssigned(event) { context.events.push(event); throw cause; } },
-  });
+  const result = await executeAssignInvestigation(assignmentCommand(), context.dependencies);
   assert.equal(result.revision, 1);
-  assert.equal(result.publication.status, "unconfirmed");
-  if (result.publication.status === "unconfirmed") assert.equal(result.publication.cause, cause);
-  assert.equal(result.event, context.events[0]);
-  assert.equal(result.investigation, context.records.get(context.requested.id)?.investigation);
+  assert.equal(result.publication.status, "queued");
+  assert.equal(context.events[0], result.event);
+  assert.deepEqual(context.records.get(context.requested.id)?.investigation, result.investigation);
 });
 
 test("concurrent collaborators cannot overwrite each other; a deliberate reload can add the loser", async () => {

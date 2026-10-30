@@ -30,7 +30,7 @@ test("two Mozaik agents explore concurrently and react to an investigation throu
   const assignmentIndex = result.events.findIndex((event) => event.type === "investigation.assigned");
   const requestIndex = result.events.findIndex((event) => event.type === "investigation.requested");
   assert.ok(assignmentIndex > requestIndex);
-  assert.ok(result.events.findLastIndex((event) => event.type === "observation.created") > assignmentIndex);
+  assert.ok(result.events.findLastIndex((event) => event.type === "observation.created") > requestIndex);
   assert.equal(result.observations.length, 3);
   assert.equal(new Set(result.observations.map((observation) => observation.agentId)).size, 2);
   assert.equal(result.failures.length, 0);
@@ -45,6 +45,7 @@ test("two Mozaik agents explore concurrently and react to an investigation throu
   const request = result.events.find((event) => event.type === "investigation.requested");
   assert.ok(request);
   session.publishEvent(request);
+  assert.throws(() => session.publishEvent({ ...request, correlationId: "changed-correlation" }), /different content/);
   const replayed = await session.waitForIdle();
   assert.deepEqual(replayed.turns, result.turns);
   assert.equal(replayed.events.length, result.events.length);
