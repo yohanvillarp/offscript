@@ -6,7 +6,7 @@ Read [PROJECT.md](PROJECT.md) for product semantics and implementation status.
 
 - TypeScript and Node.js, managed with npm without npm Workspaces.
 - A CLI plus the existing React/Vite Studio. Do not relocate the CLI or restructure Studio without explicit authorization.
-- Internal modular code under `packages/`, with hexagonal boundaries and dependency inversion where meaningful. Directories outside the implemented domain remain provisional scaffolding, not a finalized package design.
+- Internal modular code under `packages/`, with hexagonal boundaries and dependency inversion where meaningful. Directories outside the implemented domain and contracts remain provisional scaffolding, not a finalized package design.
 - Mozaik for concurrent multi-agent coordination and Playwright for browser automation.
 - SQLite with Drizzle for local persistence.
 - Typed semantic events and shared state for coordination and visibility.
@@ -66,9 +66,21 @@ Simulation completion requires every agent to be terminal (`completed`, `failed`
 
 Root commands `npm run typecheck:domain` and `npm run test:domain` validate the module and run Node's built-in unit tests. `npm run check` includes both alongside existing Studio validation. No orchestration, policies, persistence, or application services are implemented.
 
+## Implemented lifecycle contracts
+
+`packages/contracts/index.ts` exposes version-1 lifecycle events, immutable simulation/agent summary DTOs, pure snapshot mappers, and explicit runtime validation. The module depends only on the domain public entry point and its own files; the domain does not depend on contracts. It has no independent package manifest or external runtime dependencies.
+
+The envelope carries event identity, type, schema version, UTC timestamp, simulation identity, origin, correlation identity, and an event-specific summary payload. The origin is either the system or an originating agent; an affected agent is identified separately in its summary. The eight events cover started, completed, failed, and cancelled participation/session facts. They are not commands or Mozaik turn events.
+
+See [CONTRACTS.md](CONTRACTS.md) for field definitions, validation, serialization, and public functions. IDs, statuses, and failure semantics reuse the domain; no domain source was changed. Parsed snapshots are detached and frozen. Version 1 rejects unknown fields, event types, unsupported versions, invalid timestamps, and inconsistent subject IDs/statuses.
+
+Validation establishes message shape, not event truth, authorization, membership, valid lifecycle history, or actual interruption of external work. Events do not execute transitions, publish themselves, or confirm goal achievement. Observations, investigations, and their DTOs remain deferred until their domain rules are defined.
+
+Root `npm run typecheck:contracts` and `npm run test:contracts` validate this module. `npm test` runs domain and contracts tests; `npm run lint` covers internal modules and Studio. The existing `npm run check` entry point includes all these checks and the Studio build, so the existing GitHub workflow validates this milestone without a second pipeline.
+
 ## Proposed details and open questions
 
-Outside the domain foundation described above, no internal package tree, exported API, event catalog, table schema, or independent package manifest is finalized. Decide these incrementally when needed:
+Outside the domain and lifecycle contracts described above, no further internal package tree, exported API, event catalog, table schema, or independent package manifest is finalized. Decide these incrementally when needed:
 
 - CLI entry point, configuration format, and runtime lifecycle.
 - Studio transport, process topology, and event delivery/replay behavior.
@@ -79,4 +91,4 @@ Outside the domain foundation described above, no internal package tree, exporte
 
 ## Future capabilities
 
-Adapters for non-web software and broader collaboration are future possibilities. Do not implement them speculatively. Current implementation is limited to the Studio and domain foundations described in PROJECT.md.
+Adapters for non-web software and broader collaboration are future possibilities. Do not implement them speculatively. Current implementation is limited to the Studio, domain, and lifecycle contract foundations described in PROJECT.md.

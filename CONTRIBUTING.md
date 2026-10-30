@@ -67,12 +67,12 @@ Separate the body and footer with blank lines. Mark breaking changes with `!` an
 
 | Stage | Rule |
 | --- | --- |
-| `pre-commit` | Rejects commits on `main` and runs Studio lint. |
+| `pre-commit` | Rejects commits on `main` and runs internal package and Studio lint. |
 | `commit-msg` | Validates the message with commitlint. |
-| `pre-push` | Rejects any `refs/heads/main` destination and runs lint and build. |
-| GitHub Actions | Validates the title, lint, and build for PRs targeting `main`; also validates pushes to `main`. |
+| `pre-push` | Rejects any `refs/heads/main` destination and runs `npm run check`. |
+| GitHub Actions | Validates the PR title and runs `npm run check` for PRs targeting `main`; also validates pushes to `main`. |
 
-Run `npm run check` from the root to execute domain typechecks and unit tests, followed by Studio lint and build. The Studio build includes TypeScript checking. Run domain checks independently with `npm run typecheck:domain` and `npm run test:domain` (or `npm test`). There is no end-to-end test suite yet. Add meaningful tests when implementing functionality and report what you actually ran.
+Run `npm run check` from the root to execute domain/contracts typechecks and unit tests, internal package and Studio lint, and the Studio build. The Studio build includes TypeScript checking. Run module checks independently with `npm run typecheck:domain`, `npm run typecheck:contracts`, `npm run test:domain`, or `npm run test:contracts`. `npm test` runs both test suites. There is no end-to-end test suite yet. Add meaningful tests when implementing functionality and report what you actually ran.
 
 [Husky](https://typicode.github.io/husky/) hooks are local controls and can be bypassed; they do not replace GitHub protection. Do not bypass them to integrate failing changes. Lint inspects the working tree, not only staged files: keep commits coherent.
 
