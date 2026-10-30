@@ -8,12 +8,12 @@ Read [PROJECT.md](PROJECT.md) for product semantics and implementation status.
 - A CLI plus the existing React/Vite Studio. Do not relocate the CLI or restructure Studio without explicit authorization.
 - Internal modular code under `packages/`, with hexagonal boundaries and dependency inversion where meaningful. Directories outside the implemented domain and contracts remain provisional scaffolding, not a finalized package design.
 - Mozaik for concurrent multi-agent coordination and Playwright for browser automation.
-- SQLite with Drizzle for local persistence.
+- SQLite with Drizzle for local persistence. Fastify is approved for the later local HTTP server; no HTTP adapter is implemented yet.
 - Typed semantic events and shared state for coordination and visibility.
 - Explicit security policy enforcement and investigation/evidence management.
 - Runtime composition connecting application behavior to replaceable infrastructure adapters.
 
-The root package now pins @mozaik-ai/core 4.2.0, integrated through packages/orchestration against a controlled local fixture. Playwright, SQLite, and Drizzle remain uninstalled; their APIs and integration requirements must be verified when implementation is requested.
+The root package now pins @mozaik-ai/core 4.2.0, integrated through packages/orchestration against a controlled local fixture. SQLite persistence now uses exact root dependencies drizzle-orm 0.45.4 and better-sqlite3 13.0.3, with versioned migrations. Playwright and Fastify remain uninstalled; server and real browser integration are deferred.
 
 ## Dependency direction and responsibilities
 
@@ -106,9 +106,17 @@ Assignment loads a versioned investigation and active simulation/agents, invokes
 
 The bridge preserves validated OFFSCRIPT envelopes inside a Mozaik event and checks producer/session consistency. Guarded callbacks, per-agent admission, inference budgets/deadlines, and late-result rejection cover controlled failure paths. Completion of a turn does not complete a simulation or confirm a finding. Cloud export is explicitly disabled in the entry point. Tests use the real runtime with deterministic inference and blocked network; optional live inference is available but unexecuted. See [MOZAIK-INTEGRATION.md](MOZAIK-INTEGRATION.md) for verified APIs, boundaries, limitations, and commands.
 
+## Implemented SQLite persistence foundation
+
+`packages/persistence` implements the current simulation/observation read ports, explicit snapshot creation, investigation create-if-absent, and assignment compare-and-set using SQLite/Drizzle. Six tables preserve current domain state and ordered scoped relationships. Profiles and evidence-reference arrays use validated JSON; domain/contracts/application remain independent of row and ORM types.
+
+Connections are project-scoped, use local WAL files, foreign keys, FULL synchronization, and bounded busy timeouts. Migrations are explicit and transactional, with checksummed version history and rejection of incompatible databases. Synchronous database calls and immediate write transactions are deliberately short; this does not provide multiple simultaneous writers or distributed storage.
+
+Tests exercise real files, independent connections, restart/reopen, rollback, relational scope, corruption rejection, and application-port compatibility. Mozaik/Studio are not wired to durable storage yet. Snapshot writes and publication remain separate: outbox/transaction boundaries, recovery, server composition, and Fastify HTTP are subsequent increments. See [PERSISTENCE.md](PERSISTENCE.md).
+
 ## Proposed details and open questions
 
-Outside the implemented domain, contracts, request/assignment application cases, and Mozaik adapter described here, no further internal package tree, exported API, event catalog, table schema, or independent package manifest is finalized. Decide these incrementally when needed:
+Outside the implemented domain, contracts, request/assignment application cases, Mozaik adapter, and SQLite repositories described here, no further internal package tree, exported API, event catalog, table schema, or independent package manifest is finalized. Decide these incrementally when needed:
 
 - CLI entry point, configuration format, and runtime lifecycle.
 - Studio transport, process topology, and event delivery/replay behavior.
@@ -119,4 +127,4 @@ Outside the implemented domain, contracts, request/assignment application cases,
 
 ## Future capabilities
 
-Adapters for non-web software and broader collaboration are future possibilities. Do not implement them speculatively. Current implementation is limited to Studio, domain, contracts, request/assignment application cases, and the controlled Mozaik integration described in PROJECT.md.
+Adapters for non-web software and broader collaboration are future possibilities. Do not implement them speculatively. Current implementation is limited to Studio, domain, contracts, request/assignment application cases, controlled Mozaik integration, and SQLite repositories described in PROJECT.md.
