@@ -39,7 +39,15 @@ git push -u origin feat/short-description
 
 Open a PR targeting `main`. Use short branch names with prefixes such as `feat/`, `fix/`, `docs/`, `refactor/`, `chore/`, or `hotfix/`. Describe the problem, resulting behavior, validation performed, and risks. Resolve review comments before merging. Do not force-push shared branches.
 
-Use squash merge to integrate each PR as one coherent commit; its title must follow Conventional Commits. Delete the branch after merging. Every merge to `main` must be production-ready; this repository does not yet configure automatic deployments.
+After the required checks and review pass, merge the PR using the method appropriate for its history:
+
+- **Merge commit:** preserve the individual commits and the PR boundary. Use this for a coherent series of commits.
+- **Squash merge:** combine work-in-progress commits into one focused commit when useful.
+- **Rebase merge:** replay clean commits onto the base branch when a linear result is preferred.
+
+No single merge method is mandatory. Keep PR titles and authored commits consistent with Conventional Commits; GitHub-generated merge commits may use GitHub's default message. Review the final message when squashing. See [GitHub's merge methods](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/about-merge-methods-on-github).
+
+GitHub deletes the remote work branch automatically after merging. Update local `main` with `git pull --ff-only`, then remove the merged local branch and prune stale remote references. Use `git branch -d <branch>`; if squash or rebase prevents Git from recognizing the merge, verify the PR and commit history before removing the local branch. Never delete a branch while its PR is open. Every merge to `main` must be production-ready; this repository does not yet configure automatic deployments.
 
 ## Commits
 
@@ -84,7 +92,7 @@ An administrator must configure a ruleset targeting `main` and the repository se
 1. Require pull requests and at least one approval from another person; dismiss stale approvals when code changes and require conversation resolution.
 2. Require the `quality` check and an up-to-date branch before merging.
 3. Block force pushes and deletion of `main`; apply the rules to administrators and avoid routine bypasses.
-4. Require linear history, enable squash merge, and disable merge commits and rebase merge to preserve this workflow.
-5. Set the PR title as the default squash commit title and review the final message before merging.
+4. Allow merge commits, squash merge, and rebase merge. Do not require linear history, since that would prohibit merge commits.
+5. Enable automatic head-branch deletion after merging. Use the PR title as the default squash commit title when squash is chosen.
 
 These remote rules are documented here; creating local files does not activate them. The check will appear after GitHub runs the workflow. If an option depends on the plan or permissions, the administrator must confirm its availability. This contribution does not configure a deployment workflow or production credentials.

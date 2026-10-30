@@ -55,4 +55,4 @@ When a task is completed, stop. Report what changed, why it changed, what was ve
 
 ## Contribution workflow
 
-Follow `CONTRIBUTING.md`. Create a work branch and open a GitHub pull request targeting `main`, which represents production. Do not commit or push directly to `main`. Use Conventional Commits and run the relevant checks; do not bypass hooks to integrate failing changes.
+Follow `CONTRIBUTING.md`. Create a work branch and open a GitHub pull request targeting `main`, which represents production. Do not commit or push directly to `main`. Use Conventional Commits and run the relevant checks; do not bypass hooks to integrate failing changes. Choose the GitHub merge method appropriate for the PR; squash is optional. Delete work branches only after their PR is merged.
