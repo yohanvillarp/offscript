@@ -59,7 +59,7 @@ DTOs reuse domain identity, lifecycle, and environment value types, with detache
 
 Validation is explicit TypeScript code with no added dependencies. Version 1 accepts plain JSON-shaped data and rejects unknown fields, unsupported discriminators/versions, invalid identities, invalid dates, mismatched subject/status metadata, missing required fields, and failure states without a nonblank reason. Optional values must be omitted according to their discriminated shape, not represented by `undefined`. Failures raise `ContractValidationError` with a failing `path`.
 
-These checks validate structure and local consistency. They cannot prove occurrence, valid domain transition history, goal achievement, sender identity, authorization, global ID uniqueness, or correlation membership. Validated external messages remain untrusted claims until handled by future application and policy boundaries. Investigation execution, confirmed findings, event processing, and replay are not implemented.
+These checks validate structure and local consistency. They cannot prove occurrence, valid domain transition history, goal achievement, sender identity, authorization, global ID uniqueness, or correlation membership. Validated external messages remain untrusted claims until handled by future application and policy boundaries. Investigation execution, confirmed findings, event processing, and replay are not implemented by the contracts module. The runtime integration is described separately in [MOZAIK-INTEGRATION.md](MOZAIK-INTEGRATION.md).
 
 ## Observation extension
 
