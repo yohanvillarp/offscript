@@ -89,7 +89,8 @@ test("request tool invokes the application case and cannot cross simulation scop
   assert.ok(observation);
   await request.invoke({ hypothesis: "A hypothesis", observationIds: [observation.id] });
   assert.equal(fixture.state.investigations.size, 1);
-  assert.equal(published[1]?.type, "investigation.requested");
+  assert.equal(published.length, 1);
+  assert.equal(fixture.state.outbox.pending(), true);
   await request.invoke({ hypothesis: "Foreign reference", observationIds: ["foreign"] });
   await request.invoke({ hypothesis: "Duplicate reference", observationIds: [observation.id, observation.id] });
   assert.equal(fixture.state.investigations.size, 1);

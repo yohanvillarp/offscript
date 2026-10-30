@@ -32,4 +32,4 @@ try {
     simulationStatus: result.simulation.lifecycle.status,
   }, null, 2));
   if (result.failures.length) process.exitCode = 1;
-} finally { session.close(); }
+} finally { await session.close(); }

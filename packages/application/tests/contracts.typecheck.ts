@@ -11,8 +11,8 @@ export function checkTypes(command: RequestInvestigationCommand, result: Request
   void type;
   // @ts-expect-error A requested event has no completed result.
   void result.event.payload.investigation.lifecycle.result;
-  if (result.publication.status === "published") {
-    // @ts-expect-error Only unconfirmed publication carries a cause.
+  if (result.publication.status === "queued") {
+    // @ts-expect-error Queued results do not expose publisher errors.
     void result.publication.cause;
   }
 }

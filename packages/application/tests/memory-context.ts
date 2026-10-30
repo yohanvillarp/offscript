@@ -44,13 +44,16 @@ export function memoryContext() {
   const dependencies: RequestInvestigationDependencies = {
     simulations: { async findSimulation(id) { calls.push("read-simulation"); return simulations.get(id); } },
     observations: { async findObservation(id) { calls.push("read-observation"); return observations.get(id); } },
-    investigations: { async createInvestigation(value) {
+    investigations: { async commitRequest(event) {
+      const value = event.payload.investigation;
+      const prior = events.find(item => item.eventId === event.eventId);
+      if (prior) return JSON.stringify(prior) === JSON.stringify(event) ? "duplicate" : "event-conflict";
       calls.push("save");
       if (investigations.has(value.id)) return "already-exists";
       investigations.set(value.id, value);
+      events.push(event);
       return "created";
     } },
-    events: { async publishInvestigationRequested(event) { calls.push("publish"); events.push(event); } },
   };
   return { simulations, observations, investigations, events, calls, dependencies };
 }

@@ -9,8 +9,8 @@ export function checkAssignmentTypes(command: AssignInvestigationCommand, result
   stored.revision = 4;
   // @ts-expect-error The assignment does not contain a completion result.
   void result.investigation.lifecycle.result;
-  if (result.publication.status === "published") {
-    // @ts-expect-error Only unconfirmed delivery carries a cause.
+  if (result.publication.status === "queued") {
+    // @ts-expect-error Queued results do not expose publisher errors.
     void result.publication.cause;
   }
 }

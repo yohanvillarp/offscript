@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createAgent } from "@mozaik-ai/core";
 import { createObservation, observationId, investigationId, requestInvestigation, updateSimulationAgent } from "../../domain/index.ts";
-import type { InvestigationAssignmentStore } from "../../application/index.ts";
+import type { InvestigationAssignmentCommitter } from "../../application/index.ts";
 import { parseSemanticEvent } from "../../contracts/index.ts";
 import type { SemanticEvent } from "../../contracts/index.ts";
 import { encodeEvent } from "../event-bridge.ts";
@@ -15,7 +15,7 @@ export function reactionContext(maxTurns = 3) {
   let simulation = updateSimulationAgent(fixture.simulation, fixture.beginner, { status: "running" });
   simulation = updateSimulationAgent(simulation, fixture.explorer, { status: "running" });
   const state = new ExplorationState(simulation);
-  const store: InvestigationAssignmentStore = sessionInvestigationStore(state);
+  const store: InvestigationAssignmentCommitter = sessionInvestigationStore(state);
   for (const source of simulation.agents) {
     const participant = createAgent({ name: source.profile.name, instruction: "Explore", capabilities: [], tools: [], handlers: [] });
     state.agents.set(source.id, participant);
@@ -24,9 +24,14 @@ export function reactionContext(maxTurns = 3) {
   }
   const published: SemanticEvent[] = [];
   const started: string[] = [];
-  const publish = { event(value: SemanticEvent) { published.push(value); } };
+  const commit = store.commitAssignment;
+  store.commitAssignment = async (event, revision) => {
+    const result = await commit(event, revision);
+    if (result === "saved") published.push(event);
+    return result;
+  };
   const handler = investigationReaction({ state, id: fixture.explorer, maxTurns, store,
-    publish: (event) => publish.event(event), startTurn(_id, message) {
+    startTurn(_id, message) {
       const turn = state.turns.get(fixture.explorer);
       assert.ok(turn);
       turn.turns++;
@@ -57,7 +62,7 @@ export function reactionContext(maxTurns = 3) {
     assert.ok(participant);
     handler.processor.apply({ event: value, participant });
   }
-  return { state, store, published, started, publish, event, apply, id: fixture.explorer };
+  return { state, store, published, started, event, apply, id: fixture.explorer };
 }
 
 export async function flush(state: ExplorationState): Promise<void> {

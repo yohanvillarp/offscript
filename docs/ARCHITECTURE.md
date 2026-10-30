@@ -94,29 +94,27 @@ Root `npm run typecheck:contracts` and `npm run test:contracts` validate this mo
 
 ## Implemented application foundation
 
-`packages/application/index.ts` exposes the request and assignment use cases through narrow context/storage/publication ports. `executeRequestInvestigation` resolves a running simulation, checks requester membership and active participation, resolves observation identities/simulation/authors, invokes the existing domain operation, validates the requested event, and saves before publication. Its dependencies point inward to domain and contracts; no infrastructure module is imported or implemented.
+`packages/application/index.ts` exposes request/assignment use cases and a pure outbox batch dispatcher through explicit context, atomic commit, storage, and publication ports. Use cases validate domain/context and commit each investigation snapshot with its pending semantic event. Results report `queued` or `already-recorded`; conflicts enqueue nothing. Context reads remain outside the commit transaction. Storage revisions do not enter domain/event schemas. See [APPLICATION.md](APPLICATION.md) and [ASSIGNMENTS.md](ASSIGNMENTS.md).
 
-The writer requires atomic create-if-absent by investigation ID. Publication failure returns the saved investigation/event with unconfirmed delivery; read/save failures raise application errors, and no automatic retry occurs. Context reads, saving, and publication are not one transaction. In-memory adapters support tests and the controlled Mozaik session. [APPLICATION.md](APPLICATION.md) documents port obligations, error semantics, concurrency/crash limitations, and deferred execution. The root check includes strict application typechecks and unit tests.
-
-Assignment loads a versioned investigation and active simulation/agents, invokes the domain operation, validates `investigation.assigned`, and uses atomic compare-and-set before publication. Storage revisions remain outside domain/event schemas. Conflicts do not publish or automatically retry. The runtime peer reaction reserves capacity and registers participation before admitting work. These operations do not authenticate callers, transact across simulation state, or provide durable event delivery. See [ASSIGNMENTS.md](ASSIGNMENTS.md).
+`packages/runtime` supplies the Node outbox scheduler with bounded retry timing, single-flight batches, publication timeouts, and start/stop. It depends inward on application ports and does not select concrete adapters. See [OUTBOX.md](OUTBOX.md) for guarantees and limits.
 
 ## Implemented Mozaik integration
 
-`packages/orchestration` owns the adapter to installed Mozaik 4.2.0, one real runtime per simulation, mapped participant identities, session-owned shared state, and controlled local tools. Domain and contracts do not import it. Its investigation tool invokes the application request case using session-memory adapters and a publisher backed by Mozaik `sendEvent`. Situation handlers can react to peer requests; no separate event bus or inference/tool loop is introduced.
+`packages/orchestration` owns the adapter to installed Mozaik 4.2.0, one real runtime per simulation, mapped participant identities, session-owned shared state, and controlled local tools. Domain and contracts do not import it. Its investigation tool invokes the application request case using memory by default or explicitly supplied storage. An outbox publisher resolves prepared sessions and dispatches through Mozaik `sendEvent`; unavailable sessions defer without starting agents. Situation handlers can react to peer requests; no separate event bus or inference/tool loop is introduced.
 
 The bridge preserves validated OFFSCRIPT envelopes inside a Mozaik event and checks producer/session consistency. Guarded callbacks, per-agent admission, inference budgets/deadlines, and late-result rejection cover controlled failure paths. Completion of a turn does not complete a simulation or confirm a finding. Cloud export is explicitly disabled in the entry point. Tests use the real runtime with deterministic inference and blocked network; optional live inference is available but unexecuted. See [MOZAIK-INTEGRATION.md](MOZAIK-INTEGRATION.md) for verified APIs, boundaries, limitations, and commands.
 
 ## Implemented SQLite persistence foundation
 
-`packages/persistence` implements the current simulation/observation read ports, explicit snapshot creation, investigation create-if-absent, and assignment compare-and-set using SQLite/Drizzle. Six tables preserve current domain state and ordered scoped relationships. Profiles and evidence-reference arrays use validated JSON; domain/contracts/application remain independent of row and ORM types.
+`packages/persistence` implements the current simulation/observation read ports, explicit snapshot creation, investigation create-if-absent, and assignment compare-and-set using SQLite/Drizzle. Six snapshot/relationship tables preserve current domain state; a seventh table stores pending investigation events. Profiles and evidence-reference arrays use validated JSON; domain/contracts/application remain independent of row and ORM types.
 
 Connections are project-scoped, use local WAL files, foreign keys, FULL synchronization, and bounded busy timeouts. Migrations are explicit and transactional, with checksummed version history and rejection of incompatible databases. Synchronous database calls and immediate write transactions are deliberately short; this does not provide multiple simultaneous writers or distributed storage.
 
-Tests exercise real files, independent connections, restart/reopen, rollback, relational scope, corruption rejection, and application-port compatibility. Mozaik/Studio are not wired to durable storage yet. Snapshot writes and publication remain separate: outbox/transaction boundaries, recovery, server composition, and Fastify HTTP are subsequent increments. See [PERSISTENCE.md](PERSISTENCE.md).
+Investigation commits atomically update snapshots/relationships and insert validated events. Reservations, fenced acknowledgements, bounded retries, and per-investigation dispatch ordering support recovery after dispatcher loss. Acceptance acknowledges dispatch rather than asynchronous processing; duplicate delivery remains possible. SQLite-backed Mozaik composition is verified with deterministic inference, without automatic participant restoration. Studio remains disconnected. Server composition, Fastify HTTP, and durable handler recovery are deferred. See [PERSISTENCE.md](PERSISTENCE.md) and [OUTBOX.md](OUTBOX.md).
 
 ## Proposed details and open questions
 
-Outside the implemented domain, contracts, request/assignment application cases, Mozaik adapter, and SQLite repositories described here, no further internal package tree, exported API, event catalog, table schema, or independent package manifest is finalized. Decide these incrementally when needed:
+Outside the implemented domain, contracts, request/assignment application cases, Mozaik adapter, SQLite repositories, and outbox scheduler described here, no further internal package tree, exported API, event catalog, table schema, or independent package manifest is finalized. Decide these incrementally when needed:
 
 - CLI entry point, configuration format, and runtime lifecycle.
 - Studio transport, process topology, and event delivery/replay behavior.
@@ -127,4 +125,4 @@ Outside the implemented domain, contracts, request/assignment application cases,
 
 ## Future capabilities
 
-Adapters for non-web software and broader collaboration are future possibilities. Do not implement them speculatively. Current implementation is limited to Studio, domain, contracts, request/assignment application cases, controlled Mozaik integration, and SQLite repositories described in PROJECT.md.
+Adapters for non-web software and broader collaboration are future possibilities. Do not implement them speculatively. Current implementation is limited to Studio, domain, contracts, request/assignment application cases, controlled Mozaik integration, SQLite repositories, and transactional investigation delivery described in PROJECT.md.

@@ -11,7 +11,7 @@ function code(expected: ApplicationErrorCode) {
   return (error: unknown) => error instanceof ApplicationError && error.code === expected;
 }
 
-test("saves initial assignment before publishing its validated event and storage revision", async () => {
+test("commits initial assignment with its validated queued event and storage revision", async () => {
   const context = assignmentContext();
   const result = await executeAssignInvestigation(assignmentCommand(), context.dependencies);
   assert.equal(result.revision, 1);
@@ -19,8 +19,8 @@ test("saves initial assignment before publishing its validated event and storage
   assert.equal(result.event.type, "investigation.assigned");
   assert.equal(result.event.correlationId, assignmentCommand().correlationId);
   assert.deepEqual(deserializeSemanticEvent(serializeSemanticEvent(result.event)), result.event);
-  assert.equal(result.publication.status, "published");
-  assert.deepEqual(context.calls, ["read-investigation", "read-simulation", "save", "publish"]);
+  assert.equal(result.publication.status, "queued");
+  assert.deepEqual(context.calls, ["read-investigation", "read-simulation", "save"]);
   assert.ok(Object.isFrozen(result));
   assert.ok(Object.isFrozen(result.investigation.lifecycle.agentIds));
   assert.equal(context.requested.lifecycle.status, "requested");

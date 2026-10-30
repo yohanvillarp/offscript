@@ -1,54 +1,39 @@
 # Investigation assignment application case
 
-## Scope
+## Sequence and invariants
 
-`executeAssignInvestigation` is exported from `packages/application/index.ts`. It connects the existing domain assignment operation to context resolution, optimistic concurrency, and publication. It does not choose specialists, assign a leader, execute an investigation, or confirm findings. Domain and event schemas remain unchanged.
+`executeAssignInvestigation` coordinates existing domain assignment, active context validation, and an atomic snapshot/event commit. It does not select specialists, appoint a leader, execute the investigation, or confirm a finding. Domain and event schemas are unchanged.
 
-The command supplies the investigation/simulation IDs, a nonempty list of new `agentIds`, an `origin`, `assignedAt`, `eventId`, and `correlationId`. Caller-owned lists and origin metadata are copied before asynchronous reads.
+The caller supplies investigation/simulation IDs, new `agentIds`, origin, `assignedAt`, event ID, and correlation ID. Mutable input lists/origin are copied before reads.
 
-## Validation and sequence
+1. Load a matching investigation and safe, nonnegative, incrementable storage revision.
+2. Load a matching running simulation. Require every proposed collaborator and any agent origin to be an active member. The assigning origin need not be an assignee.
+3. Invoke domain `assignInvestigation`; reject empty/duplicate additions, terminal investigations, and backwards time while preserving existing collaborators.
+4. Validate `investigation.assigned` with supplied metadata.
+5. Call `InvestigationAssignmentCommitter.commitAssignment(event, expectedRevision)` to save the additive assignment and its pending event together.
 
-1. Load the investigation and its storage revision. Require matching investigation/simulation identities and a usable nonnegative safe-integer revision.
-2. Load the simulation; require matching identity and `running` lifecycle.
-3. Require every proposed collaborator to belong to that simulation and have `running` participation. For an agent origin, require that assigning actor to be an active member too; it need not be a new assignee.
-4. Invoke domain `assignInvestigation`, preserving its empty/duplicate-agent, terminal-state, and timestamp validation. Existing collaborators are retained.
-5. Construct and validate `investigation.assigned` using the existing version-1 contract and supplied correlation metadata.
-6. Save through atomic compare-and-set, then publish only after that save succeeds.
+System origin is trusted composition metadata, not authentication. Future external entry points must enforce authorization before invoking this operation.
 
-An active actor identity is a consistency condition, not proof of authentication or authorization. System origins are accepted as trusted composition metadata. Future external entry points must authenticate callers and authorize operations before invoking this case. The Mozaik reaction binds actor and assignee to the mapped participant, never to model arguments.
+## Revision, failures, and result
 
-## Revision and concurrency boundary
+`VersionedInvestigation` contains `{ investigation, revision }`; revisions are storage metadata outside domain/event schemas. Requests begin at 0. A successful assignment increments by one. Every future writer must honor the same comparison discipline.
 
-`VersionedInvestigation` contains `{ investigation, revision }`. The revision is storage metadata, not a domain field or event schema change. The session-memory adapter creates requested records at revision `0`.
+A missing record raises `INVESTIGATION_NOT_FOUND`; a competing revision raises `INVESTIGATION_CONFLICT` and enqueues nothing. The caller can deliberately reload and reconsider adding the losing collaborator. There is no automatic conflict retry. SQLite also validates that the new snapshot exactly matches the domain additive transition.
 
-`InvestigationAssignmentStore.findInvestigation(id)` returns the immutable domain snapshot and revision. `saveAssignment(assignedSnapshot, expectedRevision)` must atomically:
+Read failures become `READ_FAILED`; commit failures become `SAVE_FAILED`, retaining causes and allowing for a lost commit acknowledgement. Invalid domain/contracts data retains existing errors. Reused event IDs with different content raise `EVENT_ID_CONFLICT`.
 
-- Check that the record still exists and its revision equals `expectedRevision`.
-- Replace the snapshot without changing identity/simulation and increment the revision by one.
-- Return `saved`, `conflict`, or `not-found`.
+Results contain the assigned snapshot, incremented revision, exact event, and `queued` or `already-recorded` publication status. Reexecuting an already-applied assignment is not a delivery-recovery mechanism: domain validation rejects already-assigned collaborators. Retry stored events through the outbox instead. Context reads and permission changes are not part of the snapshot/event transaction. See [OUTBOX.md](OUTBOX.md).
 
-A conflict raises `INVESTIGATION_CONFLICT`, without a write or publication by the losing operation. It is not retried automatically. A caller may deliberately reload and reconsider the assignment; doing so can append the losing collaborator without discarding the winner. Every future writer, including completion, must use the same revision discipline. Otherwise optimistic concurrency cannot protect it.
+## Mozaik reaction
 
-This protects the investigation record only. Simulation/agent reads, snapshot saving, and event publication are not a single transaction; lifecycle or permissions could change after validation. Cross-resource transaction policy, durable publication, and concurrent event ordering remain unresolved.
+The peer handler reserves turn capacity and records its assignment before admitting work. Multiple peers may collaborate without an exclusive leader. The session uses memory by default or explicitly supplied storage; it never reconstructs agents merely because persisted events exist.
 
-## Failure and result semantics
+Reaction keys prevent overlapping work. A pre-commit failure releases the key so deliberate redelivery may retry; no automatic use-case retry is scheduled. Existing stored participation suppresses duplicate work, including after a lost commit acknowledgement. This intentionally does not resume interrupted investigations. Closing admission suppresses new turns even after a successful commit. Each callback releases only its own reservation.
 
-Missing records, inconsistent references, invalid/exhausted revisions, inactive simulations, and missing/inactive agents raise specific `ApplicationError` codes. Adapter read failures become `READ_FAILED` with their cause. Domain/contract validation errors retain their existing types and occur before saving.
-
-A save rejection becomes `SAVE_FAILED` and suppresses publication, but its commit outcome may be unknown. `not-found` becomes `INVESTIGATION_NOT_FOUND`. No rollback or automatic retry is attempted.
-
-A successful save returns the assigned snapshot and incremented revision. If publication resolves, the result says `published`, acknowledging the publisher operation only. If it rejects, the result still contains the saved snapshot, revision, and exact event with `unconfirmed` publication and the cause. Downstream delivery may already have happened. Reexecuting a saved assignment is not an event-recovery mechanism: domain duplicate checks will reject already-assigned agents.
-
-## Mozaik integration
-
-The configured peer reaction to `investigation.requested` now reserves turn capacity, invokes the application case to register itself, and only then queues or starts its contribution. This is the current minimal integration policy, not an intelligent scheduler or an assignment tool exposed to the model. Multiple active peers may participate; no leader is imposed.
-
-The session-memory store owns immutable versioned records in `ExplorationState`. Its compare/check/replace sequence contains no `await`, making that operation atomic within this single process. It is not a distributed database guarantee. Assignment events preserve the request's correlation ID and use the peer's mapped identity as origin.
-
-Rejected assignments and conflicts record a diagnostic and start no turn. Reactions remain deduplicated by peer/investigation; a failed attempt is not retried by replay. Competing peer assignments can therefore leave one peer unassigned until an explicit future recovery decision. If saving succeeds but publication is unconfirmed, the recorded participant can still proceed; if the session closes, it does not admit new work even when assignment has already been saved. Each callback releases only its own capacity reservation.
+Event dispatch and asynchronous reactions are separate acknowledgements. Starting a recorded contribution need not wait for its assignment event to be dispatched. Outbox ordering preserves request-before-assignment dispatch for that investigation, not ordering against directly published observations or handler completion.
 
 ## Verification and deferred work
 
-Application tests cover initial/additional assignments, context validation, terminal investigations, duplicate references, read/save/publication failures, CAS conflicts, deliberate reload, immutable inputs, and type discrimination. Runtime tests verify assignment before work, capacity checks, failed-assignment suppression, deduplication, correlation, closing sessions, independent reservations, and the real session-memory CAS behavior. Existing module commands and `npm run check` include these tests.
+Application and orchestration tests cover context validation, additive updates, optimistic concurrency, immutable inputs, queueing before work, capacity, replay, failed commits, lost acknowledgements, and closure. SQLite tests cover transactional rollback and durable event delivery. All relevant commands are included in root checks.
 
-Completion/result application cases, smart collaborator selection, automatic conflict retries, authorization policies, Playwright, and UI changes remain outside this milestone. A later SQLite adapter now implements the same revision contract; see [PERSISTENCE.md](PERSISTENCE.md).
+Completion/result application cases, intelligent scheduling, automatic recovery, general authorization policies, Playwright, and UI changes remain deferred.

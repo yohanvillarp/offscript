@@ -3,12 +3,14 @@ import type { Agent } from "@mozaik-ai/core";
 import type { AgentId, InvestigationId, Observation, ObservationId, Simulation } from "../domain/index.ts";
 import type { VersionedInvestigation } from "../application/index.ts";
 import type { SemanticEvent } from "../contracts/index.ts";
+import { createMemoryOutbox } from "./memory-outbox.ts";
 
 export type ToolName = "inspect_application" | "record_observation" | "request_investigation";
 export type RuntimeFailure = Readonly<{ stage: string; agentId: AgentId | undefined; cause: unknown }>;
 export type TurnState = { busy: boolean; turns: number; inferenceCalls: number; pending: string[]; reservations: number };
 
 export class ExplorationState extends RuntimeState {
+  readonly outbox = createMemoryOutbox();
   readonly observations = new Map<ObservationId, Observation>();
   readonly investigations = new Map<InvestigationId, VersionedInvestigation>();
   readonly events: SemanticEvent[] = [];
@@ -19,6 +21,7 @@ export class ExplorationState extends RuntimeState {
   readonly permissions = new Map<AgentId, ReadonlySet<ToolName>>();
   readonly reactions = new Set<string>();
   readonly seenEvents = new Set<string>();
+  readonly dispatchedEvents = new Map<string, string>();
   closed = false;
   pendingCallbacks = 0;
   systemId = "";

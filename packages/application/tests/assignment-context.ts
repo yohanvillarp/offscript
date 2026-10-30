@@ -27,16 +27,19 @@ export function assignmentContext() {
     simulations: { async findSimulation(id) { calls.push("read-simulation"); return simulations.get(id); } },
     investigations: {
       async findInvestigation(id) { calls.push("read-investigation"); return records.get(id); },
-      async saveAssignment(investigation, revision) {
+      async commitAssignment(event, revision) {
+        const investigation = event.payload.investigation;
+        const prior = events.find(item => item.eventId === event.eventId);
+        if (prior) return JSON.stringify(prior) === JSON.stringify(event) ? "duplicate" : "event-conflict";
         calls.push("save");
         const current = records.get(investigation.id);
         if (!current) return "not-found";
         if (current.revision !== revision) return "conflict";
+        events.push(event);
         records.set(investigation.id, Object.freeze({ investigation, revision: revision + 1 }));
         return "saved";
       },
     },
-    events: { async publishInvestigationAssigned(event) { calls.push("publish"); events.push(event); } },
   };
   return { requested, simulations, records, events, calls, dependencies };
 }

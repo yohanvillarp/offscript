@@ -12,16 +12,16 @@ function code(expected: ApplicationErrorCode) {
   return (error: unknown) => error instanceof ApplicationError && error.code === expected;
 }
 
-test("resolves context, saves a request, then publishes its validated semantic event", async () => {
+test("resolves context and commits a request with its validated queued event", async () => {
   const context = memoryContext();
   const result = await executeRequestInvestigation(command(), context.dependencies);
   assert.equal(result.investigation.requestedBy, agentId("explorer"));
   assert.deepEqual(result.investigation.observationIds, [observationId("observation-1")]);
   assert.equal(result.investigation.lifecycle.status, "requested");
-  assert.equal(result.publication.status, "published");
-  assert.equal(context.investigations.get(command().investigationId), result.investigation);
+  assert.equal(result.publication.status, "queued");
+  assert.deepEqual(context.investigations.get(command().investigationId), result.investigation);
   assert.equal(context.events.length, 1);
-  assert.deepEqual(context.calls, ["read-simulation", "read-observation", "save", "publish"]);
+  assert.deepEqual(context.calls, ["read-simulation", "read-observation", "save"]);
   assert.equal(result.event.correlationId, command().correlationId);
   assert.deepEqual(deserializeSemanticEvent(serializeSemanticEvent(result.event)), result.event);
   assert.ok(Object.isFrozen(result));

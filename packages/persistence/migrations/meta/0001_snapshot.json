@@ -1,0 +1,812 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "e31bb657-4223-4cf1-b0cc-4f36c0862aac",
+  "prevId": "82cfa942-ab13-41e4-85e6-9a98dbf84c0e",
+  "tables": {
+    "agents": {
+      "name": "agents",
+      "columns": {
+        "simulation_id": {
+          "name": "simulation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "profile": {
+          "name": "profile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "agent_position": {
+          "name": "agent_position",
+          "columns": [
+            "simulation_id",
+            "position"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "agents_simulation_id_simulations_id_fk": {
+          "name": "agents_simulation_id_simulations_id_fk",
+          "tableFrom": "agents",
+          "tableTo": "simulations",
+          "columnsFrom": [
+            "simulation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "agents_simulation_id_id_pk": {
+          "columns": [
+            "simulation_id",
+            "id"
+          ],
+          "name": "agents_simulation_id_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "agent_nonnegative_position": {
+          "name": "agent_nonnegative_position",
+          "value": "\"agents\".\"position\" >= 0"
+        },
+        "agent_profile_json": {
+          "name": "agent_profile_json",
+          "value": "json_valid(\"agents\".\"profile\")"
+        },
+        "agent_status": {
+          "name": "agent_status",
+          "value": "\"agents\".\"status\" in ('ready','running','completed','failed','cancelled')"
+        },
+        "agent_reason": {
+          "name": "agent_reason",
+          "value": "(\"agents\".\"status\" = 'failed' and \"agents\".\"reason\" is not null and length(trim(\"agents\".\"reason\")) > 0) or (\"agents\".\"status\" != 'failed' and \"agents\".\"reason\" is null)"
+        }
+      }
+    },
+    "investigation_agents": {
+      "name": "investigation_agents",
+      "columns": {
+        "investigation_id": {
+          "name": "investigation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "simulation_id": {
+          "name": "simulation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "agent_id": {
+          "name": "agent_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "investigation_agent_position": {
+          "name": "investigation_agent_position",
+          "columns": [
+            "investigation_id",
+            "position"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "investigation_agents_investigation_id_simulation_id_investigations_id_simulation_id_fk": {
+          "name": "investigation_agents_investigation_id_simulation_id_investigations_id_simulation_id_fk",
+          "tableFrom": "investigation_agents",
+          "tableTo": "investigations",
+          "columnsFrom": [
+            "investigation_id",
+            "simulation_id"
+          ],
+          "columnsTo": [
+            "id",
+            "simulation_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "investigation_agents_simulation_id_agent_id_agents_simulation_id_id_fk": {
+          "name": "investigation_agents_simulation_id_agent_id_agents_simulation_id_id_fk",
+          "tableFrom": "investigation_agents",
+          "tableTo": "agents",
+          "columnsFrom": [
+            "simulation_id",
+            "agent_id"
+          ],
+          "columnsTo": [
+            "simulation_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "investigation_agents_investigation_id_agent_id_pk": {
+          "columns": [
+            "investigation_id",
+            "agent_id"
+          ],
+          "name": "investigation_agents_investigation_id_agent_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "investigation_agent_nonnegative_position": {
+          "name": "investigation_agent_nonnegative_position",
+          "value": "\"investigation_agents\".\"position\" >= 0"
+        }
+      }
+    },
+    "investigation_observations": {
+      "name": "investigation_observations",
+      "columns": {
+        "investigation_id": {
+          "name": "investigation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "simulation_id": {
+          "name": "simulation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "observation_id": {
+          "name": "observation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "investigation_observation_position": {
+          "name": "investigation_observation_position",
+          "columns": [
+            "investigation_id",
+            "position"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "investigation_observations_investigation_id_simulation_id_investigations_id_simulation_id_fk": {
+          "name": "investigation_observations_investigation_id_simulation_id_investigations_id_simulation_id_fk",
+          "tableFrom": "investigation_observations",
+          "tableTo": "investigations",
+          "columnsFrom": [
+            "investigation_id",
+            "simulation_id"
+          ],
+          "columnsTo": [
+            "id",
+            "simulation_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "investigation_observations_observation_id_simulation_id_observations_id_simulation_id_fk": {
+          "name": "investigation_observations_observation_id_simulation_id_observations_id_simulation_id_fk",
+          "tableFrom": "investigation_observations",
+          "tableTo": "observations",
+          "columnsFrom": [
+            "observation_id",
+            "simulation_id"
+          ],
+          "columnsTo": [
+            "id",
+            "simulation_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "investigation_observations_investigation_id_observation_id_pk": {
+          "columns": [
+            "investigation_id",
+            "observation_id"
+          ],
+          "name": "investigation_observations_investigation_id_observation_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "investigation_observation_nonnegative_position": {
+          "name": "investigation_observation_nonnegative_position",
+          "value": "\"investigation_observations\".\"position\" >= 0"
+        }
+      }
+    },
+    "investigations": {
+      "name": "investigations",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "simulation_id": {
+          "name": "simulation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "requested_by": {
+          "name": "requested_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "hypothesis": {
+          "name": "hypothesis",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "requested_at": {
+          "name": "requested_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "assigned_at": {
+          "name": "assigned_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "completed_by": {
+          "name": "completed_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "result": {
+          "name": "result",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "revision": {
+          "name": "revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "investigation_simulation_status": {
+          "name": "investigation_simulation_status",
+          "columns": [
+            "simulation_id",
+            "status",
+            "requested_at",
+            "id"
+          ],
+          "isUnique": false
+        },
+        "investigation_scope": {
+          "name": "investigation_scope",
+          "columns": [
+            "id",
+            "simulation_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "investigations_simulation_id_simulations_id_fk": {
+          "name": "investigations_simulation_id_simulations_id_fk",
+          "tableFrom": "investigations",
+          "tableTo": "simulations",
+          "columnsFrom": [
+            "simulation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "investigations_simulation_id_requested_by_agents_simulation_id_id_fk": {
+          "name": "investigations_simulation_id_requested_by_agents_simulation_id_id_fk",
+          "tableFrom": "investigations",
+          "tableTo": "agents",
+          "columnsFrom": [
+            "simulation_id",
+            "requested_by"
+          ],
+          "columnsTo": [
+            "simulation_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "investigations_simulation_id_completed_by_agents_simulation_id_id_fk": {
+          "name": "investigations_simulation_id_completed_by_agents_simulation_id_id_fk",
+          "tableFrom": "investigations",
+          "tableTo": "agents",
+          "columnsFrom": [
+            "simulation_id",
+            "completed_by"
+          ],
+          "columnsTo": [
+            "simulation_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "investigation_revision": {
+          "name": "investigation_revision",
+          "value": "\"investigations\".\"revision\" >= 0 and \"investigations\".\"revision\" <= 9007199254740991"
+        },
+        "investigation_state": {
+          "name": "investigation_state",
+          "value": "(\n    (\"investigations\".\"status\" = 'requested' and \"investigations\".\"assigned_at\" is null and \"investigations\".\"completed_at\" is null and \"investigations\".\"completed_by\" is null and \"investigations\".\"result\" is null)\n    or (\"investigations\".\"status\" = 'assigned' and \"investigations\".\"assigned_at\" is not null and \"investigations\".\"completed_at\" is null and \"investigations\".\"completed_by\" is null and \"investigations\".\"result\" is null)\n    or (\"investigations\".\"status\" = 'completed' and \"investigations\".\"assigned_at\" is not null and \"investigations\".\"completed_at\" is not null and \"investigations\".\"completed_by\" is not null and \"investigations\".\"result\" is not null)\n  )"
+        },
+        "investigation_result_json": {
+          "name": "investigation_result_json",
+          "value": "\"investigations\".\"result\" is null or json_valid(\"investigations\".\"result\")"
+        }
+      }
+    },
+    "observations": {
+      "name": "observations",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "simulation_id": {
+          "name": "simulation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "agent_id": {
+          "name": "agent_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "observed_at": {
+          "name": "observed_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "location": {
+          "name": "location",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "evidence_ids": {
+          "name": "evidence_ids",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "observation_simulation_time": {
+          "name": "observation_simulation_time",
+          "columns": [
+            "simulation_id",
+            "observed_at",
+            "id"
+          ],
+          "isUnique": false
+        },
+        "observation_scope": {
+          "name": "observation_scope",
+          "columns": [
+            "id",
+            "simulation_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "observations_simulation_id_simulations_id_fk": {
+          "name": "observations_simulation_id_simulations_id_fk",
+          "tableFrom": "observations",
+          "tableTo": "simulations",
+          "columnsFrom": [
+            "simulation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "observations_simulation_id_agent_id_agents_simulation_id_id_fk": {
+          "name": "observations_simulation_id_agent_id_agents_simulation_id_id_fk",
+          "tableFrom": "observations",
+          "tableTo": "agents",
+          "columnsFrom": [
+            "simulation_id",
+            "agent_id"
+          ],
+          "columnsTo": [
+            "simulation_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "observation_evidence_json": {
+          "name": "observation_evidence_json",
+          "value": "json_valid(\"observations\".\"evidence_ids\")"
+        }
+      }
+    },
+    "event_outbox": {
+      "name": "event_outbox",
+      "columns": {
+        "sequence": {
+          "name": "sequence",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "simulation_id": {
+          "name": "simulation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "investigation_id": {
+          "name": "investigation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revision": {
+          "name": "revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "event_json": {
+          "name": "event_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'pending'"
+        },
+        "attempts": {
+          "name": "attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "available_at": {
+          "name": "available_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "lease_token": {
+          "name": "lease_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lease_until": {
+          "name": "lease_until",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "accepted_at": {
+          "name": "accepted_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "last_error": {
+          "name": "last_error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "event_outbox_event_id_unique": {
+          "name": "event_outbox_event_id_unique",
+          "columns": [
+            "event_id"
+          ],
+          "isUnique": true
+        },
+        "outbox_ready": {
+          "name": "outbox_ready",
+          "columns": [
+            "status",
+            "available_at",
+            "sequence"
+          ],
+          "isUnique": false
+        },
+        "outbox_aggregate_order": {
+          "name": "outbox_aggregate_order",
+          "columns": [
+            "investigation_id",
+            "sequence",
+            "status"
+          ],
+          "isUnique": false
+        },
+        "outbox_investigation_revision": {
+          "name": "outbox_investigation_revision",
+          "columns": [
+            "investigation_id",
+            "revision"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "event_outbox_investigation_id_simulation_id_investigations_id_simulation_id_fk": {
+          "name": "event_outbox_investigation_id_simulation_id_investigations_id_simulation_id_fk",
+          "tableFrom": "event_outbox",
+          "tableTo": "investigations",
+          "columnsFrom": [
+            "investigation_id",
+            "simulation_id"
+          ],
+          "columnsTo": [
+            "id",
+            "simulation_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "outbox_json": {
+          "name": "outbox_json",
+          "value": "json_valid(\"event_outbox\".\"event_json\")"
+        },
+        "outbox_numbers": {
+          "name": "outbox_numbers",
+          "value": "\"event_outbox\".\"revision\" >= 0 and \"event_outbox\".\"attempts\" >= 0 and \"event_outbox\".\"available_at\" >= 0"
+        },
+        "outbox_status": {
+          "name": "outbox_status",
+          "value": "\"event_outbox\".\"status\" in ('pending','leased','accepted','failed')"
+        },
+        "outbox_lease": {
+          "name": "outbox_lease",
+          "value": "(\"event_outbox\".\"status\" = 'leased' and \"event_outbox\".\"lease_token\" is not null and \"event_outbox\".\"lease_until\" is not null) or (\"event_outbox\".\"status\" != 'leased' and \"event_outbox\".\"lease_token\" is null and \"event_outbox\".\"lease_until\" is null)"
+        },
+        "outbox_acceptance": {
+          "name": "outbox_acceptance",
+          "value": "(\"event_outbox\".\"status\" = 'accepted' and \"event_outbox\".\"accepted_at\" is not null) or (\"event_outbox\".\"status\" != 'accepted' and \"event_outbox\".\"accepted_at\" is null)"
+        }
+      }
+    },
+    "simulations": {
+      "name": "simulations",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "environment": {
+          "name": "environment",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "deployment": {
+          "name": "deployment",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "simulation_environment": {
+          "name": "simulation_environment",
+          "value": "\"simulations\".\"environment\" = 'web'"
+        },
+        "simulation_deployment": {
+          "name": "simulation_deployment",
+          "value": "\"simulations\".\"deployment\" in ('local','development','test','staging','production')"
+        },
+        "simulation_status": {
+          "name": "simulation_status",
+          "value": "\"simulations\".\"status\" in ('created','running','completed','failed','cancelled')"
+        },
+        "simulation_reason": {
+          "name": "simulation_reason",
+          "value": "(\"simulations\".\"status\" = 'failed' and \"simulations\".\"reason\" is not null and length(trim(\"simulations\".\"reason\")) > 0) or (\"simulations\".\"status\" != 'failed' and \"simulations\".\"reason\" is null)"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

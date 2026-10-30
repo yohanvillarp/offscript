@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { agentId, assignInvestigation, observationId } from "../../domain/index.ts";
 import { ApplicationError, executeAssignInvestigation, executeRequestInvestigation } from "../../application/index.ts";
-import type { AssignInvestigationCommand, InvestigationAssignedEvent } from "../../application/index.ts";
+import type { AssignInvestigationCommand } from "../../application/index.ts";
 import { fixture, seed, sqliteCode, storage } from "./fixtures.ts";
 
 test("application requests and assignments execute against the actual SQLite ports", async (t) => {
@@ -13,12 +13,12 @@ test("application requests and assignments execute against the actual SQLite por
     investigationId: source.investigation.id, simulationId: source.simulation.id, requestedBy: agentId("explorer"),
     observationIds: [source.observation.id], hypothesis: source.investigation.hypothesis,
     requestedAt: source.investigation.requestedAt, eventId: "request-1", correlationId: "shared-correlation",
-  }, { simulations: db.simulations, observations: db.observations, investigations: db.investigations, events: { async publishInvestigationRequested() {} } });
-  assert.equal(requested.publication.status, "published");
+  }, { simulations: db.simulations, observations: db.observations, investigations: db.investigations });
+  assert.equal(requested.publication.status, "queued");
   const assigned = await executeAssignInvestigation({
     investigationId: requested.investigation.id, simulationId: source.simulation.id, agentIds: [agentId("beginner")],
     origin: { kind: "agent", agentId: agentId("beginner") }, assignedAt: "2026-10-30T12:01:00.000Z", eventId: "assignment-1", correlationId: "shared-correlation",
-  }, { simulations: db.simulations, investigations: db.investigations, events: { async publishInvestigationAssigned() {} } });
+  }, { simulations: db.simulations, investigations: db.investigations });
   assert.equal(assigned.revision, 1);
   assert.deepEqual(await db.investigations.findInvestigation(source.investigation.id), { investigation: assigned.investigation, revision: 1 });
 });
@@ -26,18 +26,17 @@ test("application requests and assignments execute against the actual SQLite por
 test("independent connections enforce CAS and a deliberate reload retains both collaborators", async (t) => {
   const temp = storage(t); const first = temp.open(); first.migrate(); const source = await seed(first);
   const second = temp.open(); second.migrate();
-  const events: InvestigationAssignedEvent[] = [];
   const commands: AssignInvestigationCommand[] = ["beginner", "explorer"].map((name) => ({
     investigationId: source.investigation.id, simulationId: source.simulation.id, agentIds: [agentId(name)],
     origin: { kind: "system" }, assignedAt: "2026-10-30T12:01:00.000Z", eventId: `assigned-${name}`, correlationId: "correlation",
   }));
-  const ports = [first, second].map((db) => ({ simulations: db.simulations, investigations: db.investigations, events: { async publishInvestigationAssigned(event: InvestigationAssignedEvent) { events.push(event); } } }));
+  const ports = [first, second].map((db) => ({ simulations: db.simulations, investigations: db.investigations }));
   const outcomes = await Promise.allSettled(commands.map((command, index) => executeAssignInvestigation(command, ports[index]!)));
   assert.equal(outcomes.filter((outcome) => outcome.status === "fulfilled").length, 1);
   const loser = outcomes.findIndex((outcome) => outcome.status === "rejected");
   const rejection = outcomes[loser];
   assert.ok(rejection?.status === "rejected" && rejection.reason instanceof ApplicationError && rejection.reason.code === "INVESTIGATION_CONFLICT");
-  assert.equal(events.length, 1);
+  assert.equal((await first.outbox.inspect(commands[1 - loser]!.eventId))?.status, "pending");
   const command = commands[loser]; assert.ok(command);
   const result = await executeAssignInvestigation(command, ports[loser]!);
   assert.equal(result.revision, 2);

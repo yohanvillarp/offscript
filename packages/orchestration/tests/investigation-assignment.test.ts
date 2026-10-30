@@ -4,25 +4,18 @@ import { ApplicationError } from "../../application/index.ts";
 import { assignInvestigation, completeInvestigation } from "../../domain/index.ts";
 import { flush, reactionContext } from "./assignment-reaction-context.ts";
 
-test("handler saves participation and publishes assignment before admitting the reactive turn", async () => {
+test("handler commits participation and queues assignment before admitting a reactive turn", async () => {
   const context = reactionContext();
   const event = context.event();
-  let checked = false;
-  context.publish.event = (assigned) => {
-    const stored = [...context.state.investigations.values()][0];
-    assert.equal(stored?.investigation.lifecycle.status, "assigned");
-    assert.equal(context.started.length, 0);
-    assert.equal(assigned.correlationId, "original-correlation");
-    assert.deepEqual(assigned.origin, { kind: "agent", agentId: context.id });
-    checked = true;
-    context.published.push(assigned);
-  };
   context.apply(event);
   context.apply(event);
   await flush(context.state);
-  assert.ok(checked);
   assert.equal(context.started.length, 1);
   assert.equal(context.published.length, 1);
+  const assigned = context.published[0];
+  assert.ok(assigned);
+  assert.equal(assigned.correlationId, "original-correlation");
+  assert.equal((await context.state.outbox.store.inspect(assigned.eventId))?.status, "pending");
   assert.equal(context.state.turns.get(context.id)?.reservations, 0);
   assert.equal(context.state.failures.length, 0);
 });
@@ -51,7 +44,7 @@ for (const outcome of ["conflict", "not-found", "throw"] as const) {
   test(`assignment ${outcome} never starts a turn or queues work and is not retried`, async () => {
     const context = reactionContext();
     let attempts = 0;
-    context.store.saveAssignment = async () => {
+    context.store.commitAssignment = async () => {
       attempts++;
       if (outcome === "throw") throw new Error("Save failed");
       return outcome;
@@ -88,20 +81,39 @@ test("completed investigations cannot start work, and fabricated requests cannot
   assert.ok(error instanceof ApplicationError && error.code === "INVESTIGATION_NOT_FOUND");
 });
 
-test("unconfirmed publication may start work after the assignment was saved", async () => {
+test("replayed delivery can retry a pre-commit failure", async () => {
   const context = reactionContext();
-  context.publish.event = () => { throw new Error("Publication uncertain"); };
-  context.apply(context.event());
+  const commit = context.store.commitAssignment;
+  const event = context.event();
+  context.store.commitAssignment = async () => { throw new Error("Unavailable"); };
+  context.apply(event);
+  await flush(context.state);
+  assert.equal(context.started.length, 0);
+  context.store.commitAssignment = commit;
+  context.apply(event);
   await flush(context.state);
   assert.equal(context.started.length, 1);
   assert.equal([...context.state.investigations.values()][0]?.revision, 1);
-  assert.equal(context.state.failures[0]?.stage, "assignment-publication");
+});
+
+test("a lost commit acknowledgement cannot start duplicate work on replay", async () => {
+  const context = reactionContext();
+  const commit = context.store.commitAssignment;
+  const event = context.event();
+  context.store.commitAssignment = async (...args) => { await commit(...args); throw new Error("Lost acknowledgement"); };
+  context.apply(event);
+  await flush(context.state);
+  context.store.commitAssignment = commit;
+  context.apply(event);
+  await flush(context.state);
+  assert.equal(context.started.length, 0);
+  assert.equal([...context.state.investigations.values()][0]?.revision, 1);
 });
 
 test("closing during assignment prevents new work even when the save already succeeded", async () => {
   const context = reactionContext();
-  const save = context.store.saveAssignment;
-  context.store.saveAssignment = async (...args) => {
+  const save = context.store.commitAssignment;
+  context.store.commitAssignment = async (...args) => {
     const result = await save(...args);
     context.state.closed = true;
     return result;
