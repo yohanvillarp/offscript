@@ -5,3 +5,7 @@ export { toAgentSummary, toSimulationSummary } from "./mappers.ts";
 export type { EventOrigin, EventMetadata, LifecyclePayloads, LifecycleEventType, LifecycleEvent } from "./events.ts";
 export { parseLifecycleEvent } from "./event-validation.ts";
 export { createLifecycleEvent, serializeLifecycleEvent, deserializeLifecycleEvent } from "./serialization.ts";
+export type { ObservationSummary } from "./observation-summary.ts";
+export { parseObservationSummary } from "./observation-summary.ts";
+export type { ObservationCreatedEvent, SemanticEvent, SemanticEventType } from "./semantic-events.ts";
+export { parseSemanticEvent, createSemanticEvent, serializeSemanticEvent, deserializeSemanticEvent } from "./semantic-events.ts";
