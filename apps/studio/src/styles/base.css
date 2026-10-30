@@ -1,0 +1,17 @@
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    letter-spacing: var(--tracking-interface);
+    background: var(--canvas);
+    color: var(--foreground);
+  }
+
+  body { min-height: 100vh; }
+  code, kbd, samp, pre { font-family: var(--font-mono); letter-spacing: var(--tracking-technical); }
+  ::selection { background: var(--selection); color: var(--foreground); }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  input, textarea, select, button { font: inherit; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+  }
+}

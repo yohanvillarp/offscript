@@ -1,0 +1,172 @@
+/* Runtime roles are separate from Tailwind's generated utility names. */
+:root {
+  color-scheme: light;
+  --canvas: #F6F6F3;
+  --surface: #FFFFFF;
+  --surface-subtle: #EEEFEA;
+  --surface-hover: #E8EAE4;
+  --foreground: #222724;
+  --muted: #68716B;
+  --faint: #878E87;
+  --accent: #237763;
+  --accent-hover: #195B4B;
+  --accent-subtle: #E1EFE9;
+  --accent-foreground: #FFFFFF;
+  --separator: #DADDD6;
+  --success: #237763;
+  --warning: #B46C34;
+  --danger: #BE514C;
+  --info: #526F9C;
+  --focus: #195B4B;
+  --disabled: #68716B;
+  --disabled-surface: #EEEFEA;
+  --selection: #C4E1D5;
+  --faint-text: #68716B;
+  --warning-text: #864718;
+  --danger-text: #A33D39;
+}
+
+:root {
+  --dark-canvas: #171B19;
+  --dark-surface: #202522;
+  --dark-surface-subtle: #292F2B;
+  --dark-surface-hover: #343C36;
+  --dark-foreground: #ECEEE9;
+  --dark-muted: #A3ADA5;
+  --dark-faint: #88948B;
+  --dark-accent: #78C8AD;
+  --dark-accent-hover: #9DDFC8;
+  --dark-accent-subtle: #263F36;
+  --dark-accent-foreground: #13231D;
+  --dark-separator: #363E38;
+  --dark-success: #78C8AD;
+  --dark-warning: #E5AA72;
+  --dark-danger: #EC8983;
+  --dark-info: #91B0E0;
+  --dark-focus: #9DDFC8;
+  --dark-disabled: #A3ADA5;
+  --dark-disabled-surface: #292F2B;
+  --dark-selection: #365F50;
+  --dark-faint-text: #A3ADA5;
+  --dark-warning-text: #E5AA72;
+  --dark-danger-text: #EC8983;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --canvas: var(--dark-canvas);
+    --surface: var(--dark-surface);
+    --surface-subtle: var(--dark-surface-subtle);
+    --surface-hover: var(--dark-surface-hover);
+    --foreground: var(--dark-foreground);
+    --muted: var(--dark-muted);
+    --faint: var(--dark-faint);
+    --accent: var(--dark-accent);
+    --accent-hover: var(--dark-accent-hover);
+    --accent-subtle: var(--dark-accent-subtle);
+    --accent-foreground: var(--dark-accent-foreground);
+    --separator: var(--dark-separator);
+    --success: var(--dark-success);
+    --warning: var(--dark-warning);
+    --danger: var(--dark-danger);
+    --info: var(--dark-info);
+    --focus: var(--dark-focus);
+    --disabled: var(--dark-disabled);
+    --disabled-surface: var(--dark-disabled-surface);
+    --selection: var(--dark-selection);
+    --faint-text: var(--dark-faint-text);
+    --warning-text: var(--dark-warning-text);
+    --danger-text: var(--dark-danger-text);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+    --canvas: var(--dark-canvas);
+    --surface: var(--dark-surface);
+    --surface-subtle: var(--dark-surface-subtle);
+    --surface-hover: var(--dark-surface-hover);
+    --foreground: var(--dark-foreground);
+    --muted: var(--dark-muted);
+    --faint: var(--dark-faint);
+    --accent: var(--dark-accent);
+    --accent-hover: var(--dark-accent-hover);
+    --accent-subtle: var(--dark-accent-subtle);
+    --accent-foreground: var(--dark-accent-foreground);
+    --separator: var(--dark-separator);
+    --success: var(--dark-success);
+    --warning: var(--dark-warning);
+    --danger: var(--dark-danger);
+    --info: var(--dark-info);
+    --focus: var(--dark-focus);
+    --disabled: var(--dark-disabled);
+    --disabled-surface: var(--dark-disabled-surface);
+    --selection: var(--dark-selection);
+    --faint-text: var(--dark-faint-text);
+    --warning-text: var(--dark-warning-text);
+    --danger-text: var(--dark-danger-text);
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-surface-hover: var(--surface-hover);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-faint-text: var(--faint-text);
+  --color-warning-text: var(--warning-text);
+  --color-danger-text: var(--danger-text);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-separator: var(--separator);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --color-focus: var(--focus);
+  --color-disabled: var(--disabled);
+  --color-disabled-surface: var(--disabled-surface);
+}
+
+@theme {
+  --font-sans: "Geist Variable", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.625rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+
+:root {
+  --layout-sidebar-width: 16rem;
+  --layout-header-height: 3.5rem;
+  --layout-content-max: 80rem;
+  --layer-base: 0;
+  --layer-sticky: 10;
+  --layer-dropdown: 20;
+  --layer-overlay: 30;
+  --layer-dialog: 40;
+  --layer-tooltip: 50;
+  --motion-fast: 120ms;
+  --motion-normal: 180ms;
+  --tracking-interface: -0.01em;
+  --tracking-technical: 0em;
+}
