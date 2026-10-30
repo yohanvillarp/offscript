@@ -35,7 +35,7 @@ Write clean, modular code with cohesive responsibilities. Keep source files at o
 
 Use strict TypeScript for implementation work; do not assume the existing configuration already enables every strict option. Prefer clear, maintainable implementations. Write meaningful tests for implemented functionality. Run relevant validation commands and do not claim tests passed unless executed.
 
-Studio currently offers `npm run build` (TypeScript project build plus Vite), `npm run lint`, `npm run dev`, and `npm run preview`, run from `apps/studio`. The private root package manages contribution tooling without workspaces and exposes `npm run lint`, `npm run build`, and `npm run check`. No automated functional test command currently exists. Documentation-only tasks do not require installing dependencies or running application builds.
+Studio currently offers `npm run build` (TypeScript project build plus Vite), `npm run lint`, `npm run dev`, and `npm run preview`, run from `apps/studio`. The private root package manages contribution tooling without workspaces and exposes `npm run lint`, `npm run build`, and `npm run check`. Domain validation is available through `npm run typecheck:domain` and `npm run test:domain` (also `npm test`); `npm run check` includes these checks alongside Studio lint/build. There is no end-to-end test suite. Documentation-only tasks do not require installing dependencies or running application builds.
 
 ## Documentation discipline
 
