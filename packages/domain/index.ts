@@ -1,0 +1,11 @@
+export { DomainError } from "./errors.ts";
+export type { DomainErrorCode } from "./errors.ts";
+export { agentId, simulationId } from "./identity.ts";
+export type { AgentId, SimulationId } from "./identity.ts";
+export { createAgentProfile } from "./profile.ts";
+export type { AgentProfile, AgentGoal, DeclaredCapability } from "./profile.ts";
+export type { ExecutionEnvironment } from "./environment.ts";
+export { createAgent, transitionAgent } from "./agent.ts";
+export type { Agent, AgentLifecycle } from "./agent.ts";
+export { createSimulation, transitionSimulation, updateSimulationAgent } from "./simulation.ts";
+export type { Simulation, SimulationLifecycle } from "./simulation.ts";

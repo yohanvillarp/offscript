@@ -1,14 +1,14 @@
-# Contribuir a OFFSCRIPT
+# Contributing to OFFSCRIPT
 
-## Flujo de trabajo
+## Workflow
 
-`main` representa producción: todo cambio debe llegar mediante un pull request en GitHub desde una rama de trabajo. No hagas commits ni pushes directos a `main`. Mantén cada PR enfocado y apto para producción; los cambios urgentes también pasan por revisión.
+`main` represents production: every change must arrive through a GitHub pull request from a work branch. Do not commit or push directly to `main`. Keep each PR focused and production-ready; urgent fixes also require review.
 
-Antes de trabajar, lee [AGENTS.md](AGENTS.md), [PROJECT.md](docs/PROJECT.md), [ARCHITECTURE.md](docs/ARCHITECTURE.md) y los archivos relacionados con la tarea.
+Before working, read [AGENTS.md](AGENTS.md), [PROJECT.md](docs/PROJECT.md), [ARCHITECTURE.md](docs/ARCHITECTURE.md), and the files relevant to your task.
 
-## Preparación
+## Setup
 
-Usa Node.js 24 y npm. Desde la raíz:
+Use Node.js 24 and npm. From the repository root:
 
 ```sh
 npm ci
@@ -16,34 +16,42 @@ npm ci --prefix apps/studio
 git config --local commit.template .gitmessage
 ```
 
-La primera instalación ejecuta `prepare` y activa Husky para este clon. La segunda instala Studio de forma independiente. No se utilizan workspaces. La configuración de la plantilla es local: cada colaborador debe ejecutar ese comando una vez. Usa `git commit` sin `-m` para abrirla.
+The first installation runs `prepare` and activates Husky for this clone. The second installs Studio independently. This project does not use workspaces. The commit template configuration is local: each contributor must run that command once. Use `git commit` without `-m` to open the template.
 
-## Finales de línea
+## Line endings
 
-`.gitattributes` establece LF para los archivos de texto en Windows, macOS y Linux, incluidos los hooks y scripts shell. Los scripts `.bat` y `.cmd` usan CRLF en la copia de trabajo; los binarios no se convierten. Estas reglas prevalecen sobre `core.autocrlf`, sin exigir cambios en la configuración global de Git.
+`.gitattributes` sets LF for text files on Windows, macOS, and Linux, including hooks and shell scripts. Windows `.bat` and `.cmd` scripts use CRLF in the working tree; binary files are not converted. These rules take precedence over `core.autocrlf` without requiring changes to global Git configuration.
 
-Configura el editor para guardar texto con LF. Para revisar la normalización usa `git ls-files --eol` y `git diff --check`. Git almacena los textos normalizados con LF en el índice, incluidos los scripts Windows.
+Configure your editor to save text with LF. Inspect normalization with `git ls-files --eol` and `git diff --check`. Git stores normalized text with LF in the index, including Windows scripts.
 
-## Ramas y pull requests
+## Branches and pull requests
 
 ```sh
 git switch main
 git pull --ff-only origin main
 git switch -c feat/short-description
-# Implementa y valida un cambio concreto.
+# Implement and validate one focused change.
 npm run check
-git add <archivos>
+git add <files>
 git commit
 git push -u origin feat/short-description
 ```
 
-Abre un PR con base `main`. Usa ramas breves con prefijos como `feat/`, `fix/`, `docs/`, `refactor/`, `chore/` o `hotfix/`. Describe el problema, el resultado, las verificaciones ejecutadas y los riesgos. Resuelve los comentarios antes de fusionar. No fuerces pushes sobre ramas compartidas.
+Open a PR targeting `main`. Use short branch names with prefixes such as `feat/`, `fix/`, `docs/`, `refactor/`, `chore/`, or `hotfix/`. Describe the problem, resulting behavior, validation performed, and risks. Resolve review comments before merging. Do not force-push shared branches.
 
-Usa squash merge para integrar cada PR como un commit coherente; su título debe seguir Conventional Commits. Elimina la rama después de fusionar. Una fusión a `main` debe estar lista para producción; este repositorio todavía no configura despliegues automáticos.
+After the required checks and review pass, merge the PR using the method appropriate for its history:
+
+- **Merge commit:** preserve the individual commits and the PR boundary. Use this for a coherent series of commits.
+- **Squash merge:** combine work-in-progress commits into one focused commit when useful.
+- **Rebase merge:** replay clean commits onto the base branch when a linear result is preferred.
+
+No single merge method is mandatory. Keep PR titles and authored commits consistent with Conventional Commits; GitHub-generated merge commits may use GitHub's default message. Review the final message when squashing. See [GitHub's merge methods](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/about-merge-methods-on-github).
+
+GitHub deletes the remote work branch automatically after merging. Update local `main` with `git pull --ff-only`, then remove the merged local branch and prune stale remote references. Use `git branch -d <branch>`; if squash or rebase prevents Git from recognizing the merge, verify the PR and commit history before removing the local branch. Never delete a branch while its PR is open. Every merge to `main` must be production-ready; this repository does not yet configure automatic deployments.
 
 ## Commits
 
-Se adopta [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/), con [commitlint](https://commitlint.js.org/) y su configuración conventional:
+Follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/), using [commitlint](https://commitlint.js.org/) and its conventional configuration:
 
 ```text
 feat(studio): add session filtering
@@ -51,39 +59,40 @@ fix(cli): handle interrupted sessions
 docs: clarify contribution workflow
 ```
 
-Formato: `type(scope opcional): descripción`. Tipos permitidos: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`. Usa una descripción concreta e imperativa, sin punto final, y una cabecera de hasta 100 caracteres. El scope es opcional y debe describir el área afectada. Evita commits WIP en la historia final.
+Format: `type(optional-scope): description`. Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, and `revert`. Use a concrete, imperative description without a trailing period and a header of at most 100 characters. The scope is optional and should identify the affected area. Avoid WIP commits in the final history.
 
-Separa cuerpo y pie con líneas en blanco. Marca incompatibilidades con `!` y explica la migración en un pie `BREAKING CHANGE:`. Referencia issues cuando corresponda. `.gitmessage` ofrece estas indicaciones al redactar el commit.
+Separate the body and footer with blank lines. Mark breaking changes with `!` and explain the migration in a `BREAKING CHANGE:` footer. Reference issues when applicable. `.gitmessage` provides these instructions when drafting a commit.
 
-## Validación y hooks
+## Validation and hooks
 
-| Momento | Regla |
+| Stage | Rule |
 | --- | --- |
-| `pre-commit` | Rechaza commits en `main` y ejecuta lint de Studio. |
-| `commit-msg` | Valida el mensaje con commitlint. |
-| `pre-push` | Rechaza cualquier destino `refs/heads/main` y ejecuta lint y build. |
-| GitHub Actions | En PR hacia `main`, valida el título, lint y build; también valida pushes a `main`. |
+| `pre-commit` | Rejects commits on `main` and runs Studio lint. |
+| `commit-msg` | Validates the message with commitlint. |
+| `pre-push` | Rejects any `refs/heads/main` destination and runs lint and build. |
+| GitHub Actions | Validates the title, lint, and build for PRs targeting `main`; also validates pushes to `main`. |
 
-`npm run check` desde la raíz ejecuta lint y build; el build de Studio incluye la comprobación TypeScript. No hay una suite automatizada de pruebas funcionales todavía. Añade pruebas significativas cuando implementes funcionalidad y documenta lo que realmente ejecutaste.
+Run `npm run check` from the root to execute domain typechecks and unit tests, followed by Studio lint and build. The Studio build includes TypeScript checking. Run domain checks independently with `npm run typecheck:domain` and `npm run test:domain` (or `npm test`). There is no end-to-end test suite yet. Add meaningful tests when implementing functionality and report what you actually ran.
 
-Los hooks de [Husky](https://typicode.github.io/husky/) son controles locales y pueden omitirse; no sustituyen la protección de GitHub. No los omitas para integrar cambios que fallen. Lint inspecciona el árbol de trabajo, no solo los archivos staged: mantén los commits coherentes.
+[Husky](https://typicode.github.io/husky/) hooks are local controls and can be bypassed; they do not replace GitHub protection. Do not bypass them to integrate failing changes. Lint inspects the working tree, not only staged files: keep commits coherent.
 
-## Calidad y seguridad
+## Quality and security
 
-- Código limpio y modular. Respeta el límite de 250 líneas y las excepciones para scripts definidas en AGENTS.md.
-- Mantén los límites de arquitectura y usa tokens semánticos en Studio.
-- Implementa solo el alcance solicitado; actualiza documentación cuando cambien decisiones aprobadas.
-- No incluyas secretos, credenciales ni evidencia sensible. `.env.example` debe contener únicamente valores ficticios.
-- No ejecutes acciones destructivas contra software externo sin autorización explícita.
+- Write clean, modular code. Follow the 250-line limit and script exceptions in AGENTS.md.
+- Preserve architectural boundaries and use semantic tokens in Studio.
+- Implement only the requested scope; update documentation when approved decisions change.
+- Write and maintain all project documentation in English.
+- Do not include secrets, credentials, or sensitive evidence. `.env.example` must contain only dummy values.
+- Do not execute destructive actions against external software without explicit authorization.
 
-## Protección de main en GitHub
+## Protecting main on GitHub
 
-Un administrador debe configurar un ruleset dirigido a `main` y las opciones del repositorio:
+An administrator must configure a ruleset targeting `main` and the repository settings:
 
-1. Exigir pull requests y al menos una aprobación de otra persona; invalidar aprobaciones cuando cambie el código y exigir resolución de conversaciones.
-2. Exigir el check `quality`, con la rama actualizada antes de fusionar.
-3. Bloquear force pushes y eliminación de `main`; aplicar las reglas también a administradores y evitar bypass rutinario.
-4. Exigir historia lineal, habilitar squash merge y deshabilitar merge commits y rebase merge para mantener este flujo.
-5. Configurar el título del PR como título predeterminado del squash commit y revisar el mensaje final antes de fusionar.
+1. Require pull requests and at least one approval from another person; dismiss stale approvals when code changes and require conversation resolution.
+2. Require the `quality` check and an up-to-date branch before merging.
+3. Block force pushes and deletion of `main`; apply the rules to administrators and avoid routine bypasses.
+4. Allow merge commits, squash merge, and rebase merge. Do not require linear history, since that would prohibit merge commits.
+5. Enable automatic head-branch deletion after merging. Use the PR title as the default squash commit title when squash is chosen.
 
-Estas reglas remotas se documentan aquí; crear archivos locales no las activa. El check aparecerá después de que GitHub ejecute el workflow. Si una opción depende del plan o permisos, el administrador debe confirmar su disponibilidad. No hay un workflow de despliegue ni credenciales de producción configurados por esta contribución.
+These remote rules are documented here; creating local files does not activate them. The check will appear after GitHub runs the workflow. If an option depends on the plan or permissions, the administrator must confirm its availability. This contribution does not configure a deployment workflow or production credentials.

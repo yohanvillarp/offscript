@@ -12,7 +12,7 @@ Agents are not scripted test cases. Profiles influence exploration; they do not 
 
 Studio exists in `apps/studio`: React, TypeScript, Vite, React Router, and Tailwind CSS 4. Its only route is Home, displaying `offscript`. It has an FSD-oriented `app` and `pages` structure, `@/` imports, and CSS design foundations with system-aware light/dark themes and locally bundled Geist and IBM Plex Mono fonts.
 
-There is no implemented CLI, agent runtime, browser exploration, persistence, investigation workflow, or CLI-to-Studio connection. Existing directories under `packages/` contain no files; their names do not establish approved module boundaries.
+There is no implemented CLI, agent runtime, browser exploration, persistence, investigation workflow, or CLI-to-Studio connection. The domain foundation in `packages/domain` implements immutable simulation and agent models, profiles, declared capabilities, environment classification, and lifecycle validation with unit tests. Other directories under `packages/` remain empty scaffolding; their names do not establish approved module boundaries.
 
 ## Intended experience
 
@@ -22,11 +22,19 @@ Initial exploration targets web applications with real backends in explicitly au
 
 ## Artificial user profiles
 
-A profile describes personality, goals, available capabilities, permissions, and limitations. For example, an impatient first-time user may abandon unclear flows; a methodical user may compare outcomes across repeated attempts. Neither profile is an exclusive bug specialization.
+A profile describes personality, goals, and declared capabilities. Effective permissions are separate, operator-controlled restrictions; execution limitations such as budgets belong to the run configuration, which is not implemented yet. For example, an impatient first-time user may abandon unclear flows; a methodical user may compare outcomes across repeated attempts. Neither profile is an exclusive bug specialization.
 
 Goals guide autonomous choices. Capabilities describe available tools. Permissions restrict allowed actions and targets. Limitations include resource budgets, incomplete knowledge, and model errors. Profile intent cannot override enforced tool policies.
 
-Agents should explore concurrently and share useful observations. They may investigate related behavior collaboratively rather than independently repeating every discovery. Scheduling, shared-state ownership, and conflict handling remain implementation questions.
+Agents should explore concurrently and share useful observations. They may investigate related behavior collaboratively rather than independently repeating every discovery. Mozaik will provide concurrent, event-driven collaboration. OFFSCRIPT must define shared-state ownership and conflict handling without duplicating its inference/tool loop. These integration details remain unimplemented.
+
+## Simulation and agent lifetimes
+
+A simulation is an exploration session. Each artificial user has a participation lifecycle within it and may take multiple inference turns. Starting a session does not automatically activate every agent; receiving a model answer does not end that agent's participation.
+
+A completed simulation means the session ended with all agent participations settled, not that every goal was achieved or the target has no defects. Failed or cancelled participations can coexist with a completed session. Ending due to a time or resource budget may be a normal product outcome; budget enforcement and outcome assessment are not implemented.
+
+Runtime membership is separate from this roster of artificial users: observers and other runtime participants need not be domain agents. Domain cancellation records a logical state; it does not itself stop browser actions or model requests.
 
 ## Evidence and confidence
 
