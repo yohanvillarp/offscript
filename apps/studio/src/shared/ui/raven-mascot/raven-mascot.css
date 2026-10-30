@@ -1,0 +1,119 @@
+@layer components {
+  .raven-mascot {
+    --raven-breath-cycle: 3.5s;
+    --raven-observe-cycle: 6s;
+    --raven-curious-cycle: 5s;
+    --raven-posture-cycle: 9s;
+    display: block;
+    flex-shrink: 0;
+    overflow: visible;
+  }
+
+  .raven-mascot__body {
+    animation: raven-breathe var(--raven-breath-cycle) ease-in-out infinite;
+  }
+
+  .raven-mascot__character {
+    animation: raven-posture var(--raven-posture-cycle) var(--ease-standard) infinite;
+  }
+
+  .raven-mascot__eye {
+    transform-box: view-box;
+    transform-origin: 60.625% 30%;
+    animation: raven-blink var(--raven-observe-cycle) ease-out infinite;
+  }
+
+  .raven-mascot[data-state="observing"] .raven-mascot__pupil {
+    animation: raven-glance var(--raven-observe-cycle) ease-out infinite;
+  }
+
+  .raven-mascot[data-state="curious"] .raven-mascot__eye {
+    animation-duration: var(--raven-curious-cycle);
+  }
+
+  .raven-mascot__head {
+    transform-box: view-box;
+    transform-origin: 56% 43%;
+  }
+
+  .raven-mascot__wing {
+    transform-box: view-box;
+    transform-origin: 47% 49%;
+  }
+
+  .raven-mascot__tail {
+    transform-box: view-box;
+    transform-origin: 40% 66%;
+    animation: raven-tail var(--raven-posture-cycle) ease-in-out infinite;
+  }
+
+  .raven-mascot[data-state="observing"] .raven-mascot__head {
+    animation: raven-observe var(--raven-observe-cycle) var(--ease-standard) infinite;
+  }
+
+  .raven-mascot[data-state="observing"] .raven-mascot__wing {
+    animation: raven-wing var(--raven-posture-cycle) var(--ease-standard) infinite;
+  }
+
+  .raven-mascot[data-state="curious"] .raven-mascot__head {
+    animation: raven-curious var(--raven-curious-cycle) var(--ease-standard) infinite;
+  }
+
+  .raven-mascot[data-state="curious"] .raven-mascot__wing {
+    animation: raven-wing var(--raven-curious-cycle) var(--ease-standard) infinite;
+  }
+
+  .raven-mascot[data-animated="false"] * {
+    animation: none !important;
+  }
+
+  @keyframes raven-breathe {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-2px); }
+  }
+
+  @keyframes raven-posture {
+    0%, 55%, 75%, 100% { transform: translateY(0); }
+    60% { transform: translateY(1px); }
+    65% { transform: translateY(-4px); }
+    70% { transform: translateY(0); }
+  }
+
+  @keyframes raven-blink {
+    0%, 18%, 22%, 55%, 59%, 100% { transform: scaleY(1); }
+    20%, 57% { transform: scaleY(0.08); }
+  }
+
+  @keyframes raven-glance {
+    0%, 18%, 45%, 55%, 77%, 100% { transform: translateX(0); }
+    21%, 42% { transform: translateX(0.45px); }
+    58%, 74% { transform: translateX(-0.55px); }
+  }
+
+  @keyframes raven-observe {
+    0%, 10%, 90%, 100% { transform: rotate(0); }
+    25%, 40% { transform: rotate(12deg) translateY(1px); }
+    60%, 75% { transform: rotate(-10deg); }
+  }
+
+  @keyframes raven-curious {
+    0%, 10%, 90%, 100% { transform: rotate(0); }
+    25%, 65% { transform: rotate(-18deg) translateY(-1px); }
+    75% { transform: rotate(5deg); }
+  }
+
+  @keyframes raven-wing {
+    0%, 20%, 70%, 100% { transform: rotate(0); }
+    35%, 50% { transform: rotate(-4deg); }
+  }
+
+  @keyframes raven-tail {
+    0%, 55%, 80%, 100% { transform: rotate(0); }
+    62% { transform: rotate(8deg); }
+    70% { transform: rotate(-6deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .raven-mascot * { animation: none !important; }
+  }
+}

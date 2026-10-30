@@ -6,11 +6,11 @@
     "prepare": "husky",
     "lint": "npm run lint:packages && npm --prefix apps/studio run lint",
     "build": "npm --prefix apps/studio run build",
-    "check": "npm run typecheck:domain && npm run typecheck:contracts && npm test && npm run lint && npm run build",
+    "check": "npm run typecheck:domain && npm run typecheck:contracts && npm --prefix apps/studio run typecheck:tests && npm test && npm run lint && npm run build",
     "commitlint": "commitlint",
     "typecheck:domain": "tsc -p packages/domain/tsconfig.json && tsc -p packages/domain/tests/tsconfig.json",
     "test:domain": "node --test packages/domain/tests/*.test.ts",
-    "test": "npm run test:domain && npm run test:contracts",
+    "test": "npm run test:domain && npm run test:contracts && npm --prefix apps/studio test",
     "typecheck:contracts": "tsc -p packages/contracts/tsconfig.json && tsc -p packages/contracts/tests/tsconfig.json",
     "test:contracts": "node --test packages/contracts/tests/*.test.ts",
     "lint:packages": "npm exec --prefix apps/studio --offline -- oxlint packages"

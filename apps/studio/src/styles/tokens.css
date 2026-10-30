@@ -134,8 +134,8 @@
 }
 
 @theme {
-  --font-sans: "Geist Variable", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-sans: "Space Grotesk Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", Consolas, monospace;
   --text-xs: 0.75rem;
   --text-xs--line-height: 1rem;
   --text-sm: 0.875rem;
@@ -167,6 +167,6 @@
   --layer-tooltip: 50;
   --motion-fast: 120ms;
   --motion-normal: 180ms;
-  --tracking-interface: -0.01em;
+  --tracking-interface: 0em;
   --tracking-technical: 0em;
 }

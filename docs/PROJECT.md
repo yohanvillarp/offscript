@@ -10,7 +10,7 @@ Agents are not scripted test cases. Profiles influence exploration; they do not 
 
 ## Current implementation
 
-Studio exists in `apps/studio`: React, TypeScript, Vite, React Router, and Tailwind CSS 4. Its only route is Home, displaying `offscript`. It has an FSD-oriented `app` and `pages` structure, `@/` imports, and CSS design foundations with system-aware light/dark themes and locally bundled Geist and IBM Plex Mono fonts.
+Studio exists in `apps/studio`: React, TypeScript, Vite, React Router, and Tailwind CSS 4. The home route displays Simulations with an empty history and an introductory guide. The New simulation action opens `/simulations/new`: a first-visit mascot introduction followed by a three-step draft editor for Target, Users, and Configuration summary. Target and Users use centered forms without a sidebar; the final summary displays the target and selected participant avatars and names. The shared navbar contains a persistent Simulations link, a collapsible mobile menu, and subtle navigation transitions that respect reduced motion. A reusable vector raven mascot provides restrained, presentation-only animation states with reduced-motion support. Interface icons use Lucide; the brand mark and mascot remain custom SVGs. Entering configuration remembers introduction completion in browser local storage; subsequent visits open Target directly. A question-mark help button reopens the introduction and returns to the current step without discarding the draft. If storage is unavailable, configuration still works but the preference cannot persist. Only this preference is stored; drafts exist only in React state while the editor is mounted; changing steps retains them, but leaving or reloading discards them. Setup supports multiple selection from three initial behavioral profiles (Raven / Explorer, Fox / Impatient, Compass / Beginner) and inline validation. Target includes a required shared Exploration goal, describing an outcome rather than scripted steps; Configuration summary repeats it for all selected users. This goal remains in the UI draft and is not yet assigned to domain agents. The user selector uses compact avatar/profile options with a separate, keyboard-accessible “About this user” disclosure for descriptions and motivations; the summary shows avatars, names, and profiles. These remain presentation metadata, without executable profile configuration, runtime goal assignment, tools, skills, or permissions. Execution, saved configurations, permission enforcement, and data loading are not connected. It has an FSD-oriented `app` and `pages` structure, `@/` imports, and CSS design foundations with system-aware light/dark themes and locally bundled Space Grotesk for interface typography and JetBrains Mono for technical labels, identifiers, paths, and code.
 
 There is no implemented CLI, agent runtime, browser exploration, persistence, investigation workflow, or CLI-to-Studio connection. The domain foundation in `packages/domain` implements immutable simulation and agent models, profiles, declared capabilities, environment classification, and lifecycle validation with unit tests. The lifecycle contract foundation in `packages/contracts` provides versioned, validated events and serializable simulation/agent summaries; no event processing is implemented. Other directories under `packages/` remain empty scaffolding; their names do not establish approved module boundaries.
 
@@ -22,9 +22,29 @@ Initial exploration targets web applications with real backends in explicitly au
 
 ## Artificial user profiles
 
-A profile describes personality, goals, and declared capabilities. Effective permissions are separate, operator-controlled restrictions; execution limitations such as budgets belong to the run configuration, which is not implemented yet. For example, an impatient first-time user may abandon unclear flows; a methodical user may compare outcomes across repeated attempts. Profiles can represent everyday users or pursue focused evaluation goals; they are not limited to ordinary end-user behavior. Neither profile is an exclusive bug specialization.
+A behavioral profile describes personality, experience, decision-making tendencies, and general motivation. It does not prescribe a sequence of steps or limit who can discover a problem. Profiles may represent everyday users or focused evaluation intentions.
 
-Goals guide autonomous choices. Capabilities describe available tools. Permissions restrict allowed actions and targets. Limitations include resource budgets, incomplete knowledge, and model errors. Profile intent cannot override enforced tool policies.
+### Initial profiles
+
+| Profile | Avatar | Behavior | General intention |
+| --- | --- | --- | --- |
+| Explorer | Raven | Observant, curious, and experimental; tries alternative paths and questions unexpected results. | Understand the system through exploration. |
+| Impatient | Fox | Quick, resourceful, and focused on results; retries or finds alternatives when progress feels slow. | Complete tasks as quickly as possible. |
+| Beginner | Compass | Needs guidance and interprets instructions without prior product knowledge; may make choices the developer did not anticipate. | Learn to use the product and accomplish a goal. |
+
+Avatar and behavior are separate concepts: changing an illustration must not change the profile's semantics. These mappings are the initial product selection, not bug specializations or runtime instructions.
+
+An agent conceptually combines a behavioral profile, an assigned goal, and available skills, subject to externally enforced permissions and execution limits. These concerns have distinct responsibilities:
+
+- **Profile:** how an artificial user approaches software and makes decisions.
+- **Goal:** a concrete desired outcome for a simulation, such as purchasing a product. All three profiles may pursue the same goal differently; a general motivation such as speed is not that assigned goal.
+- **Skills:** reusable knowledge or procedures for using capabilities; skills do not themselves grant tools or authorization.
+- **Tools and declared capabilities:** available operations and capability declarations, separate from behavior and effective authorization.
+- **Permissions and limits:** operator-controlled action/target restrictions and execution budgets. An agent cannot expand these through its decisions, profile, or skills.
+
+The existing domain `AgentProfile` currently groups personality, goals, and declared capabilities. That implemented shape remains unchanged; the conceptual separation above does not claim separate domain entities, a skill system, or policy enforcement already exist.
+
+The broader candidate catalog includes Beginner, Impatient, Explorer, Regular, Distrustful, Meticulous, Adaptive, and Collaborative. Only the three initial profiles above are included in Studio. The others remain deferred; Adaptive requires more precise interaction needs or modalities before implementation and must not stand in for every accessibility experience.
 
 Agents should explore concurrently and share useful observations. They may investigate related behavior collaboratively rather than independently repeating every discovery. Mozaik will provide concurrent, event-driven collaboration. OFFSCRIPT must define shared-state ownership and conflict handling without duplicating its inference/tool loop. These integration details remain unimplemented.
 
