@@ -1,0 +1,4 @@
+{
+  "extends": "../tsconfig.json",
+  "include": ["../*.ts", "../schema/*.ts", "../codecs/*.ts", "../repositories/*.ts", "*.ts", "../../../drizzle.config.ts"]
+}
