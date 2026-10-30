@@ -1,3 +1,25 @@
-* text=auto
-.husky/* text eol=lf
+# Keep text identical across Windows, macOS, and Linux, regardless of core.autocrlf.
+* text=auto eol=lf
+
+# Hooks have no extension and must remain executable by a POSIX shell.
+.husky/** text eol=lf
 *.sh text eol=lf
+
+# Windows command scripts use native line endings in the working tree.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Never normalize binary assets or produce text diffs for them.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.pdf binary
+*.zip binary
+*.gz binary

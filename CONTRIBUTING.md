@@ -18,6 +18,12 @@ git config --local commit.template .gitmessage
 
 La primera instalación ejecuta `prepare` y activa Husky para este clon. La segunda instala Studio de forma independiente. No se utilizan workspaces. La configuración de la plantilla es local: cada colaborador debe ejecutar ese comando una vez. Usa `git commit` sin `-m` para abrirla.
 
+## Finales de línea
+
+`.gitattributes` establece LF para los archivos de texto en Windows, macOS y Linux, incluidos los hooks y scripts shell. Los scripts `.bat` y `.cmd` usan CRLF en la copia de trabajo; los binarios no se convierten. Estas reglas prevalecen sobre `core.autocrlf`, sin exigir cambios en la configuración global de Git.
+
+Configura el editor para guardar texto con LF. Para revisar la normalización usa `git ls-files --eol` y `git diff --check`. Git almacena los textos normalizados con LF en el índice, incluidos los scripts Windows.
+
 ## Ramas y pull requests
 
 ```sh
