@@ -12,7 +12,7 @@ Agents are not scripted test cases. Profiles influence exploration; they do not 
 
 Studio exists in `apps/studio`: React, TypeScript, Vite, React Router, and Tailwind CSS 4. Its only route is Home, displaying `offscript`. It has an FSD-oriented `app` and `pages` structure, `@/` imports, and CSS design foundations with system-aware light/dark themes and locally bundled Geist and IBM Plex Mono fonts.
 
-There is no implemented CLI, agent runtime, browser exploration, persistence, investigation workflow, or CLI-to-Studio connection. The domain foundation in `packages/domain` implements immutable simulation and agent models, profiles, declared capabilities, environment classification, and lifecycle validation with unit tests. Other directories under `packages/` remain empty scaffolding; their names do not establish approved module boundaries.
+There is no implemented CLI, agent runtime, browser exploration, persistence, investigation workflow, or CLI-to-Studio connection. The domain foundation in `packages/domain` implements immutable simulation and agent models, profiles, declared capabilities, environment classification, and lifecycle validation with unit tests. The lifecycle contract foundation in `packages/contracts` provides versioned, validated events and serializable simulation/agent summaries; no event processing is implemented. Other directories under `packages/` remain empty scaffolding; their names do not establish approved module boundaries.
 
 ## Intended experience
 
@@ -22,7 +22,7 @@ Initial exploration targets web applications with real backends in explicitly au
 
 ## Artificial user profiles
 
-A profile describes personality, goals, and declared capabilities. Effective permissions are separate, operator-controlled restrictions; execution limitations such as budgets belong to the run configuration, which is not implemented yet. For example, an impatient first-time user may abandon unclear flows; a methodical user may compare outcomes across repeated attempts. Neither profile is an exclusive bug specialization.
+A profile describes personality, goals, and declared capabilities. Effective permissions are separate, operator-controlled restrictions; execution limitations such as budgets belong to the run configuration, which is not implemented yet. For example, an impatient first-time user may abandon unclear flows; a methodical user may compare outcomes across repeated attempts. Profiles can represent everyday users or pursue focused evaluation goals; they are not limited to ordinary end-user behavior. Neither profile is an exclusive bug specialization.
 
 Goals guide autonomous choices. Capabilities describe available tools. Permissions restrict allowed actions and targets. Limitations include resource budgets, incomplete knowledge, and model errors. Profile intent cannot override enforced tool policies.
 
