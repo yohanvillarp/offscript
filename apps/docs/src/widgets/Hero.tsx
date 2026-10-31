@@ -1,4 +1,5 @@
-import { ArrowDown, ArrowUpRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { Link } from "react-router";
 import { RavenMascot } from "@studio/shared/ui/raven-mascot/RavenMascot";
 import { repository } from "@/shared/links";
 import { Section } from "@/shared/Section";
@@ -16,11 +17,13 @@ export function Hero() {
       </p>
       <TerminalInstall />
       <div className="actions">
-        <a className="primary-link" href="#get-started">
-          Explore the guide<ArrowDown size={16} />
-        </a>
+        <Link className="primary-link" to="/get-started">
+          Explore the guide
+          <ArrowRight size={16} />
+        </Link>
         <a className="text-link" href={repository} target="_blank" rel="noreferrer">
-          View source<ArrowUpRight size={16} />
+          View source
+          <ArrowUpRight size={16} />
         </a>
       </div>
       <RavenMascot
