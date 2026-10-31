@@ -172,10 +172,10 @@ export function createLocalHost(options: LocalHostOptions) {
       }
       finally { deleting.delete(id); }
     },
-    async startSimulation(id: SimulationId, mode: SimulationExecutionMode) {
+    async startSimulation(id: SimulationId, mode: SimulationExecutionMode, options: Readonly<{ headless?: boolean | undefined }> = {}) {
       if (phase !== "ready" || closing) throw new Error("Host is not accepting execution commands.");
       if (!coordinator) throw new Error("No execution session factory configured on this host.");
-      return coordinator.start(simulationId(id), mode);
+      return coordinator.start(simulationId(id), mode, options);
     },
     async stopSimulation(id: SimulationId) {
       if (phase !== "ready" || closing) throw new Error("Host is not accepting execution commands.");

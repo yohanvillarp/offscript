@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ContractValidationError, defaultExecutionLimits, parseSimulationSetup } from "../index.ts";
-import { parseProjectDescriptor, parseTargetConnection } from "../index.ts";
+import { parseProjectDescriptor, parseTargetConnection, parseStartSimulationRequest } from "../index.ts";
 
 const setup = { targetUrl: "http://localhost:3000", environment: { kind: "web", deployment: "local" },
   goal: "Find a product and complete a purchase.", userProfileIds: ["explorer", "beginner"] };
@@ -46,4 +46,12 @@ test("project suggestions and connection results validate their public transport
   for (const patch of [{ kind: "unknown" }, { statusCode: 600 }, { url: "https://example.com" }, { extra: true }, { kind: "busy" }]) {
     assert.throws(() => parseTargetConnection({ url: "http://localhost:5173", kind: "response", statusCode: 200, ...patch }), ContractValidationError);
   }
+});
+
+test("start simulation request validates execution mode and optional headless flag", () => {
+  assert.deepEqual(parseStartSimulationRequest({ mode: "browser-exploration" }), { mode: "browser-exploration" });
+  assert.deepEqual(parseStartSimulationRequest({ mode: "browser-exploration", headless: false }), { mode: "browser-exploration", headless: false });
+  assert.deepEqual(parseStartSimulationRequest({ mode: "controlled-demo", headless: true }), { mode: "controlled-demo", headless: true });
+  assert.throws(() => parseStartSimulationRequest({ mode: "invalid" }), ContractValidationError);
+  assert.throws(() => parseStartSimulationRequest({ mode: "browser-exploration", headless: "no" }), ContractValidationError);
 });

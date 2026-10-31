@@ -74,9 +74,9 @@ export async function startControlledDemo(id: string): Promise<SimulationExecuti
   return parseSimulationExecutionStatus(result);
 }
 
-export async function startBrowserExploration(id: string): Promise<SimulationExecutionStatus> {
+export async function startBrowserExploration(id: string, options: { headless?: boolean } = {}): Promise<SimulationExecutionStatus> {
   const result = await request(`/api/simulations/${encodeURIComponent(id)}/start`, {
-    method: "POST", body: JSON.stringify({ mode: "browser-exploration" }),
+    method: "POST", body: JSON.stringify({ mode: "browser-exploration", ...options }),
   });
   return parseSimulationExecutionStatus(result);
 }

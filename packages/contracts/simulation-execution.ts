@@ -39,12 +39,20 @@ export type SimulationExecutionStatus = Readonly<{
 
 export type StartSimulationRequest = Readonly<{
   mode: SimulationExecutionMode;
+  headless?: boolean | undefined;
 }>;
 
 export function parseStartSimulationRequest(value: unknown): StartSimulationRequest {
-  const input = record(value, "startRequest", ["mode"]);
+  const input = record(value, "startRequest", ["mode", "headless"]);
   const mode = oneOf(input.mode, simulationExecutionModes, "startRequest.mode");
-  return Object.freeze({ mode });
+  let headless: boolean | undefined;
+  if (input.headless !== undefined) {
+    if (typeof input.headless !== "boolean") {
+      throw new ContractValidationError("startRequest.headless", "Expected a boolean.");
+    }
+    headless = input.headless;
+  }
+  return Object.freeze({ mode, ...(headless !== undefined ? { headless } : {}) });
 }
 
 export function parseSimulationExecutionStatus(value: unknown): SimulationExecutionStatus {

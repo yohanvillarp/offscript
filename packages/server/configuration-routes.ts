@@ -15,7 +15,7 @@ export type ConfigurationServices = Readonly<{
   findConfiguration(id: ReturnType<typeof simulationId>): Promise<SimulationConfiguration | undefined>;
   listConfigurations(): Promise<readonly SimulationConfiguration[]>;
   deleteConfiguration(id: ReturnType<typeof simulationId>): Promise<DeleteConfiguredSimulationResult>;
-  startSimulation(id: ReturnType<typeof simulationId>, mode: SimulationExecutionMode): Promise<SimulationExecutionStatus>;
+  startSimulation(id: ReturnType<typeof simulationId>, mode: SimulationExecutionMode, options?: Readonly<{ headless?: boolean | undefined }>): Promise<SimulationExecutionStatus>;
   stopSimulation(id: ReturnType<typeof simulationId>): Promise<SimulationExecutionStatus>;
   inspectExecution(id: ReturnType<typeof simulationId>): Promise<SimulationExecutionStatus>;
   getSimulationResults(id: ReturnType<typeof simulationId>): Promise<SimulationResults>;
@@ -58,8 +58,8 @@ export function configurationRoutes(server: FastifyInstance, services: Configura
     return value;
   });
   server.post<{ Params: { id: string } }>("/api/simulations/:id/start", { bodyLimit: 4096 }, async (request, reply) => {
-    const { mode } = parseStartSimulationRequest(request.body);
-    const status = await services.startSimulation(simulationId(request.params.id), mode);
+    const { mode, headless } = parseStartSimulationRequest(request.body);
+    const status = await services.startSimulation(simulationId(request.params.id), mode, { headless });
     return reply.code(200).send(status);
   });
   server.get<{ Params: { id: string } }>("/api/simulations/:id/execution", async (request) => {
