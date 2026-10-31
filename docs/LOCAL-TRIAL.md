@@ -2,7 +2,7 @@
 
 ## What currently works
 
-This increment recognizes a selected local project, proposes its name, serves Studio and the API together, and saves/reloads simulation configurations in that project's `.offscript` directory. It does not start autonomous exploration, launch the target's development server, discover its URL, or perform browser actions. Application URL remains editable; simple Vite scripts receive an unverified suggestion. Use Check connection to explicitly contact a local target.
+This increment recognizes a selected local project, proposes its name, serves Studio and the API together, and saves/reloads simulation configurations in that project's `.offscript` directory. Starting the host does not start exploration or launch the target development server. Explicit Studio execution can run the controlled demo or interact with real pages; normal browser mode currently uses a deterministic runner, not validated autonomous model decisions. See CONSOLIDATION.md before treating findings/evidence or terminal statuses as verified guarantees. Application URL remains editable; simple Vite scripts receive an unverified suggestion. Use Check connection to explicitly contact a local target.
 
 Use Node.js 24 and npm. From the OFFSCRIPT checkout, install the root and Studio dependencies if needed:
 

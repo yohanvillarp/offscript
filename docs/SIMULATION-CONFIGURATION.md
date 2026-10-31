@@ -4,7 +4,7 @@
 
 `executeConfigureSimulation` creates a persisted, configured simulation without starting exploration. It depends on project-inspection and atomic configuration-storage ports. The existing domain model and lifecycle are unchanged: the simulation is `created`, its selected users are `ready`, and no lifecycle event or outbox row is emitted.
 
-Authenticated configuration HTTP and Studio integration are now implemented in the following increment. Model selection, browser actions, autonomous execution, and automatic service startup remain deferred.
+Authenticated configuration HTTP and Studio integration are now implemented in the following increment. Browser interaction and execution controls are implemented separately; the normal browser factory still defaults to deterministic inference. Operator-facing model selection, validated autonomous reasoning, and automatic service startup remain deferred. See CONSOLIDATION.md.
 
 ## Shared contracts
 
@@ -43,7 +43,7 @@ Studio invalidates the result and aborts the old check whenever the URL changes,
 
 ## Profiles and persistence
 
-The application maps behavioral IDs to the three approved personalities and the selected goal using existing domain factories. Agent IDs use those behavioral keys within the simulation's existing scoped roster. Declared capabilities are empty; effective tool permissions are not inferred from profiles, avatars, URLs, or limits. The existing `AgentProfile` shape is retained.
+The application maps behavioral IDs to the six implemented behavioral profiles and the selected goal using existing domain factories. Agent IDs use those behavioral keys within the simulation's existing scoped roster. Declared capabilities are empty; effective tool permissions are not inferred from profiles, avatars, URLs, or limits. The existing `AgentProfile` shape is retained.
 
 `configurations.createConfiguredSimulation(configuration, simulation)` validates that both values describe the same initial simulation. A single immediate SQLite transaction inserts the simulation, its agents, and configuration metadata. Existing identities return `already-exists` without overwriting; the use case reports `SIMULATION_ALREADY_EXISTS`. Commit errors become `SAVE_FAILED`; inspection errors become `PROJECT_INSPECTION_FAILED`, retaining internal causes for trusted callers.
 
@@ -53,7 +53,7 @@ Migration `0002_simulation_configuration.sql` adds `simulation_configurations`, 
 
 After `start()`, the host exposes trusted in-process `inspectProject()`, `configureSimulation({simulationId, setup})`, and `findConfiguration(id)` methods. Recognition/configuration uses the host's selected root, not an arbitrary path received through an HTTP request. Guarded storage includes the configuration ports; new commits are rejected if host closure began during inspection. Saving configuration does not register a Mozaik session.
 
-The host now exposes authenticated project/create/read/list HTTP operations and built Studio consumes them through shared contracts. The list is limited to the latest 50 configured records; snapshot-only legacy simulations are not fabricated into configurations. No new execution controls are exposed.
+The host now exposes authenticated project/create/read/list HTTP operations and built Studio consumes them through shared contracts. The list is limited to the latest 50 configured records; snapshot-only legacy simulations are not fabricated into configurations. Execution start/inspect/stop/recover and results routes are documented separately in LOCAL-HOST.md; saving still starts nothing.
 
 ## Delete an initial saved configuration
 
@@ -69,4 +69,4 @@ Authenticated `DELETE /api/simulations/:id` returns 204 without a body, 404 for 
 
 Focused tests cover address/profile/budget validation, project naming and fallback without script execution, real SQLite commit/reopen, duplicate preservation, rollback injection, inspection failure before writes, and host composition without execution. Existing lifecycle, parser-helper, and host-security tests are reused rather than duplicated. `typecheck:projects` and `test:projects` are included in root checks and exposed through Make.
 
-Studio now saves and reads configurations through authenticated transport, with explicit avatar-to-behavior mapping and retained request identities on retries. Explicit controlled demo execution control (start, inspect, stop) is now implemented; see [LOCAL-HOST.md](LOCAL-HOST.md). Service startup, broader framework detection, model configuration, permissions, Playwright, skills, and the remaining user profiles remain deferred.
+Studio now saves and reads configurations through authenticated transport, with explicit avatar-to-behavior mapping and retained request identities on retries. Explicit controlled demo execution control (start, inspect, stop) is now implemented; see [LOCAL-HOST.md](LOCAL-HOST.md). Playwright interaction and six profiles are implemented. Service startup, broader framework detection, operator-facing live model setup, general action permissions, skills, Adaptive and Collaborative remain deferred. See CONSOLIDATION.md for current correctness gaps.

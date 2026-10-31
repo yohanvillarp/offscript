@@ -2,7 +2,7 @@
 
 ## Scope
 
-`packages/application/index.ts` exposes request/assignment use cases, atomic investigation commit ports, and a transport-independent outbox batch dispatcher. Production code depends only on domain/contracts public entry points and its own files. It imports no database, Mozaik, framework, timers, or concrete adapter. There is no independent package manifest.
+`packages/application/index.ts` exposes request/assignment/completion use cases, configuration/check/delete/recovery operations, atomic investigation commit ports, and a transport-independent outbox batch dispatcher. Production code depends only on domain/contracts public entry points and its own files. It imports no database, Mozaik, framework, timers, or concrete adapter. There is no independent package manifest.
 
 ## Request sequence
 
@@ -33,4 +33,4 @@ Committers are trusted ports; implementations must validate and atomically persi
 
 `npm run typecheck:application` and `npm run test:application` check strict typing, immutable inputs, context resolution, commit failures/conflicts, and result semantics without external services. They are included in root checks. SQLite and runtime integration tests separately exercise actual delivery boundaries.
 
-Investigation completion, permission policy engines, context-wide transactions, evidence-resource storage, HTTP, CLI commands, and Studio wiring remain unimplemented. Observations and hypotheses remain untrusted data, not execution instructions or confirmed findings.
+Investigation completion and external HTTP/CLI/Studio adapters are implemented. The application remains infrastructure-independent. A general action-policy engine, context-wide transactions and verified evidence-resource ownership remain pending; initial PNG storage is not proof of artifact integrity. See CONSOLIDATION.md. Observations and hypotheses remain untrusted data, not execution instructions or confirmed findings.

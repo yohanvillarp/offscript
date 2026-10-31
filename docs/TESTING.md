@@ -2,6 +2,8 @@
 
 ## Purpose
 
+For current execution/browser/evidence/finding acceptance gaps, read [CONSOLIDATION.md](CONSOLIDATION.md). A deterministic runner proves integration of the exercised path, not autonomous goal pursuit or profile-dependent behavior. A manually constructed finding assessment does not prove independent discovery or corroboration. Tests that encode weaker guarantees must be reviewed when fixing them; a passing suite does not override a reproduced counterexample.
+
 Protect OFFSCRIPT's behavior with a maintainable set of tests. A new function, file, component, or architectural layer is not itself a reason for a new test. Before adding coverage, name the observable failure it should detect and check whether an existing test already detects it.
 
 The current suite was developed alongside domain, contracts, persistence, Mozaik, outbox, and host foundations. It includes useful failure-path coverage but also repetitive assertions and shared-validation matrices. The reported case count includes parameterized inputs; it does not measure independent product guarantees or readiness for real software exploration.
