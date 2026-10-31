@@ -62,13 +62,13 @@ test("simulation results associate findings and observations with known particip
     (p) => p.profileId === results.observations[0]?.agentId,
   );
   assert.ok(participant);
-  assert.equal(participant.name, "Raven");
+  assert.equal(participant.name, "Alex");
   assert.equal(participant.profile, "Explorer");
 
   const participants = results.findings[0]?.participatingAgents.map((agentId) =>
     participantCatalog.find((p) => p.profileId === agentId)?.name,
   );
-  assert.deepEqual(participants, ["Raven", "Fox"]);
+  assert.deepEqual(participants, ["Alex", "Leo"]);
 });
 
 test("simulation execution status parses recent activity for live observability", () => {

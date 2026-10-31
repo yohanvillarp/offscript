@@ -1,4 +1,4 @@
-import { Clock3, Globe, Info, Layers2, UsersRound } from "lucide-react";
+import { Clock3, Globe, Layers2, UsersRound } from "lucide-react";
 import { useRef, useState } from "react";
 import type { UserProfileId } from "@offscript/contracts";
 import { SimulationsEmptyState } from "@/pages/home/ui/SimulationsEmptyState";
@@ -55,11 +55,6 @@ export function SimulationHistory() {
       {history.notice && <p role="status" className="px-5 py-4 text-sm text-accent">{history.notice}</p>}
       {history.error && <p role="alert" className="px-5 py-6 text-sm text-danger-text">{history.error}</p>}
       {!history.loading && !history.error && !history.items.length && <SimulationsEmptyState />}
-
-      <div id="simulation-availability" className="flex items-start gap-2 border-t border-separator bg-canvas px-5 py-3 text-xs leading-relaxed text-muted sm:px-6">
-        <Info aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" strokeWidth={1.5} />
-        <p>Configurations are stored locally. Simulation execution is not available yet.</p>
-      </div>
     </section>
   );
 }

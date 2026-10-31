@@ -21,7 +21,7 @@ export function SimulationIntroduction({ onContinue, returning }: Readonly<{ onC
         {returning ? "Back to configuration" : "Configure simulation"}
         <ArrowRight aria-hidden="true" className="size-4" strokeWidth={1.5} />
       </button>
-      <p className="mt-4 text-xs text-muted">Save your configuration locally. Execution is not available yet.</p>
+      <p className="mt-4 text-xs text-muted">Configure your simulation and run browser explorations locally.</p>
     </main>
   );
 }
