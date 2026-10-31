@@ -39,6 +39,8 @@ make dev-studio
 
 This starts standalone Vite for UI development. For the authenticated connected experience use `make build-local` then `make start-local` with `OFFSCRIPT_PROJECT_ROOT`, or the root launcher described in [LOCAL-TRIAL.md](LOCAL-TRIAL.md). Separate Vite does not receive host cookies or credentials. Stop each process with Ctrl+C. `make preview-studio` serves an existing production build after `make build`.
 
+`make start-local` opens the secure Studio entry in the default browser. Use `npm start -- studio --no-open` for unattended usage, or `make serve-local` for API-only operation. `make pack-local` delegates to `npm pack`, which builds the complete unpublished archive for testing from another project. It does not publish to npm.
+
 ## Validation
 
 | Target | Scope |

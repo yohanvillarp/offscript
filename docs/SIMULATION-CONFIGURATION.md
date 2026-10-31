@@ -29,7 +29,17 @@ Stored configuration adds the caller-supplied simulation ID, resolved project ro
 
 `packages/projects/index.ts` exposes `inspectProject(projectRoot)`. It resolves the selected directory using the filesystem, reads only its `package.json`, and proposes its nonblank `name`. Missing manifests or missing/unusable names fall back to the directory name. Invalid paths, malformed manifests, and unreadable files fail explicitly. Manifests must be regular files of at most 1 MiB.
 
-Inspection does not search parent repositories, scan dependencies, import project code, execute package scripts, read `.env`, detect frameworks, probe ports, or launch services. Manifest values are untrusted metadata, never agent instructions or permissions. This is basic recognition, not a filesystem sandbox or a general discovery engine. Global versus local npm installation does not change the selected project root.
+Inspection also reads the manifest scripts to recognize simple `vite` commands in `dev` or `start`. It suggests the explicit port or Vite default 5173 with a source label. Unsupported flags, compound shell commands, and unknown tools produce no suggestion. Inspection does not search parent repositories, scan installed dependencies, import project code/configuration, execute package scripts, read `.env`, probe ports, or launch services. Manifest values are untrusted metadata, never agent instructions or permissions. This is basic recognition, not a filesystem sandbox or a general discovery engine. Global versus local npm installation does not change the selected project root.
+
+## Target suggestions and availability
+
+`ProjectDescriptor.targetSuggestion` is optional and carries a normalized local URL, `vite-default` or `vite-script` source, and script name. This is an additive project-inspection DTO field, not saved runtime configuration. Vite configuration files, plugins, port fallback, HTTPS, or proxy behavior can override the suggestion. Studio never overwrites a manually edited URL when recognition completes or retries.
+
+Authenticated `POST /api/target/check` accepts only `{url}`. The host invokes `executeCheckTarget` through the `TargetProbe` application port; the Node adapter lives in `packages/projects`. Checks allow HTTP(S) on `localhost`, `127.0.0.1`, or `[::1]` only, and reject credentials and the OFFSCRIPT listening port. Localhost maps directly to IPv4 loopback with IPv6 fallback on connection refusal, without DNS. Remote URLs remain valid simulation targets but are not probed in this increment.
+
+Each check is an explicit GET with a 2.5-second overall deadline, at most two concurrent checks per host, an 8 KiB response-header limit, no credentials/cookies, no redirects, and no returned response body. TLS certificate validation remains enabled. Client disconnect and host shutdown cancel checks. Results distinguish an HTTP response (including redirects and error status codes), unreachable service, timeout, TLS error, and busy host. A response proves neither target identity nor backend readiness.
+
+Studio invalidates the result and aborts the old check whenever the URL changes, and cancels on unmount. Saving does not require a successful check; nothing starts automatically, and results are not persisted. A future exploration start must recheck current readiness rather than trust a stale UI result. Managed process startup and multiple-service orchestration remain deferred.
 
 ## Profiles and persistence
 
@@ -45,8 +55,18 @@ After `start()`, the host exposes trusted in-process `inspectProject()`, `config
 
 The host now exposes authenticated project/create/read/list HTTP operations and built Studio consumes them through shared contracts. The list is limited to the latest 50 configured records; snapshot-only legacy simulations are not fabricated into configurations. No new execution controls are exposed.
 
+## Delete an initial saved configuration
+
+The configuration detail panel offers **Delete simulation**, followed by an inline confirmation naming the simulation. This permanently removes the configuration, configured users, and initial simulation snapshot. It does not delete the target project, database file, or external resources. Studio prevents duplicate submissions, preserves the panel on failure, removes the row after success, and refreshes the list. If refresh fails after deletion, it reports that separately. User-detail views do not offer independent user deletion.
+
+`executeDeleteConfiguredSimulation` depends on an atomic deletion port. The SQLite adapter uses an immediate transaction to require a configuration, a `created` simulation, all users `ready`, and no observations, investigations, or outbox rows in any status. It then deletes configuration, roster, and simulation in dependency order. Any failure rolls back every write. Missing configurations return `not-found`; snapshot-only records are preserved. Other states/data return `not-allowed`. No cancellation event, schema change, or cascading deletion is introduced.
+
+The host rejects deletion for registered or preparing sessions and reserves the simulation ID during deletion to block session registration. Storage admission and shutdown draining apply to deletion as to other writes. This is an in-process exclusion mechanism, not cross-process session ownership. Future multi-host execution needs explicit ownership before these guarantees can extend across processes.
+
+Authenticated `DELETE /api/simulations/:id` returns 204 without a body, 404 for a missing configuration, or 409 `DELETION_NOT_ALLOWED` for an ineligible record/session. Existing Host, Origin, bearer, and Studio cookie/header requirements apply. Terminal/active simulation deletion, archival, evidence retention, and managed service cleanup remain deferred.
+
 ## Verification and next step
 
 Focused tests cover address/profile/budget validation, project naming and fallback without script execution, real SQLite commit/reopen, duplicate preservation, rollback injection, inspection failure before writes, and host composition without execution. Existing lifecycle, parser-helper, and host-security tests are reused rather than duplicated. `typecheck:projects` and `test:projects` are included in root checks and exposed through Make.
 
-Studio now saves and reads configurations through authenticated transport, with explicit avatar-to-behavior mapping and retained request identities on retries. Next: explicit simulation start/observe/stop. Framework/URL suggestions, service startup, model configuration, permissions, Playwright, skills, and the remaining user profiles are deferred.
+Studio now saves and reads configurations through authenticated transport, with explicit avatar-to-behavior mapping and retained request identities on retries. Next: explicit simulation start/observe/stop. Simple Vite URL suggestions and explicit local availability checks are implemented below. Service startup, broader framework detection, model configuration, permissions, Playwright, skills, and the remaining user profiles are deferred.

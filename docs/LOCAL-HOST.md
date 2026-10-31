@@ -6,6 +6,8 @@ The configuration transport increment adds authenticated `GET /api/project`, `PO
 
 When built Studio assets are enabled, the host serves their fixed directory on the same origin. A local entry HTML file submits the instance credential in a POST body to `/studio/session`; it is never placed in a URL. A successful exchange rotates the entry credential and establishes a host-only HttpOnly, SameSite=Strict cookie scoped to the API. Browser API calls must send the same-origin `X-Offscript-Client: studio` header, and cross-origin exchanges remain rejected except the authenticated local-file entry POST. The public asset shell contains no project data or credentials. Failed exchanges do not set cookies. No tokens enter browser storage.
 
+Local-file entry POSTs may carry `Origin: null` or omit Origin, including cross-site fetch metadata. Both still require the expiring one-time body credential; explicit foreign origins remain rejected. Public Studio GET assets accept cross-site navigation metadata so the post-exchange redirect can load. Host validation still applies to all requests, and protected APIs retain origin and authentication checks.
+
 The host binds only to `127.0.0.1`. Programmatic health/API access requires `Authorization: Bearer <token>` using a fresh token for that host instance. Enabled Studio assets are public, while browser configuration APIs require an authenticated session cookie and client header as described below. The `Host` header must match `127.0.0.1` or `localhost` at the listening port. Browser origins are denied unless same-origin or explicitly allowed; CORS is not enabled. Tokens never belong in query strings, request logs, or response bodies.
 
 | Method and path | Success | Unavailable |
@@ -18,6 +20,8 @@ Errors use `{"error":"<code>"}`: `401 UNAUTHORIZED`, `403 HOST_NOT_ALLOWED` or `
 Readiness means host initialization succeeded and shutdown has not begun. It does not imply active agents, an empty outbox, completed handlers, or successful investigations. There are no simulation-control endpoints in this increment.
 
 ## Ownership and startup
+
+Saved configuration deletion is available through authenticated `DELETE /api/simulations/:id`: 204 (empty body), 404 (missing configuration), or 409 `DELETION_NOT_ALLOWED`. Only initial records without related observations, investigations, or outbox data are eligible. The host excludes registered/preparing sessions and blocks registration while deletion is admitted; SQLite rechecks persisted conditions atomically. See SIMULATION-CONFIGURATION.md. This is not a stop/cancel operation or a general history-deletion endpoint.
 
 `packages/runtime/host.ts` exposes `createLocalHost(options)` and host option/context types. It composes SQLite, one outbox dispatcher, an in-process session registry, and the HTTP adapter in `packages/server`. Fastify 5.12.7 is pinned in the root npm package. The existing scheduler-only entry point stays separate, so standalone Mozaik sessions do not load the HTTP/database composition through their dispatcher import.
 
