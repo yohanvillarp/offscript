@@ -9,6 +9,7 @@ export type BrowserManagerOptions = Readonly<{
 
 export class BrowserManager {
   private browser: Browser | null = null;
+  private pendingLaunch: Promise<Browser> | null = null;
   private readonly headless: boolean;
   private readonly sessions = new Set<BrowserUserSession>();
   private closed = false;
@@ -19,11 +20,23 @@ export class BrowserManager {
 
   private async ensureBrowser(): Promise<Browser> {
     if (this.closed) throw new Error("BrowserManager is closed.");
-    if (!this.browser || !this.browser.isConnected()) {
+    if (this.browser && this.browser.isConnected()) {
+      return this.browser;
+    }
+    if (this.pendingLaunch) {
+      return this.pendingLaunch;
+    }
+    this.pendingLaunch = (async () => {
       try {
-        this.browser = await chromium.launch({
+        const browser = await chromium.launch({
           headless: this.headless,
         });
+        if (this.closed) {
+          await browser.close().catch(() => {});
+          throw new Error("BrowserManager was closed during launch.");
+        }
+        this.browser = browser;
+        return browser;
       } catch (cause) {
         if (cause instanceof Error && cause.message.includes("Executable doesn't exist")) {
           throw new Error(
@@ -32,9 +45,11 @@ export class BrowserManager {
           );
         }
         throw cause;
+      } finally {
+        this.pendingLaunch = null;
       }
-    }
-    return this.browser;
+    })();
+    return this.pendingLaunch;
   }
 
   async createSession(options: BrowserSessionOptions): Promise<BrowserUserSession> {
@@ -65,6 +80,16 @@ export class BrowserManager {
       await session.close().catch(() => {});
     }
     this.sessions.clear();
+
+    if (this.pendingLaunch) {
+      try {
+        const browser = await this.pendingLaunch;
+        await browser.close().catch(() => {});
+      } catch {
+        // Ignore launch error during close
+      }
+      this.pendingLaunch = null;
+    }
 
     if (this.browser) {
       await this.browser.close().catch(() => {});

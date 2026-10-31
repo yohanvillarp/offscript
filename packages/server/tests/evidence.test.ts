@@ -49,7 +49,13 @@ test("evidence endpoint serves visual artifacts securely with path traversal pro
     const res = await http(origin, `/api/simulations/${simId}/evidence/${evId}`, { headers: auth });
     assert.equal(res.status, 200);
     assert.equal(res.headers["content-type"], "image/png");
+    assert.ok(String(res.headers["cache-control"]).includes("private"));
+    assert.ok(String(res.headers["cache-control"]).includes("no-cache"));
     assert.deepEqual(res.body, fakePng);
+
+    // Cross-simulation read isolation (scoped reads do not alias)
+    const otherSimRes = await http(origin, `/api/simulations/other-sim-id/evidence/${evId}`, { headers: auth });
+    assert.equal(otherSimRes.status, 404);
 
     // Verify deletion cleans up
     await store.deleteSimulationEvidence(simId);
@@ -58,4 +64,30 @@ test("evidence endpoint serves visual artifacts securely with path traversal pro
   }
 
   await host.close();
+});
+
+test("evidence store enforces age-based retention and rejects illegal or traversal identifiers", async (t) => {
+  const temp = hostContext(t);
+  const { createEvidenceStore } = await import("../../runtime/evidence-store.ts");
+  const store = createEvidenceStore(temp.root, 2);
+  const sim = simulationId("sim-retention-test");
+  const sample = Buffer.from([0x01, 0x02]);
+
+  // Rejects illegal identifiers
+  await assert.rejects(async () => store.saveEvidence(sim, "ev/traversal", sample), /Invalid evidenceId/);
+  await assert.rejects(async () => store.saveEvidence(simulationId("../escape"), "ev-1", sample), /Invalid simulationId/);
+
+  // Retention: max 2 screenshots per simulation
+  await store.saveEvidence(sim, "ev-1", sample);
+  await new Promise((r) => setTimeout(r, 10));
+  await store.saveEvidence(sim, "ev-2", sample);
+  await new Promise((r) => setTimeout(r, 10));
+  await store.saveEvidence(sim, "ev-3", sample);
+
+  // Oldest (ev-1) must have been evicted, while ev-2 and ev-3 remain
+  assert.equal(await store.getEvidence(sim, "ev-1"), undefined);
+  assert.ok(await store.getEvidence(sim, "ev-2"));
+  assert.ok(await store.getEvidence(sim, "ev-3"));
+
+  await store.deleteSimulationEvidence(sim);
 });

@@ -2,9 +2,9 @@
 
 ## Responsibility and boundaries
 
-Investigation requests and assignments now commit a validated snapshot and its exact semantic event together. SQLite is the durable adapter; controlled sessions default to an ephemeral memory adapter. Domain and event schemas are unchanged. This is a delivery queue, not event sourcing, a second event bus, or a replacement for Mozaik's reactive runtime.
+Investigation requests, assignments and completions commit a validated snapshot and its exact semantic event together. SQLite is the durable adapter; controlled sessions default to an ephemeral memory adapter. Domain and event schemas are unchanged. This is a delivery queue, not event sourcing, a second event bus, or a replacement for Mozaik's reactive runtime.
 
-`InvestigationRequestCommitter.commitRequest(event)` creates revision 0. `InvestigationAssignmentCommitter.commitAssignment(event, expectedRevision)` validates the additive domain transition and increments the storage revision. Both derive the snapshot from the parsed payload. A failed snapshot, relationship, or outbox insert rolls back the entire transaction. Assignment conflicts enqueue nothing.
+`InvestigationRequestCommitter.commitRequest(event)` creates revision 0. `InvestigationAssignmentCommitter.commitAssignment(event, expectedRevision)` validates the additive domain transition and increments the storage revision. The completion committer likewise validates the completion transition and expected revision. All derive the snapshot from the parsed payload. A failed snapshot, relationship, or outbox insert rolls back the entire transaction. Assignment conflicts enqueue nothing.
 
 Identical event ID/content/revision returns `duplicate`; reuse with different content returns `event-conflict`. Application results say `queued` or `already-recorded`, never that processing finished. Duplicate commit protection is not general command idempotency: reexecuting an assignment against its already-updated snapshot still encounters domain duplicate-assignee validation.
 
@@ -38,4 +38,4 @@ Acceptance means `sendEvent` returned, not that asynchronous situation handlers 
 
 Root checks include application, persistence, orchestration, and runtime typechecks/tests. Disk-backed tests cover atomic rollback, original-schema upgrades, reopen, competing connections, stale tokens, lost acknowledgements, ordering, deferral, corrupt events, bounded retries, and exhaustion. A real Mozaik runtime with deterministic inference exercises SQLite request/assignment composition without model API calls or a browser.
 
-The local Fastify host now owns shared dispatch and protected health routes; hosted sessions use explicit external dispatch. See [LOCAL-HOST.md](LOCAL-HOST.md). Simulation-control HTTP, CLI/Studio transport, durable handler processing/recovery, automatic agent resumption, investigation completion use cases, evidence resources, cleanup/retention, and operator retry controls remain deferred.
+The local Fastify host now owns shared dispatch and protected health routes; hosted sessions use explicit external dispatch. See [LOCAL-HOST.md](LOCAL-HOST.md). Execution/results HTTP, CLI/Studio wiring, investigation completion, and initial evidence files are implemented. Durable handler processing/recovery, automatic agent resumption and operator outbox retry controls remain deferred. Evidence integrity/retention and lifecycle error handling require consolidation; see CONSOLIDATION.md.

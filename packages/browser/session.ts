@@ -184,9 +184,18 @@ export class BrowserUserSession {
     }
   }
 
+  /**
+   * Captures the rendered viewport of the active in-scope page as a PNG image.
+   * Password fields (<input type="password">) are rendered with native masking.
+   * Universal optical redaction on arbitrary rendered text/canvas is not performed.
+   */
   async screenshot(): Promise<ScreenshotResult> {
     if (this.closed) return { success: false, error: "SESSION_CLOSED" };
     try {
+      const currentUrl = this.page.url();
+      if (!isUrlInScope(currentUrl, this.targetUrl)) {
+        return { success: false, error: `OUT_OF_SCOPE: Cannot capture screenshot from "${currentUrl}".` };
+      }
       const data = await this.page.screenshot({ type: "png" });
       return { success: true, data, mimeType: "image/png" };
     } catch (cause) {

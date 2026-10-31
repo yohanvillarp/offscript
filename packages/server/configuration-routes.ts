@@ -79,7 +79,7 @@ export function configurationRoutes(server: FastifyInstance, services: Configura
     }
     const evidence = await services.getEvidence(simulationId(request.params.id), evId);
     if (!evidence) return reply.code(404).send({ error: "NOT_FOUND" });
-    return reply.type(evidence.contentType).header("Cache-Control", "public, max-age=86400").send(evidence.data);
+    return reply.type(evidence.contentType).header("Cache-Control", "private, no-cache, no-store, must-revalidate").send(evidence.data);
   });
   server.post<{ Params: { id: string } }>("/api/simulations/:id/stop", async (request) => {
     return services.stopSimulation(simulationId(request.params.id));

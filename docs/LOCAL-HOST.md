@@ -1,10 +1,14 @@
 # Local runtime host
 
+## Current validation limits
+
+The host exposes controlled-demo and browser-exploration execution, results, recovery and initial evidence retrieval. The normal CLI browser factory defaults to deterministic inference. The coordinator can report terminal state after swallowed persistence/close failures, and restored status does not preserve all execution metadata. The evidence endpoint currently replaces the security hook's no-store header with public caching. These are known gaps, not established guarantees; see [CONSOLIDATION.md](CONSOLIDATION.md), C1-C4, before planning the next slice.
+
 ## HTTP contract
 
 The configuration transport increment adds authenticated `GET /api/project`, `POST /api/simulations` (`{simulationId, setup}`), `GET /api/simulations/:id`, and `GET /api/simulations` (the latest 50 saved configurations). Creation returns 201 with configuration metadata, duplicates 409, missing records 404, and invalid setup 400 with a safe field path. Creation never starts agents. Existing bearer access remains supported.
 
-Simulation execution control adds authenticated `POST /api/simulations/:id/start`, `GET /api/simulations/:id/execution`, and `POST /api/simulations/:id/stop`. Starting requires an explicit `{ mode: "controlled-demo" }` or `{ mode: "browser-exploration" }` body. Controlled demo runs agents against the simulated local cart fixture, whereas browser exploration navigates and interacts with the configured target application URL via Playwright in isolated browser contexts. Duplicate starts or invalid states return 409 `EXECUTION_CONFLICT`. Stopping closes the session and persists domain cancellation. In-memory controller phases (`idle`, `starting`, `running`, `stopping`, `completed`, `failed`, `cancelled`, `interrupted`) remain distinct from domain lifecycle states; a simulation found `running` in SQLite after host restart is reported as `interrupted` without automatic resumption.
+Simulation execution control adds authenticated `POST /api/simulations/:id/start`, `GET /api/simulations/:id/execution`, and `POST /api/simulations/:id/stop`. Starting requires an explicit `{ mode: "controlled-demo" }` or `{ mode: "browser-exploration" }` body. Controlled demo runs agents against the simulated local cart fixture, whereas browser exploration navigates and interacts with the configured target application URL via Playwright in isolated browser contexts. Duplicate starts or invalid states return 409 `EXECUTION_CONFLICT`. Stopping attempts session closure and domain cancellation; following C3 consolidation, closure and persistence errors are propagated as explicit failures (`SESSION_CLOSE_FAILED`, `SETTLEMENT_STORAGE_FAILED`), and terminal phases report `activeAgents: []`. In-memory controller phases (`idle`, `starting`, `running`, `stopping`, `completed`, `failed`, `cancelled`, `interrupted`) remain distinct from domain lifecycle states; a simulation found `running` in SQLite after host restart is reported as `interrupted` without automatic resumption or fabricated modes.
 
 
 When built Studio assets are enabled, the host serves their fixed directory on the same origin. A local entry HTML file submits the instance credential in a POST body to `/studio/session`; it is never placed in a URL. A successful exchange rotates the entry credential and establishes a host-only HttpOnly, SameSite=Strict cookie scoped to the API. Browser API calls must send the same-origin `X-Offscript-Client: studio` header, and cross-origin exchanges remain rejected except the authenticated local-file entry POST. The public asset shell contains no project data or credentials. Failed exchanges do not set cookies. No tokens enter browser storage.
@@ -18,7 +22,7 @@ The host binds only to `127.0.0.1`. Programmatic health/API access requires `Aut
 | `GET /health/live` | `200 {"status":"alive"}` | Process/socket no longer available after shutdown. |
 | `GET /health/ready` | `200 {"status":"ready"}` | `503 {"status":"not-ready"}` while the host is not ready. |
 
-Errors use `{"error":"<code>"}`: `401 UNAUTHORIZED`, `403 HOST_NOT_ALLOWED` or `ORIGIN_NOT_ALLOWED`, `404 NOT_FOUND`, `400 INVALID_REQUEST`, and `500 INTERNAL_ERROR`. HTTP responses never expose database paths, credentials, exceptions, observations, or agent state. Route JSON schemas in `packages/server` are the executable contract.
+Errors use `{"error":"<code>"}`: `401 UNAUTHORIZED`, `403 HOST_NOT_ALLOWED` or `ORIGIN_NOT_ALLOWED`, `404 NOT_FOUND`, `400 INVALID_REQUEST`, and `500 INTERNAL_ERROR`. Health/error responses do not expose database paths, credentials, internal exceptions or observation content. Authenticated results/execution endpoints intentionally return their public contracts. Route JSON schemas in `packages/server` are the executable contract.
 
 Readiness means host initialization succeeded and shutdown has not begun. It does not imply active agents, an empty outbox, completed handlers, or successful investigations. There are no simulation-control endpoints in this increment.
 
@@ -50,7 +54,7 @@ Run `npm run dev:server` with Node.js 24. It uses the working directory as the d
 
 The entry prints the listening address and the path of an access file inside the configured data directory. It never prints the token. The uniquely named `.offscript-host-<pid>-<random>.json` contains `{origin, token}`, is created exclusively with mode 0600, and is removed on normal SIGINT/SIGTERM shutdown. Git ignores that filename pattern even in a custom data directory. POSIX mode bits do not establish Windows ACL isolation; protect the project/data directory with appropriate operating-system access controls. A crash can leave a stale file; tokens are instance-specific. Cleanup preserves a file whose contents have changed. No token is committed or returned by health routes.
 
-Except for the credential-authenticated local-file entry POST, no origins are allowed by default except the actual same origin. Programmatic callers may omit `Origin`. Explicitly allowed origins are checked but no CORS headers or preflight support are added; browser/Studio transport is a subsequent task. Forwarded host headers are not trusted. Application/tool permissions remain separate from host authentication.
+Except for the credential-authenticated local-file entry POST, no origins are allowed by default except the actual same origin. Programmatic callers may omit `Origin`. Explicitly allowed origins are checked but no CORS headers or preflight support are added; same-origin browser/Studio transport is implemented; general cross-origin access is not enabled. Forwarded host headers are not trusted. Application/tool permissions remain separate from host authentication.
 
 ## Verification and deferred work
 

@@ -96,6 +96,7 @@ export async function startTestServer(): Promise<TestServerHandle> {
     server,
     origin,
     close: () => new Promise<void>((resolve, reject) => {
+      server.closeAllConnections?.();
       server.close((err) => (err ? reject(err) : resolve()));
     }),
   };

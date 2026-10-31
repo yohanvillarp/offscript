@@ -26,7 +26,7 @@ The implementation uses synchronous SQLite calls behind asynchronous application
 | `investigations` | Request metadata, existing domain lifecycle fields, and storage-only revision. |
 | `investigation_observations` | Ordered, unique links to observations from the same simulation. |
 | `investigation_agents` | Ordered, unique collaborator roster within that simulation. |
-| `event_outbox` | Validated request/assignment events, revision ordering, leases, attempts, and acceptance metadata. |
+| `event_outbox` | Validated request/assignment/completion events, revision ordering, leases, attempts, and acceptance metadata. |
 | `simulation_configurations` | Validated setup metadata committed atomically with the initial simulation and roster. |
 
 Composite foreign keys enforce simulation scope for observation authors, requesters, collaborators, and related observations. Unique constraints preserve identity and relationship positions. Indexes support observation lookup by simulation/time and investigations by simulation/status. Status/reason and JSON-shape checks complement domain/contract validation; SQL constraints alone do not certify a valid domain history.
@@ -46,7 +46,7 @@ Simulation loading validates profiles and summaries, reconstructs immutable snap
 
 Assignment acquires an immediate transaction, validates the current snapshot/revision, and verifies that the requested update is the domain's additive assignment operation. It cannot replace the hypothesis, change simulation, drop existing collaborators, or overwrite a competing revision. A failed collaborator insert rolls back both roster and revision. Missing records and conflicts preserve the existing port results. SQLite/Drizzle operation errors retain their underlying causes for application-level error mapping.
 
-Simulation lifecycle updates, observation edits, investigation completion writes, paginated history, and production runtime wiring are not exposed speculatively. Mozaik runtime state and agent memories remain session-owned. Optional `SessionOptions.storage` now supplies these durable investigation/observation/outbox adapters to an explicitly prepared session; it does not restore runtime state or resume agents. Await session closure before closing its supplied database.
+Aggregate lifecycle updates and investigation completion commits are implemented. Observation edits, expanded paginated history, and durable runtime restoration remain deferred. Following C3 consolidation, the execution coordinator propagates rejected and failed aggregate writes explicitly to `SETTLEMENT_STORAGE_FAILED` instead of swallowing storage errors. Mozaik runtime state and agent memories remain session-owned. Optional `SessionOptions.storage` now supplies these durable investigation/observation/outbox adapters to an explicitly prepared session; it does not restore runtime state or resume agents. Await session closure before closing its supplied database.
 
 `configurations` now exposes atomic configured creation and metadata reads. Existing simulation creation remains available for snapshot/bootstrap use without fabricating setup metadata. See [SIMULATION-CONFIGURATION.md](SIMULATION-CONFIGURATION.md).
 
@@ -58,7 +58,7 @@ It also supports atomic deletion of initial saved configurations: only `created`
 
 `migrate()` reads the checked-in Drizzle SQL/journal artifacts and applies pending statements plus history in a single immediate transaction. `__offscript_migrations` records consecutive versions, journal timestamps, and SHA-256 SQL checksums. This small runner uses Drizzle's migration-file reader/query execution and owns history validation; it does not claim compatibility with the default Drizzle migrator's separate history table.
 
-An unknown future version, edited applied migration, or inconsistent history is rejected. Failed DDL and history insertions roll back together. Repeated migration is a no-op; existing data is preserved. An unmanaged conflicting schema is not reset. Applied migration files must remain immutable and LF-normalized; Git attributes enforce consistent text line endings across platforms. The SQL/journal assets must ship alongside the module when npm packaging is implemented.
+An unknown future version, edited applied migration, or inconsistent history is rejected. Failed DDL and history insertions roll back together. Repeated migration is a no-op; existing data is preserved. An unmanaged conflicting schema is not reset. Applied migration files must remain immutable and LF-normalized; Git attributes enforce consistent text line endings across platforms. The local npm archive ships the SQL/journal assets alongside compiled JavaScript.
 
 There is no automatic downgrade, destructive reset, backup mechanism, or live database copying command. Future migrations remain reviewed code changes; startup must not proceed after a schema compatibility error.
 
@@ -66,4 +66,4 @@ There is no automatic downgrade, destructive reset, backup mechanism, or live da
 
 `npm run typecheck:persistence`, `npm run test:persistence`, and `npm run db:check` are included in root validation. Tests use temporary disk-backed databases, independent connections, restart/reopen, rollback injection, scope constraints, corruption rejection, migration upgrades/checksums, CAS conflicts, and bounded lock contention. The existing request/assignment application cases run against the real repositories without external services or a browser.
 
-The transactional outbox closes the investigation snapshot/event insertion crash gap; original snapshot-only records are not backfilled. Dispatcher acknowledgement and handler execution remain distinct. The local host now composes storage with protected health endpoints and explicit startup/shutdown; simulation-control endpoints, CLI distribution, Studio changes, and real browser exploration remain deferred. See [OUTBOX.md](OUTBOX.md).
+The transactional outbox closes the investigation snapshot/event insertion crash gap; original snapshot-only records are not backfilled. Dispatcher acknowledgement and handler execution remain distinct. The local host now composes storage with protected health endpoints and explicit startup/shutdown; execution/results endpoints, local CLI archives, Studio wiring, and browser interaction are implemented. Default browser decisions remain deterministic; durable handler recovery and product-validated autonomy remain pending. Evidence PNG storage is separate from SQLite and has integrity/retention gaps tracked in CONSOLIDATION.md. See [OUTBOX.md](OUTBOX.md).

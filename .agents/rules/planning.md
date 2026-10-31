@@ -7,6 +7,8 @@ description: "Use when planning OFFSCRIPT milestones, choosing the next implemen
 
 Read `AGENTS.md`, `docs/PROJECT.md`, `docs/ARCHITECTURE.md`, and `docs/ROADMAP.md` from the repository root.
 
+Also read `docs/CONSOLIDATION.md` for execution/browser/evidence/finding work. Reproduce the relevant gap before calling it fixed. Keep implemented code, controlled integration evidence, and actual autonomous product validation separate. A milestone requires acceptance evidence, not just a collection of classes, prompts, or passing fixtures.
+
 Check relevant source and Git state before describing a capability as implemented or merged. A roadmap entry is a proposed outcome, not permission to execute it.
 
 Plan one coherent, reviewable slice with observable completion criteria. Preserve unresolved decisions until the task requires and authorizes resolving them. Do not invent internal modules, public contracts, or tables to fill future milestones.

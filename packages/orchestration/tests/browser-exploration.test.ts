@@ -63,7 +63,7 @@ test("autonomous browser exploration executes via local host on a real web appli
     const firstRow = rows[0]!;
     assert.equal(firstRow.simulationId, simId);
     assert.equal(firstRow.agentId, explorer);
-    assert.equal(firstRow.location, "/");
+    assert.equal(firstRow.location, server.origin + "/");
 
     // Inspect execution status
     const exec = await host.inspectExecution(simId);
@@ -89,6 +89,57 @@ test("autonomous browser exploration executes via local host on a real web appli
   } finally {
     await server.close();
   }
+});
+
+test("record_observation failure injection does not create ghost evidence and binds real location", async () => {
+  const { browserExplorationTools } = await import("../tools/browser-exploration-tools.ts");
+  const { ExplorationState } = await import("../state.ts");
+  const { simulationId, agentId } = await import("../../domain/index.ts");
+
+  const simId = simulationId("sim-evidence-fail-injection");
+  const agId = agentId("tester");
+  const state = new ExplorationState({
+    id: simId,
+    agents: [{ id: agId, profile: { name: "Explorer", personality: "active", goals: [] } }],
+  } as any);
+  state.permissions.set(agId, new Set(["record_observation"]));
+
+  const mockBrowserSession = {
+    getCurrentUrl: () => "http://127.0.0.1:8080/actual-page",
+    screenshot: async () => ({ success: false, error: "INJECTED_CAPTURE_FAILURE" }),
+  } as any;
+
+  const mockStorage = {
+    observations: {
+      async createObservation() { return "created" as const; },
+    },
+  } as any;
+
+  const published: any[] = [];
+  const tools = browserExplorationTools(
+    state,
+    agId,
+    mockBrowserSession,
+    (event) => published.push(event),
+    mockStorage,
+    { saveEvidence: async () => {} } as any,
+  );
+
+  const recordTool = tools.find((t) => t.name === "record_observation");
+  assert.ok(recordTool);
+
+  const res = (await recordTool.invoke({
+    description: "Observed issue while screenshot capture fails",
+    location: "/untrusted-location",
+  })) as { observationId: string; evidenceId: string };
+
+  assert.ok(res.observationId);
+  assert.equal(res.evidenceId, "");
+
+  const saved = state.observations.get(res.observationId as any);
+  assert.ok(saved);
+  assert.equal(saved.context.location, "http://127.0.0.1:8080/actual-page");
+  assert.deepEqual(saved.evidenceIds, []);
 });
 
 test("browser exploration initializes instructions and executes with expanded behavioral profiles", async (t) => {

@@ -28,7 +28,7 @@ export type AgentActivityItem = Readonly<{
 export type SimulationExecutionStatus = Readonly<{
   simulationId: SimulationId;
   phase: SimulationExecutionPhase;
-  mode: SimulationExecutionMode;
+  mode?: SimulationExecutionMode | undefined;
   turnsCount: number;
   activeAgents: readonly string[];
   failureReason?: string;
@@ -53,7 +53,7 @@ export function parseSimulationExecutionStatus(value: unknown): SimulationExecut
   ]);
   const id = simulationId(text(input.simulationId, "executionStatus.simulationId"));
   const phase = oneOf(input.phase, simulationExecutionPhases, "executionStatus.phase");
-  const mode = oneOf(input.mode, simulationExecutionModes, "executionStatus.mode");
+  const mode = input.mode !== undefined ? oneOf(input.mode, simulationExecutionModes, "executionStatus.mode") : undefined;
   if (typeof input.turnsCount !== "number" || !Number.isSafeInteger(input.turnsCount) || input.turnsCount < 0) {
     throw new ContractValidationError("executionStatus.turnsCount", "Expected a non-negative integer.");
   }
@@ -83,7 +83,7 @@ export function parseSimulationExecutionStatus(value: unknown): SimulationExecut
   return Object.freeze({
     simulationId: id,
     phase,
-    mode,
+    ...(mode !== undefined ? { mode } : {}),
     turnsCount: input.turnsCount,
     activeAgents: Object.freeze([...input.activeAgents]),
     ...(failureReason ? { failureReason } : {}),

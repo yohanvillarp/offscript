@@ -13,6 +13,8 @@ export type ExecutionSessionHandle = HostedSession & {
   snapshot?(): {
     turns?: readonly { agentId: AgentId; count: number }[] | undefined;
     recentActivity?: readonly { agentId: string; action: string; location?: string | undefined; timestamp: string }[] | undefined;
+    failures?: readonly { stage?: string | undefined; agentId?: string | undefined; cause?: unknown }[] | undefined;
+    activeAgents?: readonly string[] | undefined;
   };
   waitForIdle?(timeoutMs?: number): Promise<unknown>;
 };

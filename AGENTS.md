@@ -15,6 +15,16 @@ For milestone planning, also read `docs/ROADMAP.md`. It records proposed outcome
 
 Implement only the task explicitly requested in the current prompt. Never implement the entire roadmap automatically. Do not create speculative features, abstractions, services, modules, or database tables.
 
+## Repository skills
+
+Use the relevant repository skill when its workflow materially applies:
+
+- Capability/readiness audits or roadmap claims: [.agents/skills/offscript-capability-audit/SKILL.md](.agents/skills/offscript-capability-audit/SKILL.md).
+- Lifecycle, evidence, finding or browser changes crossing ownership boundaries: [.agents/skills/offscript-boundary-review/SKILL.md](.agents/skills/offscript-boundary-review/SKILL.md).
+- Approved substantive feature/fix delivery: [.agents/skills/offscript-scoped-delivery/SKILL.md](.agents/skills/offscript-scoped-delivery/SKILL.md).
+
+Load only the applicable skill, not the whole catalog for every task. Skills guide execution; they do not override the user's scope, authorize external actions or require approval already supplied in the session. Antigravity discovery/use is documented in docs/ANTIGRAVITY.md.
+
 ## Respect existing architecture
 
 - Use npm without Workspaces. Do not introduce pnpm, Yarn, Bun, Nx, or Turborepo.
@@ -59,6 +69,10 @@ Read `docs/TESTING.md` before adding or restructuring tests. Test observable beh
 Studio currently offers `npm run build` (TypeScript project build plus Vite), `npm run lint`, `npm run dev`, and `npm run preview`, run from `apps/studio`. The private root package manages contribution tooling without workspaces and exposes `npm run lint`, `npm run build`, and `npm run check`. Domain validation is available through `npm run typecheck:domain` and `npm run test:domain` (also included in `npm test`). Contracts have corresponding `npm run typecheck:contracts` and `npm run test:contracts` commands. `npm test` runs both modules; `npm run lint` covers internal packages and Studio. `npm run check` includes all module typechecks/tests, lint, and the Studio build. Studio draft validation tests run with `npm --prefix apps/studio test` and `npm --prefix apps/studio run typecheck:tests`; both are included in the root checks. Application validation uses `npm run typecheck:application` and `npm run test:application`; both are included in root checks, and `npm test` also runs application tests. Orchestration validation uses `npm run typecheck:orchestration` and `npm run test:orchestration`, included in root checks; tests use the installed Mozaik runtime, deterministic inference, and blocked network. `npm run demo:mozaik` runs the controlled integration fixture; `-- --live` is opt-in provider inference. Read `docs/MOZAIK-INTEGRATION.md` for the pinned package behavior and explicit cloud-export opt-out. Persistence validation uses `npm run typecheck:persistence`, `npm run test:persistence`, and `npm run db:check`, included in root checks. `npm run db:generate` generates reviewed migration artifacts; applied migrations must remain immutable. Read `docs/PERSISTENCE.md` before storage changes. Runtime outbox validation uses `npm run typecheck:runtime` and `npm run test:runtime`, included in root checks. Read `docs/OUTBOX.md` before changing delivery semantics. Server validation uses `npm run typecheck:server` and `npm run test:server`, included in root checks. `npm run dev:server` starts the protected local health host. Read `docs/LOCAL-HOST.md` before host/HTTP lifecycle changes. Project inspection validation uses `npm run typecheck:projects` and `npm run test:projects`, included in root checks. Read `docs/SIMULATION-CONFIGURATION.md` before setup/recognition changes. Browser interaction validation uses `npm run typecheck:browser` and `npm run test:browser`, included in root checks. Read `docs/BROWSER-INTERACTION.md` for scope enforcement and adapter behavior. Read `docs/LOCAL-TRIAL.md` for same-origin Studio authentication and local archive usage. `npm run build:local` produces distributable JavaScript, migrations, and Studio assets; do not ship source TypeScript under node_modules or put credentials in URLs/browser storage. There is no end-to-end browser test suite. Documentation-only tasks do not require installing dependencies or running application builds.
 
 ## Documentation discipline
+
+Before planning an execution, browser, evidence, or finding milestone, read `docs/CONSOLIDATION.md` and recheck its observations against current source. A class, endpoint, prompt, merged PR, or passing deterministic test does not establish an autonomous product outcome. Distinguish implemented code, integration-tested guarantees, and product-validated behavior in documentation and reports.
+
+Do not close a roadmap milestone merely because its components exist. Record acceptance evidence, execution mode, target/model conditions, and remaining limitations. Preserve known correctness gaps until a demonstrated fix resolves them; do not silently replace them with stronger claims. Independent corroboration is not established by assignment or participant counts, and an evidence reference is not proof of an available artifact.
 
 For CLI/distribution changes, validate the archive produced by `npm pack` from a separate project directory. Use `studio --no-open` in unattended trials; never open a real browser as part of automated checks. Help/version must remain free of host startup and project storage effects. Preserve the host's existing resource ownership and keep credentials out of URLs.
 

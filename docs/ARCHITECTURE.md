@@ -2,24 +2,26 @@
 
 Read [PROJECT.md](PROJECT.md) for product semantics and implementation status.
 
+Read [CONSOLIDATION.md](CONSOLIDATION.md) before using an implemented component as evidence of readiness. Browser execution currently defaults to deterministic inference; finding confirmation, artifact integrity/privacy and lifecycle settlement have known unresolved gaps. Documentation corrections do not implement those fixes.
+
 ## Confirmed direction
 
 - TypeScript and Node.js, managed with npm without npm Workspaces.
 - A CLI plus the existing React/Vite Studio. Do not relocate the CLI or restructure Studio without explicit authorization.
-- Internal modular code under `packages/`, with hexagonal boundaries and dependency inversion where meaningful. Directories outside the implemented domain and contracts remain provisional scaffolding, not a finalized package design.
+- Internal modular code under `packages/`, with hexagonal boundaries and dependency inversion where meaningful. Implemented internal modules include application, contracts, domain, browser, orchestration, persistence, runtime, server and projects. Empty directories elsewhere do not finalize future boundaries.
 - Mozaik for concurrent multi-agent coordination and Playwright for browser automation.
-- SQLite with Drizzle for local persistence. Fastify provides the initial protected local health interface; simulation-control HTTP and Studio transport remain deferred.
+- SQLite with Drizzle for local persistence. Fastify serves protected health, configuration, execution, results and evidence routes, with same-origin Studio authentication. Implemented endpoints do not establish action authorization or lifecycle correctness.
 - Typed semantic events and shared state for coordination and visibility.
 - Explicit security policy enforcement and investigation/evidence management.
 - Runtime composition connecting application behavior to replaceable infrastructure adapters.
 
-The root package pins @mozaik-ai/core 4.2.0, integrated through packages/orchestration against a controlled local fixture. SQLite persistence uses exact root dependencies drizzle-orm 0.45.4 and better-sqlite3 13.0.3, with versioned migrations. Fastify 5.12.7 is installed for the local host. Playwright 1.51.0 is installed; packages/browser provides bounded, authorized browser interaction and observation attribution with Chromium.
+The root package pins @mozaik-ai/core 4.2.0, integrated through packages/orchestration against a controlled local fixture. SQLite persistence uses exact root dependencies drizzle-orm 0.45.4 and better-sqlite3 13.0.3, with versioned migrations. Fastify 5.12.7 is installed for the local host. Playwright 1.64.1 is declared in the root manifest; packages/browser provides bounded, authorized browser interaction and observation attribution with Chromium.
 
 ## Dependency direction and responsibilities
 
 Domain logic owns exploration and evidence semantics without importing browser, database, UI, orchestration-library, or model-provider implementations. Application use cases coordinate domain behavior through explicit ports where external capabilities are needed. Infrastructure implements those ports; it depends inward on their contracts. Runtime composition supplies concrete implementations.
 
-CLI and Studio initiate use cases and present results. They must not become alternative owners of domain rules. Studio currently uses FSD with `@/` imports; retain its existing organization. Home and New simulation are separate page slices and share the header through `shared/ui/studio-header`. Studio uses “Users” for artificial-user selection, while internal participant and domain agent terminology remains unchanged. The page-local UserOption component owns selection presentation and optional profile details. Shared participant metadata and UserAvatar artwork support both setup and the saved-configuration detail panel. The participant catalog presents three approved behavioral profiles: Explorer (Raven), Impatient (Fox), and Beginner (Compass). Profile descriptions and motivations are presentation metadata backed by local prerendered artwork, without WebGL dependencies, runtime instructions, or mappings to domain agent factories. Avatar identity is separate from behavioral metadata; neither determines tools, skills, or permissions. See PROJECT.md for product semantics. The existing domain profile shape is unchanged; separate goal assignment, skill composition, and policy enforcement remain future implementation concerns. The setup editor owns an in-memory UI draft and pure field validation within its page slice; it does not instantiate domain simulations, emit lifecycle events, authorize actions, or persist configuration.
+CLI and Studio initiate use cases and present results. They must not become alternative owners of domain rules. Studio currently uses FSD with `@/` imports; retain its existing organization. Home and New simulation are separate page slices and share the header through `shared/ui/studio-header`. Studio uses “Users” for artificial-user selection, while internal participant and domain agent terminology remains unchanged. The page-local UserOption component owns selection presentation and optional profile details. Shared participant metadata and UserAvatar artwork support both setup and the saved-configuration detail panel. The participant catalog contains Explorer (Raven), Impatient (Fox), Beginner (Compass), Regular (Sparrow), Meticulous (Owl), and Distrustful (Badger). Profile descriptions and motivations are presentation metadata backed by local prerendered artwork, without WebGL dependencies. Configuration maps behavioral IDs to domain profiles, and browser factories supply profile-specific instructions; deterministic inference does not establish differentiated behavior. Avatar identity is separate from behavioral metadata; neither determines tools, skills, or permissions. See PROJECT.md for product semantics. The existing domain profile shape is unchanged; separate goal assignment, skill composition, and policy enforcement remain future implementation concerns. The setup editor owns an in-memory UI draft and pure field validation within its page slice; it submits validated setup to the authenticated host rather than instantiating domain simulations or owning persistence/authorization rules.
 
 ```mermaid
 flowchart TD
@@ -33,7 +35,7 @@ flowchart TD
   RUNTIME --> ADAPTERS
 ```
 
-The diagram is conceptual. The local host now serves built Studio and configuration APIs on the same origin; execution transport remains deferred. Arrows express dependencies or composition, not a finalized message flow or module tree.
+The diagram is conceptual. The local host now serves built Studio and configuration APIs on the same origin; execution and results transport are also implemented, with correctness gaps tracked in CONSOLIDATION.md. Arrows express dependencies or composition, not a finalized message flow or module tree.
 
 ## Required boundaries
 
@@ -82,7 +84,7 @@ The domain now includes branded observation/evidence identities and an immutable
 
 Contracts expose `ObservationSummary` and `observation.created` through an opt-in `SemanticEvent` union and creation/parsing/serialization functions. Existing lifecycle entry points remain unchanged and reject observation events. The new event uses the existing version-1 envelope; validation checks matching simulation and agent-origin authorship. A system may record an observation while preserving its agent author. No existing payload schema changes, so existing lifecycle schemas remain version 1. See [OBSERVATIONS.md](OBSERVATIONS.md) for the field rules, compatibility boundary, and unresolved evidence/time guarantees.
 
-Observations do not trigger investigations in this implementation. Domain values and contracts remain independent of Mozaik, Playwright, persistence, CLI, and Studio. Tests are included in the existing domain/contracts validation commands.
+Observation contracts do not themselves trigger investigations; orchestration tools and reactive handlers coordinate that behavior. Domain values and contracts remain independent of Mozaik, Playwright, persistence, CLI, and Studio. Tests are included in the existing domain/contracts validation commands.
 
 Root `npm run typecheck:contracts` and `npm run test:contracts` validate this module. `npm test` runs domain and contracts tests; `npm run lint` covers internal modules and Studio. The existing `npm run check` entry point includes all these checks and the Studio build, so the existing GitHub workflow validates this milestone without a second pipeline.
 
@@ -90,7 +92,7 @@ Root `npm run typecheck:contracts` and `npm run test:contracts` validate this mo
 
 `packages/domain` now includes immutable investigation requests, collaborative assignment, and completion with hypothesis assessments (`supported`, `contradicted`, or `inconclusive`). A request requires unique observations from the same simulation. Multiple agents may be assigned without an exclusive leader; one assigned agent presents the completion result. This records authorship, not consensus or authorization. Supported/contradicted assessments require evidence references but do not certify a confirmed finding.
 
-`packages/contracts` exposes investigation summaries, result validation, and the version-1 `investigation.requested`, `investigation.assigned`, and `investigation.completed` events through `SemanticEvent`. It also provides `evaluateFindingAssessment`, which evaluates explicit confirmation criteria (multi-agent corroboration and verified evidence references) to determine whether a supported hypothesis constitutes a confirmed finding or a provisional assessment, explicitly communicating uncertainty. See [INVESTIGATIONS.md](INVESTIGATIONS.md) for lifecycle, provenance, time, and validation boundaries.
+`packages/contracts` exposes investigation summaries, result validation, and the version-1 `investigation.requested`, `investigation.assigned`, and `investigation.completed` events through `SemanticEvent`. It also provides `evaluateFindingAssessment`, a pure classification helper that enforces non-empty verified simulation evidence and distinct observing agent corroboration, failing closed to provisional when corroboration is absent or unverified (C1 in CONSOLIDATION.md). See [INVESTIGATIONS.md](INVESTIGATIONS.md) for lifecycle, provenance, time, and validation boundaries.
 
 ## Implemented application foundation
 
@@ -102,7 +104,7 @@ Root `npm run typecheck:contracts` and `npm run test:contracts` validate this mo
 
 `packages/orchestration` owns the adapter to installed Mozaik 4.2.0, one real runtime per simulation, mapped participant identities, session-owned shared state, and controlled local tools. Domain and contracts do not import it. Its investigation tool invokes the application request case using memory by default or explicitly supplied storage. An outbox publisher resolves prepared sessions and dispatches through Mozaik `sendEvent`; unavailable sessions defer without starting agents. Situation handlers can react to peer requests; no separate event bus or inference/tool loop is introduced.
 
-The bridge preserves validated OFFSCRIPT envelopes inside a Mozaik event and checks producer/session consistency. Guarded callbacks, per-agent admission, inference budgets/deadlines, and late-result rejection cover controlled failure paths. Completion of a turn does not complete a simulation or confirm a finding. Cloud export is explicitly disabled in the entry point. Tests use the real runtime with deterministic inference and blocked network; optional live inference is available but unexecuted. See [MOZAIK-INTEGRATION.md](MOZAIK-INTEGRATION.md) for verified APIs, boundaries, limitations, and commands.
+The bridge preserves validated OFFSCRIPT envelopes inside a Mozaik event and checks producer/session consistency. Guarded callbacks, per-agent admission, inference budgets/deadlines, and late-result rejection cover controlled failure paths. A turn answer does not establish goal achievement or a finding. The execution coordinator currently applies an idle-to-completed policy; its persistence and error handling require consolidation. Cloud export is explicitly disabled in the entry point. Tests use the real runtime with deterministic inference and blocked network; optional live inference is available but unexecuted. See [MOZAIK-INTEGRATION.md](MOZAIK-INTEGRATION.md) for verified APIs, boundaries, limitations, and commands.
 
 ## Implemented SQLite persistence foundation
 
@@ -110,13 +112,13 @@ The bridge preserves validated OFFSCRIPT envelopes inside a Mozaik event and che
 
 Connections are project-scoped, use local WAL files, foreign keys, FULL synchronization, and bounded busy timeouts. Migrations are explicit and transactional, with checksummed version history and rejection of incompatible databases. Synchronous database calls and immediate write transactions are deliberately short; this does not provide multiple simultaneous writers or distributed storage.
 
-Investigation commits atomically update snapshots/relationships and insert validated events. Reservations, fenced acknowledgements, bounded retries, and per-investigation dispatch ordering support recovery after dispatcher loss. Acceptance acknowledges dispatch rather than asynchronous processing; duplicate delivery remains possible. SQLite-backed Mozaik composition is verified with deterministic inference, without automatic participant restoration. Studio now consumes authenticated configuration APIs. The local host composes these resources; execution-control HTTP and durable handler recovery are deferred. See [PERSISTENCE.md](PERSISTENCE.md) and [OUTBOX.md](OUTBOX.md).
+Investigation commits atomically update snapshots/relationships and insert validated events. Reservations, fenced acknowledgements, bounded retries, and per-investigation dispatch ordering support recovery after dispatcher loss. Acceptance acknowledges dispatch rather than asynchronous processing; duplicate delivery remains possible. SQLite-backed Mozaik composition is verified with deterministic inference, without automatic participant restoration. Studio now consumes authenticated configuration APIs. The local host composes these resources; execution-control HTTP is implemented; durable handler recovery remains deferred. See [PERSISTENCE.md](PERSISTENCE.md) and [OUTBOX.md](OUTBOX.md).
 
 ## Implemented local host
 
 `packages/runtime/host.ts` is the host composition entry point. It owns SQLite, a single dispatcher, explicitly registered session handles, and the Fastify adapter in `packages/server`. No Mozaik implementation is imported by the host: a local factory supplies a prepared session using guarded storage and external dispatch. Standalone sessions retain their own dispatcher. Startup and persisted events never construct agents automatically.
 
-The host binds loopback, authenticates programmatic API requests with an instance-specific token, validates Host/Origin, and exposes configuration creation/read/list/delete as well as explicit simulation execution control (`start`, `inspect`, `stop`) against the controlled demo fixture. Shutdown stops admission, releases HTTP/sessions/publication, drains storage, and closes SQLite. A deadline reports uncertainty without force-closing pending work. The development entry is `scripts/server/run.ts`, not a new CLI directory. See [LOCAL-HOST.md](LOCAL-HOST.md) for the contract, configuration, resource ownership, security boundary, and actual verification scope.
+The host binds loopback, authenticates programmatic API requests with an instance-specific token, validates Host/Origin, and exposes configuration creation/read/list/delete as well as explicit simulation execution control (`start`, `inspect`, `stop`) in controlled-demo and browser-exploration modes. The normal CLI browser factory still supplies deterministic inference by default. Shutdown stops admission, releases HTTP/sessions/publication, drains storage, and closes SQLite. A deadline reports uncertainty without force-closing pending work. The development entry is `scripts/server/run.ts`, not a new CLI directory. See [LOCAL-HOST.md](LOCAL-HOST.md) for the contract, configuration, resource ownership, security boundary, and actual verification scope.
 
 ## Implemented simulation configuration
 
@@ -124,30 +126,30 @@ The host binds loopback, authenticates programmatic API requests with an instanc
 
 SQLite stores configuration metadata with the simulation and roster in one transaction through a new additive migration. Existing snapshot-only records are not backfilled. The local host provides trusted in-process inspection/configuration/read methods, and configuration HTTP endpoints now connect Studio to those operations. Saving does not publish events or create runtime participants. See [SIMULATION-CONFIGURATION.md](SIMULATION-CONFIGURATION.md) for responsibilities, defaults, failure semantics, and deferred work.
 
-## Implemented autonomous browser exploration
+## Browser exploration integration and inference boundary
 
 `packages/orchestration` now includes `createBrowserExplorationSessionFactory` and a unified multi-mode session factory (`createMultiModeSessionFactory`) dispatching between `"controlled-demo"` and `"browser-exploration"`. For browser exploration, the factory provisions a `BrowserManager` (`packages/browser`) running Chromium in headless mode by default, creating an isolated `BrowserUserSession` per agent.
 
 Each agent receives behavioral-profile-specific system instructions detailing their persona, goals, the authorized target scope, and the mandate that external page content is untrusted data. Interaction tools (`browser_navigate`, `browser_inspect`, `browser_click`, `browser_type`, `record_observation`, `request_investigation`) map to the user session, enforcing URL boundaries and resolving actions through opaque references (`elem_x`). Discovered unexpected behaviors are committed to SQLite as domain observations and published via `observation.created` semantic events with full agent and simulation provenance.
 
-Testing uses `deterministicBrowserRunner`, which executes repeatable interaction paths against a local loopback HTTP target to verify multi-agent navigation, inspection, click, type, and observation recording without external network requests or live provider credentials.
+Both the normal browser factory default and integration tests use `deterministicBrowserRunner`, a fixed interaction sequence. Runner injection is supported, but an operator-facing live provider setup and product validation of autonomous goal pursuit are pending. The coordinator starts initial goal turns for all selected agents, and peers may also participate reactively. Do not infer independent exploration from a populated roster alone.
 
 ## Implemented reliability and evaluation foundation
 
-`packages/runtime/execution-coordinator.ts` now coordinates natural session completion settlement by awaiting `session.waitForIdle`. Upon settlement, active agents and the simulation aggregate are atomically updated to `completed` in SQLite, timers are cleared, and the execution phase transitions to `"completed"`.
+`packages/runtime/execution-coordinator.ts` coordinates natural session completion settlement by awaiting `session.waitForIdle`. `packages/runtime/execution-settlement.ts` updates the aggregate through an atomic SQLite write with typed result handling. Injected storage write failures, session close errors, or recorded runtime/inference failures fail closed to `phase: "failed"` with explicit reasons (`SETTLEMENT_STORAGE_FAILED`, `SESSION_CLOSE_FAILED`, `SESSION_EXECUTION_FAILED_*`) rather than reporting false completion. Terminal phases report `activeAgents: []`, and restored executions avoid fabricating prior modes or activity. Idle does not prove goal achievement.
 
 Simulations left in `running` status after a host crash or restart are detected upon inspection as `interrupted` (`INTERRUPTED_BY_HOST_RESTART`) without automatic resumption. Operators can explicitly resolve them via `executeRecoverSimulation` (`POST /api/simulations/:id/recover`, CLI `offscript recover <id> [--cancel]`, or Studio), which transitions the orphaned record to `failed` or `cancelled` with atomic concurrency checks.
 
 Exploration tools (`exploration-tools.ts` and `browser-exploration-tools.ts`) enforce bounded observation deduplication, returning existing observation and evidence references when an agent notices an identical issue (`simulationId`, `agentId`, `location`, `description`) multiple times, preventing redundant database rows and outbox events.
 
-A controlled evaluation benchmark (`evaluation.test.ts`) verifies multi-profile exploration, attributable evidence references, and finding assessment confirmation criteria against target applications with known issues (e.g. cart state loss on reload).
+The controlled benchmark (`evaluation.test.ts`) checks deterministic browser wiring and constructs part of its finding assessment manually. It does not establish autonomous defect discovery, actual backend persistence failures, independent corroboration, or profile-dependent behavior.
 
 ## Proposed details and open questions
 
-Outside the implemented domain, contracts, request/assignment application cases, Mozaik adapter, SQLite repositories, outbox scheduler, local host, project recognition, and configured-simulation creation described here, no further internal package tree, exported API, event catalog, table schema, or independent package manifest is finalized. Decide these incrementally when needed:
+The source/public entry points define the currently implemented module boundaries. Additional module trees, event catalogs, schemas, or package manifests remain undecided; implement them only for an approved slice. Current open questions include:
 
-- Exploration-control CLI commands, configuration format, and autonomous runtime lifecycle. The local Studio/API launcher is implemented below.
-- Studio transport, process topology, and event delivery/replay behavior.
+- Operator-facing model/provider configuration, live execution qualification, and missing durable execution metadata. CLI inspection/recovery and HTTP/Studio execution controls already exist.
+- Future streaming/replay guarantees. Existing Studio transport uses authenticated same-origin requests and execution polling.
 - Live model/provider selection, production runtime composition, expanded output patterns, provider cancellation, and durable coordination. The initial adapter pins Mozaik 4.2.0 and bounds local admission; verified behavior and unresolved guarantees are separated in [MOZAIK.md](MOZAIK.md).
 - Shared-state consistency, concurrent investigation updates, authorization of assignment/completion, automatic-close policy, and duplicate handling. The initial roster permits multiple assigned agents without an exclusive leader.
 - Confirmation criteria, evidence formats, retention, and sensitive-data redaction.
@@ -155,7 +157,7 @@ Outside the implemented domain, contracts, request/assignment application cases,
 
 ## Future capabilities
 
-Adapters for non-web software and broader collaboration are future possibilities. Do not implement them speculatively. Current implementation is limited to Studio, domain, contracts, request/assignment application cases, controlled Mozaik integration, SQLite repositories, transactional investigation delivery, the protected local host, and persisted simulation setup described in PROJECT.md.
+Adapters for non-web software and broader collaboration are future possibilities. Do not implement them speculatively. Implemented modules also include browser interaction, execution control, investigation completion/recovery, evidence files and result inspection. Their unresolved acceptance criteria are recorded in CONSOLIDATION.md; implementation is not product validation.
 
 ## Connected local Studio and package trial
 

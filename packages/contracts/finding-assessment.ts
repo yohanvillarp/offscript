@@ -44,7 +44,7 @@ export function evaluateFindingAssessment(
   const evidenceIds = lifecycle.result.evidenceIds;
 
   const participants = Array.from(
-    new Set([investigation.requestedBy, ...lifecycle.agentIds]),
+    new Set([investigation.requestedBy, ...lifecycle.agentIds, lifecycle.completedBy]),
   );
 
   if (outcome === "inconclusive") {
@@ -77,30 +77,30 @@ export function evaluateFindingAssessment(
     });
   }
 
-  // Outcome is "supported": apply explicit confirmation criteria.
-  // 1. Corroboration: must involve at least 2 distinct artificial users
-  // (e.g. requester != completer, or multiple assigned agents).
-  const isCorroboratedByCollaborators =
-    participants.length >= 2 &&
-    (investigation.requestedBy !== lifecycle.completedBy ||
-      lifecycle.agentIds.length >= 2);
+  // Outcome is "supported": apply strict verification and independent corroboration criteria.
 
-  // 2. Evidence validation: if simulation observations are provided, check
-  // that all cited evidenceIds originate from known observations in this simulation.
-  const observedEvidence = new Set<string>();
-  for (const obs of observations) {
-    if (obs.simulationId === investigation.simulationId) {
-      for (const eid of obs.evidenceIds) {
-        observedEvidence.add(eid);
-      }
-    }
+  // 1. Evidence presence: conclusion must cite positive supporting evidence.
+  if (evidenceIds.length === 0) {
+    return Object.freeze({
+      investigationId: investigation.id,
+      hypothesis: investigation.hypothesis,
+      outcome,
+      confidence: "provisional" as const,
+      explanation,
+      isConfirmedFinding: false,
+      participatingAgents: Object.freeze(participants),
+      evidenceIds: Object.freeze([]),
+      uncertaintyReason:
+        "Provisional assessment: supported conclusion does not reference any supporting evidence.",
+    });
   }
 
-  const hasUnverifiedEvidence =
-    observations.length > 0 &&
-    evidenceIds.some((eid) => !observedEvidence.has(eid));
+  // 2. Observations presence: simulation observations must be available.
+  const simulationObservations = observations.filter(
+    (obs) => obs.simulationId === investigation.simulationId,
+  );
 
-  if (!isCorroboratedByCollaborators) {
+  if (simulationObservations.length === 0) {
     return Object.freeze({
       investigationId: investigation.id,
       hypothesis: investigation.hypothesis,
@@ -111,10 +111,19 @@ export function evaluateFindingAssessment(
       participatingAgents: Object.freeze(participants),
       evidenceIds: Object.freeze([...evidenceIds]),
       uncertaintyReason:
-        "Provisional assessment: conclusion was reached without independent collaborator corroboration.",
+        "Provisional assessment: no simulation observations are available to verify evidence or corroborate findings.",
     });
   }
 
+  // 3. Evidence verification: all cited evidenceIds must exist in observed simulation data.
+  const observedEvidenceMap = new Map<string, string>(); // evidenceId -> agentId
+  for (const obs of simulationObservations) {
+    for (const eid of obs.evidenceIds) {
+      observedEvidenceMap.set(eid, obs.agentId);
+    }
+  }
+
+  const hasUnverifiedEvidence = evidenceIds.some((eid) => !observedEvidenceMap.has(eid));
   if (hasUnverifiedEvidence) {
     return Object.freeze({
       investigationId: investigation.id,
@@ -127,6 +136,45 @@ export function evaluateFindingAssessment(
       evidenceIds: Object.freeze([...evidenceIds]),
       uncertaintyReason:
         "Provisional assessment: one or more referenced evidence identifiers are unverified in observed simulation data.",
+    });
+  }
+
+  // 4. Independent corroboration:
+  // Requester/assignee counts, roster membership, or completion authorship alone do NOT constitute corroboration.
+  // Independent corroboration requires observations contributed by at least two distinct artificial users.
+  const observationMap = new Map<string, ObservationSummary>();
+  for (const obs of simulationObservations) {
+    observationMap.set(obs.id, obs);
+  }
+
+  const observingAgents = new Set<string>();
+  for (const obsId of investigation.observationIds) {
+    const obs = observationMap.get(obsId);
+    if (obs) {
+      observingAgents.add(obs.agentId);
+    }
+  }
+  for (const eid of evidenceIds) {
+    const agentId = observedEvidenceMap.get(eid);
+    if (agentId) {
+      observingAgents.add(agentId);
+    }
+  }
+
+  const isCorroboratedByDistinctObservers = observingAgents.size >= 2;
+
+  if (!isCorroboratedByDistinctObservers) {
+    return Object.freeze({
+      investigationId: investigation.id,
+      hypothesis: investigation.hypothesis,
+      outcome,
+      confidence: "provisional" as const,
+      explanation,
+      isConfirmedFinding: false,
+      participatingAgents: Object.freeze(participants),
+      evidenceIds: Object.freeze([...evidenceIds]),
+      uncertaintyReason:
+        "Provisional assessment: conclusion was reached without independent collaborator corroboration across distinct observing agents.",
     });
   }
 

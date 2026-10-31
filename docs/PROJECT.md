@@ -4,84 +4,79 @@
 
 ## Vision
 
-OFFSCRIPT is a local-first multi-agent software exploration and testing platform. Autonomous artificial users explore real software, pursue goals, and collect evidence of unexpected behavior. It helps developers, QA engineers, and product teams find failures and usability problems that predefined test paths can miss.
+OFFSCRIPT is a local-first multi-agent software exploration and testing platform. Autonomous artificial users pursue goals in real software and collect attributable evidence of unexpected behavior. Developers, QA engineers, and product teams use it to investigate failures and usability problems that predefined test paths can miss.
 
-Agents are not scripted test cases. Profiles influence exploration; they do not prescribe a fixed sequence or restrict who can discover a problem. Any agent can notice, investigate, or contribute evidence about any issue.
+Agents are not scripted test cases. A behavioral profile influences decisions; it does not dictate a fixed sequence or restrict which agent can discover a problem. Any user may notice or investigate any issue.
 
-## Current implementation
+## Current product and validation boundary
 
-Studio exists in `apps/studio`: React, TypeScript, Vite, React Router, and Tailwind CSS 4. The home route displays up to 50 saved simulation configurations with compact rows and a responsive configuration-detail panel. Selecting an avatar opens that user's behavior, general intention, and assigned goal in the same panel; View simulation returns to its configuration. Target links open the application in a new tab. The configuration panel supports confirmed permanent deletion of initial saved configurations; active/terminal states, registered sessions, or related observations, investigations, and outbox data block deletion. The New simulation action opens `/simulations/new`: a first-visit mascot introduction with an explanation of target/goal selection, behavioral users, and configuration review, followed by a three-step draft editor for Target, Users, and Configuration summary. Target and Users use centered forms without a sidebar; the final summary displays the target and selected participant avatars and names. The shared navbar contains a persistent Simulations link, a collapsible mobile menu, and subtle navigation transitions that respect reduced motion. A reusable vector raven mascot provides restrained, presentation-only animation states with reduced-motion support. Interface icons use Lucide; the brand mark and mascot remain custom SVGs. Entering configuration remembers introduction completion in browser local storage; subsequent visits open Target directly. A question-mark help button reopens the introduction and returns to the current step without discarding the draft. If storage is unavailable, configuration still works but the preference cannot persist. The introduction preference is stored in browser local storage. Unsaved drafts exist only in React state; saved configurations live in the selected project's SQLite database. Setup supports multiple selection from three initial behavioral profiles (Raven / Explorer, Fox / Impatient, Compass / Beginner) and inline validation. Target includes a required shared Exploration goal, describing an outcome rather than scripted steps; Configuration summary repeats it for all selected users. Saving assigns this shared goal to the initial ready domain users without starting them. The user selector uses compact avatar/profile options with a separate, keyboard-accessible “About this user” disclosure for descriptions and motivations; the summary shows avatars, names, and profiles. Avatar identity maps explicitly to a separate behavioral ID when saving. Studio now recognizes the selected project, suggests a name and an unverified local URL for simple Vite scripts, explicitly checks local target availability, edits stored limits, saves through the authenticated local API, and reloads persisted records. Target suggestions never execute project code; connection checks do not start the application. Runtime tools, skills, permissions, and execution controls remain deferred. It has an FSD-oriented `app` and `pages` structure, `@/` imports, and CSS design foundations with system-aware light/dark themes and locally bundled Space Grotesk for interface typography and JetBrains Mono for technical labels, identifiers, paths, and code.
+The repository implements a local CLI/Studio configuration and results workflow, SQLite persistence, Mozaik coordination, a Playwright browser adapter, investigations, and initial visual evidence. **The normal browser-exploration CLI path currently uses a deterministic runner.** It can interact with real pages, but its scripted decisions do not demonstrate autonomous goal pursuit or profile-dependent behavior. Programmatic runner injection and an opt-in live demo are not a complete operator-facing provider setup.
 
-A minimal unpublished local launcher now serves Studio/API from a source build or npm archive. Real browser exploration, execution-control CLI commands, durable runtime recovery, and full investigation execution remain unimplemented. The domain foundation in `packages/domain` implements immutable simulation and agent models, profiles, declared capabilities, environment classification, lifecycle validation, observations with author/context/time and evidence references, and investigations with request/assignment/completion operations. Investigations permit multiple assigned agents without an exclusive leader; results assess a hypothesis without confirming a defect. Contracts provide versioned, validated lifecycle events, simulation/agent summaries, and a semantic event union including observations and investigations with their summaries. Evidence resources are not collected or stored; contracts themselves do not process events. See [OBSERVATIONS.md](OBSERVATIONS.md) and [INVESTIGATIONS.md](INVESTIGATIONS.md) for rules and compatibility boundaries. SQLite/Drizzle repositories now persist current simulation, agent, observation, and investigation snapshots with scoped relationships and optimistic revisions. Migrations and disk-backed tests are implemented; transactional delivery of request/assignment events and optional SQLite-backed Mozaik composition are implemented. The Fastify host now provides protected loopback health routes, shared dispatch, and controlled resource lifecycle. Project recognition and atomic creation of configured simulations are now available through application ports and trusted host methods; they keep simulations created and users ready. Authenticated configuration and controlled demo execution endpoints and same-origin Studio wiring are implemented; real browser exploration, autonomous recovery, and full investigation execution remain pending. See [PERSISTENCE.md](PERSISTENCE.md), [LOCAL-HOST.md](LOCAL-HOST.md), and [SIMULATION-CONFIGURATION.md](SIMULATION-CONFIGURATION.md). Other directories outside implemented modules under `packages/` remain empty scaffolding; their names do not establish approved module boundaries.
+Read [CONSOLIDATION.md](CONSOLIDATION.md) for verified gaps, source references, and proposed acceptance criteria. The first corrective slice is finding-confirmation correctness. [ROADMAP.md](ROADMAP.md) distinguishes implemented code, integration checks, and product validation; multi-round debate is deferred.
+
+| Area | Existing behavior |
+| --- | --- |
+| CLI/distribution | `studio`, `serve`, help/version, `--no-open`, local `npm pack` archive, `list`, `results`, and explicit interruption recovery. The npm package remains private/unpublished. |
+| Studio | React/Vite/Tailwind with FSD, `@/` imports, semantic light/dark tokens, Space Grotesk and JetBrains Mono. Compact configurations, a responsive simulation/user detail panel, target links, inline deletion confirmation, execution controls, result views and evidence preview. |
+| Setup | First-visit raven introduction, reopenable help, Target/Users/Configuration summary, project/name recognition, unverified simple Vite URL suggestions, explicit loopback checks, shared goal and stored limits. Unsaved drafts stay in memory; saved records use project storage. |
+| Domain/application | Immutable simulation/agent lifecycles, observations, collaborative investigations, initial configuration creation/deletion, investigation request/assignment/completion and explicit interrupted-record recovery. |
+| Persistence/runtime | SQLite/Drizzle snapshots, optimistic writes, transactional investigation outbox, protected local Fastify host, shared dispatch and explicit session factories. Startup never reconstructs agents automatically. |
+| Browser/orchestration | Playwright Chromium, one user context per artificial user, semantic inspection and interaction tools, screenshots, Mozaik sessions and reactive investigations. Browser mode defaults to deterministic inference. |
+
+Execution completion, evidence integrity, secret handling and finding confirmation have unresolved correctness/validation gaps. Their existence in the UI or contracts must not be presented as guarantees already established. Recent activity is polled, not delivered through a streaming protocol. Target service startup, a skills system, general action-policy enforcement and automatic agent resumption remain unimplemented.
 
 ## Intended experience
 
-The request application use case resolves simulation/requester/observation context and validates membership and lifecycle. Request and assignment use cases atomically commit investigation snapshots and pending semantic events. A bounded outbox dispatcher publishes committed events to explicitly prepared Mozaik sessions, preserving IDs/correlation and allowing repeated delivery after acknowledgement loss. Session-owned memory remains the default; optional SQLite storage is tested with deterministic inference. Peers record participation before starting a reactive contribution; durable assignment suppresses duplicate work, but does not resume interrupted work. This is not connected to Studio or a CLI. See [APPLICATION.md](APPLICATION.md), [ASSIGNMENTS.md](ASSIGNMENTS.md), and [OUTBOX.md](OUTBOX.md).
+A developer selects a local project, authorizes a target and action scope, chooses artificial users and a concrete goal, configures model access and budgets, and starts a bounded exploration. Users act concurrently through Mozaik and share useful observations rather than independently repeating every discovery. Studio and CLI explain actual actions, evidence, uncertainty, and termination reasons.
 
-A developer uses the CLI to configure a target, select profiles, authorize capabilities, and start a local exploration session. Studio will provide visibility into concurrent activity, shared observations, investigations, and evidence. Exact commands and screens remain undecided.
+Initial real exploration targets web applications with real backends in explicitly authorized environments. The application must be accessible for exploration; saving configuration does not require it to be running. A configured URL, successful connection check, or same-origin browser restriction does not authorize every business action.
 
-Initial exploration targets web applications with real backends in explicitly authorized environments. Browser actions may change real state: a run must respect the operator's scope and permissions. Local-first means local execution and local persistence are the baseline; it does not promise offline model inference or prevent an authorized target or model provider from using the network.
+Local-first means local execution/storage are the baseline. It does not promise offline model inference or prohibit authorized network use. Secrets and target content must not become privileged model instructions. The target project is resolved independently of the CLI installation directory.
 
 ## Artificial user profiles
 
-A behavioral profile describes personality, experience, decision-making tendencies, and general motivation. It does not prescribe a sequence of steps or limit who can discover a problem. Profiles may represent everyday users or focused evaluation intentions.
+| Profile | Avatar identity | Behavior and general intention |
+| --- | --- | --- |
+| Explorer | Raven | Curious and experimental; understands software by trying alternative paths. |
+| Impatient | Fox | Fast and result-oriented; retries or seeks alternatives when progress feels slow. |
+| Beginner | Compass | Needs orientation; learns without prior product knowledge. |
+| Regular | Sparrow | Practical and habitual; expects familiar workflows. |
+| Meticulous | Owl | Attentive and precise; checks details and resulting state. |
+| Distrustful | Badger | Cautious and skeptical; questions unexpected requests and disclosures. |
 
-### Behavioral profiles
+All six exist in selection/contracts/instructions. Their behavioral differentiation is not established by deterministic tests. Distinct artwork is unfinished: Sparrow/Compass, Owl/Raven and Badger/Fox currently reuse identical assets. Adaptive and Collaborative remain candidates; Adaptive needs explicit interaction needs rather than representing every accessibility experience.
 
-| Profile | Avatar | Behavior | General intention |
-| --- | --- | --- | --- |
-| Explorer | Raven | Observant, curious, and experimental; tries alternative paths and questions unexpected results. | Understand the system through exploration. |
-| Impatient | Fox | Quick, resourceful, and focused on results; retries or finds alternatives when progress feels slow. | Complete tasks as quickly as possible. |
-| Beginner | Compass | Needs guidance and interprets instructions without prior product knowledge; may make choices the developer did not anticipate. | Learn to use the product and accomplish a goal. |
-| Regular | Sparrow | Conventional, practical, and habitual; follows familiar application patterns and expects common user flows. | Accomplish goals using standard and familiar patterns. |
-| Meticulous | Owl | Thorough, attentive, and precise; examines fine print, validates input states, and double-checks confirmations. | Verify accuracy, details, and confirm state changes. |
-| Distrustful | Badger | Skeptical, cautious, and vigilant; looks out for deceptive designs, unintended data disclosures, and unprompted charges. | Protect privacy, avoid deceitful patterns, and question unexpected actions. |
+Avatar identity is presentation metadata, not a permission or specialization. An agent conceptually combines profile, assigned goal and skills, subject to tools, externally enforced permissions and limits:
 
-Avatar and behavior are separate concepts: changing an illustration must not change the profile's semantics. These mappings are the product selection, not bug specializations or runtime instructions.
+- **Profile:** how the user approaches software.
+- **Goal:** a concrete desired outcome, shared or individual, not scripted steps.
+- **Skills:** reusable knowledge/procedures; no authorization is implied.
+- **Tools/capabilities:** available operations and declarations, distinct from effective permissions.
+- **Permissions/limits:** operator-authorized targets/actions and budgets that model decisions cannot expand.
 
-An agent conceptually combines a behavioral profile, an assigned goal, and available skills, subject to externally enforced permissions and execution limits. These concerns have distinct responsibilities:
+The existing domain `AgentProfile` groups personality, goals and capabilities. The conceptual distinction above does not claim separate skill or policy entities already exist. Preserve that shape unless a scoped change requires otherwise.
 
-- **Profile:** how an artificial user approaches software and makes decisions.
-- **Goal:** a concrete desired outcome for a simulation, such as purchasing a product. All profiles may pursue the same goal differently; a general motivation such as speed is not that assigned goal.
-- **Skills:** reusable knowledge or procedures for using capabilities; skills do not themselves grant tools or authorization.
-- **Tools and declared capabilities:** available operations and capability declarations, separate from behavior and effective authorization.
-- **Permissions and limits:** operator-controlled action/target restrictions and execution budgets. An agent cannot expand these through its decisions, profile, or skills.
+## Lifetimes and collaboration
 
-The existing domain `AgentProfile` currently groups personality, goals, and declared capabilities. That implemented shape remains unchanged; the conceptual separation above does not claim separate domain entities, a skill system, or policy enforcement already exist.
+Domain session state, artificial-user participation, runtime membership, inference turns and goal achievement are distinct. The domain start operation leaves agents ready; the current execution coordinator separately transitions selected users to running, then starts only the first goal turn. Peers may be activated through investigation reactions. This is not evidence that all selected users explore independently from the start.
 
-The candidate catalog now includes Beginner, Impatient, Explorer, Regular, Distrustful, and Meticulous as implemented in Studio, contracts, and autonomous runtime instructions. Adaptive and Collaborative remain deferred candidates; Adaptive requires more precise interaction needs or modalities before implementation and must not stand in for every accessibility experience.
+A model answer ends a turn, not proof of success or defect discovery. `completed` means a session outcome with settled participation, not exhaustive coverage. Current automatic idle settlement and error handling require C3 consolidation. Domain cancellation cannot itself abort a browser or provider request; Mozaik `leave` does not establish provider cancellation.
 
-Agents should explore concurrently and share useful observations. They may investigate related behavior collaboratively rather than independently repeating every discovery. Mozaik will provide concurrent, event-driven collaboration. OFFSCRIPT must define shared-state ownership and conflict handling without duplicating its inference/tool loop. The initial Mozaik 4.2.0 adapter now demonstrates concurrent turns, controlled tools, and investigation-request reactions against a simulated cart. It uses session-owned shared state and validates event identity/correlation. A deterministic inference fixture verifies integration without model API calls; optional live inference is configured separately and has not been executed in this milestone. Real software exploration, durable handler recovery, and full investigation execution remain unimplemented; transactional event delivery alone does not provide these capabilities. See [MOZAIK-INTEGRATION.md](MOZAIK-INTEGRATION.md).
-
-## Simulation and agent lifetimes
-
-A simulation is an exploration session. Each artificial user has a participation lifecycle within it and may take multiple inference turns. Starting a session does not automatically activate every agent; receiving a model answer does not end that agent's participation.
-
-A completed simulation means the session ended with all agent participations settled, not that every goal was achieved or the target has no defects. Failed or cancelled participations can coexist with a completed session. Ending due to a time or resource budget may be a normal product outcome; the integration adapter only bounds turn/inference admission and waiting; provider cancellation, full cost budgets, and outcome assessment are not implemented.
-
-Runtime membership is separate from this roster of artificial users: observers and other runtime participants need not be domain agents. Domain cancellation records a logical state; it does not itself stop browser actions or model requests.
+The domain/application investigation workflow supports requests, multiple assigned collaborators without an exclusive leader, and completion by an assigned author. Authorship and assignment do not establish consensus. SQLite/outbox delivery preserves committed facts but does not restore interrupted agent work or guarantee asynchronous handler completion.
 
 ## Evidence and confidence
 
 | Concept | Meaning |
 | --- | --- |
-| Observation | A recorded event or behavior, without claiming it is a defect. |
-| Suspicion | A hypothesis that observed behavior may be problematic. |
-| Investigation | A focused effort to test a hypothesis and gather supporting or contradictory evidence. |
-| Confirmed finding | A supported conclusion meeting an explicit confirmation policy; not merely an LLM assertion. |
+| Observation | Recorded behavior with provenance; it does not assert a defect. |
+| Suspicion | A hypothesis that behavior may be problematic. |
+| Investigation | A focused effort to gather support or contradiction. |
+| Confirmed finding | A conclusion meeting an explicit verification policy, beyond an LLM assertion or collaborator roster. |
 
-Visual screen evidence (viewport screenshots) is captured during browser exploration turns upon recording observations, correlated through unique `evidenceIds`, stored in bounded local retention (`.offscript/evidence/<simulationId>/`), and previewable directly in Studio via authenticated API routes. For example, one user sees a saved item disappear after reload and captures visual evidence. Another agent can investigate persistence and gather evidence from a separate session. This begins as an observation and suspicion; confirmation requires an agreed evidence standard. These are conceptual distinctions, not an approved database schema or fixed workflow.
+Browser observation recording attempts viewport screenshots under `.offscript/evidence`, and Studio can request them through authenticated routes. Current references do not guarantee artifact existence, independent verification, accurate page provenance, retention, or complete redaction. The existing finding evaluator can overconfirm; its `isConfirmedFinding` output is not yet a trustworthy verification guarantee. See CONSOLIDATION.md and [INVESTIGATIONS.md](INVESTIGATIONS.md).
 
-## Planned scope and future capabilities
+## Non-goals and future work
 
-See [ROADMAP.md](ROADMAP.md) for the proposed milestone sequence, current gaps, and next implementation slice. The roadmap guides planning; it does not authorize implementing future milestones automatically.
+No hosted multi-tenant service, mandatory cloud control plane, universal software support, unrestricted destructive testing, autonomous privilege escalation, or guaranteed defect discovery is promised. OFFSCRIPT complements deterministic regression tests.
 
-The planned foundation includes authorized browser exploration, concurrent coordination, shared observations, investigation and evidence management, local persistence, and CLI/Studio visibility. Adapters should allow future support for other software types without coupling the domain to browser tooling. Additional target types and richer collaboration can be considered after the initial web workflow; no delivery order is implied.
-
-## Initial non-goals
-
-- A hosted multi-tenant service or required cloud control plane.
-- Universal support for all software types in the first implementation.
-- Unrestricted destructive testing or autonomous privilege escalation.
-- Guaranteed exhaustive coverage, guaranteed defect discovery, or replacement of deterministic regression tests.
-- Automatic implementation of this roadmap during unrelated tasks.
+Prioritize the first trustworthy autonomous exploration before new profile catalogs, visual tooling or debate protocols. Additional target adapters, managed application startup, secure authentication setup, npm publication and durable recovery require separate scoped decisions. Completing one task never authorizes automatic implementation of the rest of the roadmap.
