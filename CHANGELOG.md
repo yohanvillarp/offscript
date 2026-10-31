@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0](https://github.com/yohanvillarp/offscript/compare/offscript-v1.2.0...offscript-v1.3.0) (2026-10-31)
+
+
+### Features
+
+* **studio:** add preflight target checks, failure reason guidance, and quiet telemetry logs ([46b18cc](https://github.com/yohanvillarp/offscript/commit/46b18cc09b538f4a641aab755f01a5f57052feeb))
+* **studio:** add preflight target checks, failure reason guidance, and quiet telemetry logs ([6dfecf9](https://github.com/yohanvillarp/offscript/commit/6dfecf9edcc077846f1fb99e51fcf490838d75a3))
+
 ## [1.2.0](https://github.com/yohanvillarp/offscript/compare/offscript-v1.1.1...offscript-v1.2.0) (2026-10-31)
 
 
