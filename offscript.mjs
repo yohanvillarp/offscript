@@ -18,22 +18,24 @@ function resolveCliScript() {
 try {
   const { values, positionals } = parseArgs({ allowPositionals: true, options: {
     project: { type: "string" }, port: { type: "string" }, "data-directory": { type: "string" },
-    "no-studio": { type: "boolean" }, "no-open": { type: "boolean" },
+    "no-studio": { type: "boolean" }, "no-open": { type: "boolean" }, cancel: { type: "boolean" },
     help: { type: "boolean", short: "h" }, version: { type: "boolean", short: "v" },
   } });
   const command = positionals[0];
   const isResults = command === "results";
-  const validCommands = ["studio", "serve", "list", "results"];
+  const isRecover = command === "recover";
+  const isTargeted = isResults || isRecover;
+  const validCommands = ["studio", "serve", "list", "results", "recover"];
   if (
     (command !== undefined && !validCommands.includes(command)) ||
-    (isResults && positionals.length !== 2) ||
-    (!isResults && positionals.length > 1)
+    (isTargeted && positionals.length !== 2) ||
+    (!isTargeted && positionals.length > 1)
   ) {
-    throw new Error("Expected studio, serve, list, or results <simulation-id>. Use --help for usage.");
+    throw new Error("Expected studio, serve, list, results <simulation-id>, or recover <simulation-id>. Use --help for usage.");
   }
   if ((command === "studio" && values["no-studio"]) ||
       ((command === "serve" || values["no-studio"]) && values["no-open"]) ||
-      ((command === "list" || isResults) && (values["no-studio"] || values["no-open"] || values.port))) {
+      ((command === "list" || isTargeted) && (values["no-studio"] || values["no-open"] || values.port))) {
     throw new Error("Conflicting options for command. Use --help for usage.");
   }
   if (values.help) {
@@ -44,11 +46,13 @@ Commands:
   serve                  Serve the API only.
   list                   List saved simulations for the project.
   results <id>           Inspect exploration results (findings, observations, investigations).
+  recover <id>           Explicitly settle an interrupted simulation to failed (or cancelled with --cancel).
 
 Options:
   --project <directory>  Target project (default: current directory).
   --port <number>        Loopback port, 0 selects an available port (default: 0).
   --data-directory <dir> Storage directory, relative to the target project.
+  --cancel               When recovering, mark as cancelled instead of failed.
   --no-open             Print the Studio entry without opening a browser.
   --no-studio           Legacy alias for serve.
   -h, --help            Show help without starting the host.
@@ -72,6 +76,9 @@ No agents or target services start automatically.`);
     } else if (isResults) {
       const { executeResultsCommand } = await import(resolveCliScript());
       await executeResultsCommand({ projectRoot: project, simulationId: positionals[1] ?? "", ...(dataDirectory !== undefined ? { dataDirectory } : {}) });
+    } else if (isRecover) {
+      const { executeRecoverCommand } = await import(resolveCliScript());
+      await executeRecoverCommand({ projectRoot: project, simulationId: positionals[1] ?? "", cancel: Boolean(values.cancel), ...(dataDirectory !== undefined ? { dataDirectory } : {}) });
     } else {
       const port = values.port ?? process.env.OFFSCRIPT_PORT ?? "0";
       if (!/^\d+$/.test(port) || !Number.isSafeInteger(Number(port)) || Number(port) > 65535) {

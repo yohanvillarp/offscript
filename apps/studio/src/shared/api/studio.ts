@@ -93,6 +93,13 @@ export async function stopSimulation(id: string): Promise<SimulationExecutionSta
   return parseSimulationExecutionStatus(result);
 }
 
+export async function recoverSimulation(id: string, action: "fail" | "cancel" = "fail"): Promise<SimulationExecutionStatus> {
+  const result = await request(`/api/simulations/${encodeURIComponent(id)}/recover`, {
+    method: "POST", body: JSON.stringify({ action }),
+  });
+  return parseSimulationExecutionStatus(result);
+}
+
 export async function loadSimulationResults(id: string, signal?: AbortSignal): Promise<SimulationResults> {
   const result = await request(`/api/simulations/${encodeURIComponent(id)}/results`, signal ? { signal } : {});
   return parseSimulationResults(result);

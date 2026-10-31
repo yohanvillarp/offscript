@@ -27,3 +27,11 @@ export type { OutboxEvent, OutboxError, OutboxRecord, OutboxLease, OutboxStore, 
 export { executeConfigureSimulation } from "./configure-simulation/execute.ts";
 export { configuredSimulation } from "./configure-simulation/profiles.ts";
 export type { ProjectInspector, SimulationConfigurationStore, ConfigureSimulationCommand, ConfigureSimulationDependencies } from "./configure-simulation/ports.ts";
+export { executeRecoverSimulation } from "./recover-simulation/execute.ts";
+export type {
+  RecoverSimulationAction,
+  RecoverSimulationCommand,
+  RecoverSimulationResult,
+  SimulationRecoveryStore,
+} from "./recover-simulation/ports.ts";
+

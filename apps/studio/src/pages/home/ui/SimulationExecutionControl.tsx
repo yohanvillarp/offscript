@@ -3,6 +3,7 @@ import { AlertCircle, Compass, Play, Square } from "lucide-react";
 import type { SimulationExecutionStatus } from "@offscript/contracts";
 import {
   inspectExecution,
+  recoverSimulation,
   startBrowserExploration,
   startControlledDemo,
   stopSimulation,
@@ -88,6 +89,19 @@ export function SimulationExecutionControl({ simulationId, targetUrl, onBusy }: 
     }
   }
 
+  async function handleRecover() {
+    setLoading(true);
+    setError(undefined);
+    try {
+      const result = await recoverSimulation(simulationId, "fail");
+      setStatus(result);
+    } catch {
+      setError("Could not recover interrupted simulation.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <section aria-labelledby="execution-section-title" className="rounded-lg border border-separator bg-surface-subtle p-4">
       <div className="flex items-center justify-between gap-2">
@@ -153,6 +167,16 @@ export function SimulationExecutionControl({ simulationId, targetUrl, onBusy }: 
           >
             <Square aria-hidden="true" className="size-3.5 fill-current" />
             <span>{phase === "stopping" ? "Stopping..." : "Stop execution"}</span>
+          </button>
+        ) : phase === "interrupted" ? (
+          <button
+            type="button"
+            disabled={loading}
+            onClick={handleRecover}
+            className="flex w-full items-center justify-center gap-2 rounded-md bg-danger px-3 py-2 text-xs font-medium text-white shadow-xs hover:bg-danger/90 disabled:opacity-50"
+          >
+            <Square aria-hidden="true" className="size-3.5 fill-current" />
+            <span>{loading ? "Recovering..." : "Recover interrupted simulation"}</span>
           </button>
         ) : (
           <>

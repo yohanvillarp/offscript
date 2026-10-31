@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { request, createServer } from "node:http";
 import { join } from "node:path";
 import { test } from "node:test";
-import { agentId, simulationId } from "../../domain/index.ts";
+import { agentId, simulationId, transitionSimulation } from "../../domain/index.ts";
 import { parseSimulationSetup } from "../../contracts/index.ts";
 import { hostContext } from "../../runtime/tests/host-context.ts";
 
@@ -204,4 +204,30 @@ test("local-file entry uses a one-time body credential and an HttpOnly API cooki
   assert.equal((await http(origin, "/", { headers: { "sec-fetch-site": "cross-site", origin: "null" } })).status, 200);
   assert.equal((await http(origin, "/assets/app.js", { headers: { "sec-fetch-site": "cross-site" } })).status, 200);
   assert.equal((await http(origin, "/api/project", { headers: { ...authorization, "sec-fetch-site": "cross-site" } })).status, 403);
+});
+
+test("POST /api/simulations/:id/recover settles an interrupted simulation", async t => {
+  const temp = hostContext(t); const host = temp.host(); const origin = await host.start();
+  const headers = { authorization: `Bearer ${host.credentials().token}`, "content-type": "application/json" };
+  const id = "sim-recover-http";
+  const created = await http(origin, "/api/simulations", { method: "POST", headers, body: JSON.stringify({ simulationId: id, setup }) });
+  assert.equal(created.status, 201);
+
+  const rawDb = temp.open();
+  const current = await rawDb.simulations.findSimulation(simulationId(id));
+  assert.ok(current);
+  const runningSim = transitionSimulation(current, { status: "running" });
+  await rawDb.simulations.updateSimulationAggregate(runningSim, { status: "created" });
+
+  const inspected = await http(origin, `/api/simulations/${id}/execution`, { headers });
+  assert.equal(inspected.status, 200);
+  assert.equal(JSON.parse(inspected.body).phase, "interrupted");
+
+  const recoverRes = await http(origin, `/api/simulations/${id}/recover`, {
+    method: "POST", headers, body: JSON.stringify({ action: "fail" }),
+  });
+  assert.equal(recoverRes.status, 200);
+  const recoveredStatus = JSON.parse(recoverRes.body);
+  assert.equal(recoveredStatus.phase, "failed");
+  assert.equal(recoveredStatus.failureReason, "INTERRUPTED_BY_HOST_RESTART");
 });

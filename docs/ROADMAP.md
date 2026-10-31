@@ -52,13 +52,11 @@ Compose the existing application, SQLite, outbox, and explicitly prepared Mozaik
 
 **Implemented:** complete end-to-end developer journey connecting target configuration, exploration execution, and results inspection across CLI and Studio. The local Fastify host serves authenticated `GET /api/simulations/:id/results` delivering validated `SimulationResults` (chronological observations, collaborative investigations, and evaluated finding assessments). Studio features `SimulationResultsView` with responsive tabs for Corroborated Findings (with explicit confirmation and uncertainty badges), Observations (with agent avatars, timestamps, locations, and evidence tags), and Investigations (with lifecycle status and outcomes), auto-refreshing on execution completion. The CLI executable (`offscript.mjs`) provides `offscript list` to inspect saved simulations and `offscript results <simulation-id>` for terminal output of findings, evidence references, and observations without opening a browser. Package distribution via `npm run build:local` and `npm pack` cleanly bundles compiled JS, Studio assets, and migrations decoupled from the installation path. Next: Milestone 7 — Reliability and evaluation.
 
-### 7. Reliability and evaluation — next
+### 7. Reliability and evaluation — implemented foundation
 
-Improve interruption handling, explicit recovery decisions, duplicate processing protection, budgets, diagnostics, evidence retention/redaction, and cross-platform packaging. Evaluate real exploration quality, behavioral differences, evidence usefulness, and misleading conclusions on controlled applications with known issues.
+**Implemented:** robust session settlement, explicit interruption recovery, bounded observation deduplication, and a controlled multi-profile evaluation benchmark. The runtime `executionCoordinator` monitors session completion (`waitForIdle`), settles active agents and simulation aggregate to `completed` in SQLite, clears timers, and sets `record.phase = "completed"`. Interrupted simulations left after host restart/crash are reported as `interrupted` (`INTERRUPTED_BY_HOST_RESTART`) without automatic resumption, and can be explicitly settled to `failed` or `cancelled` by operators via `POST /api/simulations/:id/recover`, CLI (`offscript recover <id> [--cancel]`), or Studio. Exploration tools enforce bounded observation deduplication to prevent duplicate events and records for identical agent observations. The evaluation suite validates behavioral profiles, attributable evidence references, and finding corroboration criteria against a benchmark application with known defects. Next: Milestone 8 — Broader capabilities.
 
-**Ready when:** supported failure modes and recovery limits are documented and tested, and product quality can be assessed beyond a successful demo. Resilience begins in every milestone; automatic resumption requires its own approved design.
-
-### 8. Broader capabilities — later
+### 8. Broader capabilities — next
 
 Expand skills, tools, behavioral profiles, focused evaluation intentions, and software adapters when validated use cases justify them. The remaining candidate profiles are Regular, Distrustful, Meticulous, Adaptive, and Collaborative. Refine Adaptive around explicit interaction needs rather than treating it as a universal accessibility profile.
 

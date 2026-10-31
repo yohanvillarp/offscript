@@ -117,9 +117,16 @@ test("host restart reports persisted running simulations as interrupted without 
 });
 
 test("budget duration expiry transitions simulation to cancelled", async (t) => {
-  process.env.MOZAIK_API_KEY = "";
   const temp = hostContext(t);
-  const host = temp.host({ sessionFactory: createControlledDemoSessionFactory() });
+  const hangingFactory = () => ({
+    startTurn: () => true,
+    close: async () => {},
+    waitForIdle: async (timeoutMs?: number) => {
+      await new Promise((resolve) => setTimeout(resolve, (timeoutMs ?? 50) + 10));
+      throw new Error("Session settlement timed out; in-flight provider work is not guaranteed cancelled.");
+    },
+  });
+  const host = temp.host({ sessionFactory: hangingFactory as any });
   await host.start();
 
   const fastSetup = parseSimulationSetup({
@@ -136,3 +143,32 @@ test("budget duration expiry transitions simulation to cancelled", async (t) => 
     return inspected.phase === "cancelled" && inspected.failureReason === "SESSION_BUDGET_EXHAUSTED";
   });
 });
+
+test("natural session completion settles active agents and transitions simulation to completed", async (t) => {
+  process.env.MOZAIK_API_KEY = "";
+  const temp = hostContext(t);
+  const host = temp.host({ sessionFactory: createControlledDemoSessionFactory() });
+  await host.start();
+
+  const id = simulationId("sim-natural-settle");
+  await host.configureSimulation({ simulationId: id, setup });
+
+  await host.startSimulation(id, "controlled-demo");
+
+  await eventually(async () => {
+    const inspected = await host.inspectExecution(id);
+    return inspected.phase === "completed";
+  });
+
+  const inspected = await host.inspectExecution(id);
+  assert.equal(inspected.phase, "completed");
+
+  const storage = temp.open();
+  const sim = await storage.simulations.findSimulation(id);
+  assert.ok(sim);
+  assert.equal(sim.lifecycle.status, "completed");
+  for (const agent of sim.agents) {
+    assert.equal(agent.lifecycle.status, "completed");
+  }
+});
+

@@ -132,6 +132,16 @@ Each agent receives behavioral-profile-specific system instructions detailing th
 
 Testing uses `deterministicBrowserRunner`, which executes repeatable interaction paths against a local loopback HTTP target to verify multi-agent navigation, inspection, click, type, and observation recording without external network requests or live provider credentials.
 
+## Implemented reliability and evaluation foundation
+
+`packages/runtime/execution-coordinator.ts` now coordinates natural session completion settlement by awaiting `session.waitForIdle`. Upon settlement, active agents and the simulation aggregate are atomically updated to `completed` in SQLite, timers are cleared, and the execution phase transitions to `"completed"`.
+
+Simulations left in `running` status after a host crash or restart are detected upon inspection as `interrupted` (`INTERRUPTED_BY_HOST_RESTART`) without automatic resumption. Operators can explicitly resolve them via `executeRecoverSimulation` (`POST /api/simulations/:id/recover`, CLI `offscript recover <id> [--cancel]`, or Studio), which transitions the orphaned record to `failed` or `cancelled` with atomic concurrency checks.
+
+Exploration tools (`exploration-tools.ts` and `browser-exploration-tools.ts`) enforce bounded observation deduplication, returning existing observation and evidence references when an agent notices an identical issue (`simulationId`, `agentId`, `location`, `description`) multiple times, preventing redundant database rows and outbox events.
+
+A controlled evaluation benchmark (`evaluation.test.ts`) verifies multi-profile exploration, attributable evidence references, and finding assessment confirmation criteria against target applications with known issues (e.g. cart state loss on reload).
+
 ## Proposed details and open questions
 
 Outside the implemented domain, contracts, request/assignment application cases, Mozaik adapter, SQLite repositories, outbox scheduler, local host, project recognition, and configured-simulation creation described here, no further internal package tree, exported API, event catalog, table schema, or independent package manifest is finalized. Decide these incrementally when needed:
