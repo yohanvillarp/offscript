@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0](https://github.com/yohanvillarp/offscript/compare/offscript-v1.4.0...offscript-v1.5.0) (2026-10-31)
+
+
+### Features
+
+* enable deletion of stopped simulations, elevate execution controls, and align personas ([8260552](https://github.com/yohanvillarp/offscript/commit/8260552f0a66014143d2845d567f59f286cb6638))
+* enable deletion of stopped simulations, elevate execution controls, and align personas ([2010080](https://github.com/yohanvillarp/offscript/commit/2010080ae5903ebef22f9cf6480f89c15e875e3a))
+
 ## [1.4.0](https://github.com/yohanvillarp/offscript/compare/offscript-v1.3.0...offscript-v1.4.0) (2026-10-31)
 
 
