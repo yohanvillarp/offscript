@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { executeAssignInvestigation } from "../application/index.ts";
+import { ApplicationError, executeAssignInvestigation } from "../application/index.ts";
 import type { InvestigationAssignmentCommitter } from "../application/index.ts";
 import type { AgentId } from "../domain/index.ts";
 import { decodeEvent, offscriptEventType } from "./event-bridge.ts";
@@ -45,6 +45,12 @@ export function investigationReaction({ state, id, maxTurns, store, startTurn }:
       else startTurn(id, message);
     } catch (cause) {
       state.reactions.delete(key);
+      if (cause instanceof ApplicationError && cause.code === "INVESTIGATION_CONFLICT") {
+        const reloaded = await store.findInvestigation(decoded.payload.investigation.id).catch(() => undefined);
+        if (reloaded && reloaded.investigation.lifecycle.status !== "requested") {
+          return;
+        }
+      }
       state.fail("investigation-assignment", id, cause);
     } finally {
       // Only this callback owns the reservation it created.

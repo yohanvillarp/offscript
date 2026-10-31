@@ -77,7 +77,7 @@ export function SimulationDetails({ item, position, total, selectedUser, onSelec
           <h2 id="simulation-detail-title" tabIndex={-1} className="mt-4 break-words text-2xl font-semibold">{item.name}</h2>
           <p className="mt-2 text-xs capitalize text-muted">{item.environment.deployment} · Local exploration</p>
         </div>
-        <SimulationExecutionControl simulationId={item.simulationId} targetUrl={item.targetUrl} onBusy={setExecuting} />
+        <SimulationExecutionControl simulationId={item.simulationId} targetUrl={item.targetUrl} onBusy={setExecuting} onViewResults={() => setActiveTab("results")} />
         <dl className="space-y-6 text-sm">
           <div><dt className="text-xs text-muted">Exploration goal</dt><dd className="mt-2 whitespace-pre-wrap break-words leading-relaxed">{item.goal}</dd></div>
           <div><dt className="text-xs text-muted">Application URL</dt><dd className="mt-2 break-all font-mono text-xs">

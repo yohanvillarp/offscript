@@ -30,6 +30,7 @@ export class BrowserManager {
       try {
         const browser = await chromium.launch({
           headless: this.headless,
+          args: this.headless ? [] : ["--start-maximized"],
         });
         if (this.closed) {
           await browser.close().catch(() => {});
@@ -59,6 +60,9 @@ export class BrowserManager {
     const contextOptions: Parameters<Browser["newContext"]>[0] = {};
     if (options.storageState) {
       contextOptions.storageState = options.storageState;
+    }
+    if (!this.headless) {
+      contextOptions.viewport = null;
     }
 
     const context = await browser.newContext(contextOptions);
