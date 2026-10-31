@@ -6,4 +6,6 @@ export type {
   ExecutionSessionFactory,
   ExecutionSessionHandle,
 } from "./execution-coordinator.ts";
+export { createEvidenceStore } from "./evidence-store.ts";
+export type { EvidenceStore, EvidenceItem } from "./evidence-store.ts";
 

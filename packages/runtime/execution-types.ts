@@ -6,16 +6,21 @@ import type {
 } from "../contracts/index.ts";
 import type { HostStorage } from "./host-storage.ts";
 import type { HostedSession } from "./session-registry.ts";
+import type { EvidenceStore } from "./evidence-store.ts";
 
 export type ExecutionSessionHandle = HostedSession & {
   startTurn(agentId: AgentId, message: string): boolean;
-  snapshot?(): { turns?: readonly { agentId: AgentId; count: number }[] };
+  snapshot?(): {
+    turns?: readonly { agentId: AgentId; count: number }[] | undefined;
+    recentActivity?: readonly { agentId: string; action: string; location?: string | undefined; timestamp: string }[] | undefined;
+  };
   waitForIdle?(timeoutMs?: number): Promise<unknown>;
 };
 
 export type ExecutionSessionContext = Readonly<{
   mode?: SimulationExecutionMode | undefined;
   targetUrl?: string | undefined;
+  evidenceStore?: EvidenceStore | undefined;
 }>;
 
 export type ExecutionSessionFactory = (
