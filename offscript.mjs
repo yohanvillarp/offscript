@@ -3,6 +3,18 @@ import { readFileSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
+function resolveCliScript() {
+  const dist = new URL("./dist/scripts/server/cli-results.js", import.meta.url);
+  try {
+    if (statSync(dist).isFile()) return dist.href;
+  } catch {}
+  const dev = new URL("./scripts/server/cli-results.ts", import.meta.url);
+  try {
+    if (statSync(dev).isFile()) return dev.href;
+  } catch {}
+  throw new Error("Distribution is missing. Run npm run build:local in the OFFSCRIPT checkout, or reinstall the archive.");
+}
+
 try {
   const { values, positionals } = parseArgs({ allowPositionals: true, options: {
     project: { type: "string" }, port: { type: "string" }, "data-directory": { type: "string" },
@@ -55,18 +67,10 @@ No agents or target services start automatically.`);
     if (dataDirectory !== undefined && !dataDirectory.trim()) throw new Error("Storage directory must not be blank.");
 
     if (command === "list") {
-      const cliScript = new URL("./dist/scripts/server/cli-results.js", import.meta.url);
-      try {
-        if (!statSync(cliScript).isFile()) throw new Error();
-      } catch { throw new Error("Distribution is missing. Run npm run build:local in the OFFSCRIPT checkout, or reinstall the archive."); }
-      const { executeListCommand } = await import(cliScript.href);
+      const { executeListCommand } = await import(resolveCliScript());
       await executeListCommand({ projectRoot: project, ...(dataDirectory !== undefined ? { dataDirectory } : {}) });
     } else if (isResults) {
-      const cliScript = new URL("./dist/scripts/server/cli-results.js", import.meta.url);
-      try {
-        if (!statSync(cliScript).isFile()) throw new Error();
-      } catch { throw new Error("Distribution is missing. Run npm run build:local in the OFFSCRIPT checkout, or reinstall the archive."); }
-      const { executeResultsCommand } = await import(cliScript.href);
+      const { executeResultsCommand } = await import(resolveCliScript());
       await executeResultsCommand({ projectRoot: project, simulationId: positionals[1] ?? "", ...(dataDirectory !== undefined ? { dataDirectory } : {}) });
     } else {
       const port = values.port ?? process.env.OFFSCRIPT_PORT ?? "0";
