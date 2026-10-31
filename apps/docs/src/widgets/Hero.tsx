@@ -2,6 +2,7 @@ import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { RavenMascot } from "@studio/shared/ui/raven-mascot/RavenMascot";
 import { repository } from "@/shared/links";
 import { Section } from "@/shared/Section";
+import { TerminalInstall } from "@/shared/TerminalInstall";
 
 export function Hero() {
   return (
@@ -13,6 +14,7 @@ export function Hero() {
       <p className="hero-subtitle">
         Explore your application through different user perspectives. Share observations, investigate unexpected behavior, and inspect the evidence.
       </p>
+      <TerminalInstall />
       <div className="actions">
         <a className="primary-link" href="#get-started">
           Explore the guide<ArrowDown size={16} />
