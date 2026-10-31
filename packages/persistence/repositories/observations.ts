@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import type { Observation } from "../../domain/index.ts";
 import { parseObservationSummary } from "../../contracts/index.ts";
 import type { ObservationReader } from "../../application/index.ts";
@@ -8,6 +8,7 @@ import { json, stored } from "../codecs/values.ts";
 
 export interface ObservationRepository extends ObservationReader {
   createObservation(observation: Observation): Promise<"created" | "already-exists">;
+  listObservations(simulationId: string): Promise<readonly Observation[]>;
 }
 
 export function observationRepository(db: PersistenceDatabase): ObservationRepository {
@@ -28,6 +29,16 @@ export function observationRepository(db: PersistenceDatabase): ObservationRepos
         id: row.id, simulationId: row.simulationId, agentId: row.agentId, observedAt: row.observedAt,
         description: row.description, context: { location: row.location }, evidenceIds: json(row.evidenceIds),
       }));
+    },
+    async listObservations(simulationId) {
+      const rows = db.select().from(observations)
+        .where(eq(observations.simulationId, simulationId))
+        .orderBy(asc(observations.observedAt))
+        .all();
+      return Object.freeze(rows.map(row => stored(() => parseObservationSummary({
+        id: row.id, simulationId: row.simulationId, agentId: row.agentId, observedAt: row.observedAt,
+        description: row.description, context: { location: row.location }, evidenceIds: json(row.evidenceIds),
+      }))));
     },
   };
 }

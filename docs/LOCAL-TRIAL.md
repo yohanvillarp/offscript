@@ -82,11 +82,20 @@ The database lives at `<project>/.offscript/offscript.sqlite` by default. Entry/
 Automated HTTP tests cover authentication, one-time exchange/replay rejection, cookie/header requirements, validation, duplicates, save/read/list/restart, and static-file confinement. A local archive was installed via `npm exec` from a separate temporary project and exercised through the real listening server, including bundled assets and persisted configuration. No interactive browser QA or real target exploration is claimed; visual interaction is left for manual review.
 
 
-## API-only and unattended usage
+## API-only, CLI inspection and unattended usage
 
 ```sh
+# Start Studio without opening a browser
 npm exec --yes --package="/absolute/path/offscript-0.0.0.tgz" -- offscript studio --no-open
+
+# Start API host only
 npm exec --yes --package="/absolute/path/offscript-0.0.0.tgz" -- offscript serve --port 4317
+
+# List saved simulations directly from project SQLite storage
+npm exec --yes --package="/absolute/path/offscript-0.0.0.tgz" -- offscript list
+
+# Inspect exploration results (findings, observations, investigations) in the terminal
+npm exec --yes --package="/absolute/path/offscript-0.0.0.tgz" -- offscript results <simulation-id>
 ```
 
 For an optional global-install trial, use `npm install --global --prefix <temporary-directory> <archive>` and run that prefix's executable (on Windows, `<prefix>/offscript.cmd`; on macOS/Linux, `<prefix>/bin/offscript`). This tests installation without modifying your normal global prefix. `npm pack` remains the primary distribution check; there is no OFFSCRIPT packaging command. Publishing to npm is a separate, unimplemented release workflow.

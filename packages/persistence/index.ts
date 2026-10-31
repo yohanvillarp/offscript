@@ -25,5 +25,6 @@ export type { PersistenceOptions } from "./connection.ts";
 export type { SimulationRepository } from "./repositories/simulations.ts";
 export type { ExpectedSimulationAggregate } from "./repositories/simulation-writes.ts";
 export type { ObservationRepository } from "./repositories/observations.ts";
+export type { InvestigationRepository } from "./repositories/investigations.ts";
 export { PersistenceError } from "./errors.ts";
 export type { PersistenceErrorCode } from "./errors.ts";

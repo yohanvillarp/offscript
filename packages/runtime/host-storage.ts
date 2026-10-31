@@ -27,10 +27,13 @@ export function hostStorage(source: Persistence) {
       updateSimulationAggregate: guard(source.simulations.updateSimulationAggregate),
     }),
     observations: Object.freeze({
-      createObservation: guard(source.observations.createObservation), findObservation: guard(source.observations.findObservation),
+      createObservation: guard(source.observations.createObservation),
+      findObservation: guard(source.observations.findObservation),
+      listObservations: guard(source.observations.listObservations),
     }),
     investigations: Object.freeze({
       findInvestigation: guard(source.investigations.findInvestigation),
+      listInvestigations: guard(source.investigations.listInvestigations),
       commitRequest: guard(source.investigations.commitRequest),
       commitAssignment: guard(source.investigations.commitAssignment),
       commitCompletion: guard(source.investigations.commitCompletion),

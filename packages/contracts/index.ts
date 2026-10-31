@@ -30,4 +30,6 @@ export {
 export type {
   SimulationExecutionMode, SimulationExecutionPhase, SimulationExecutionStatus, StartSimulationRequest,
 } from "./simulation-execution.ts";
+export type { SimulationResults } from "./simulation-results.ts";
+export { parseSimulationResults } from "./simulation-results.ts";
 
