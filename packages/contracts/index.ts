@@ -19,3 +19,11 @@ export { parseSimulationConfiguration, parseProjectDescriptor } from "./simulati
 export type { SimulationConfiguration, ProjectDescriptor } from "./simulation-configuration.ts";
 export { parseLocalTargetUrl, parseTargetConnection, parseTargetSuggestion } from "./target-connection.ts";
 export type { TargetConnection, TargetSuggestion } from "./target-connection.ts";
+export {
+  simulationExecutionModes, simulationExecutionPhases,
+  parseStartSimulationRequest, parseSimulationExecutionStatus,
+} from "./simulation-execution.ts";
+export type {
+  SimulationExecutionMode, SimulationExecutionPhase, SimulationExecutionStatus, StartSimulationRequest,
+} from "./simulation-execution.ts";
+

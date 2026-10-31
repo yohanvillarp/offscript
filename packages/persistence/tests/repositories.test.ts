@@ -87,3 +87,39 @@ test("corrupt stored profile/evidence/link shapes are rejected rather than cast 
   raw.client.prepare("DELETE FROM investigation_observations WHERE investigation_id = ?").run(source.investigation.id);
   await assert.rejects(db.investigations.findInvestigation(source.investigation.id), PersistenceError);
 });
+
+test("updateSimulationAggregate atomically updates simulation and agents with conflict rejection", async (t) => {
+  const db = storage(t).open(); db.migrate();
+  const source = fixture();
+  await db.simulations.createSimulation(source.ready);
+  const runningSim = transitionSimulation(source.ready, { status: "running" });
+  const runningAgents = updateSimulationAgent(updateSimulationAgent(runningSim, agentId("beginner"), { status: "running" }), agentId("explorer"), { status: "running" });
+
+  // Wrong expected status -> conflict
+  const conflictSim = await db.simulations.updateSimulationAggregate(runningAgents, { status: "running" });
+  assert.equal(conflictSim, "conflict");
+
+  // Wrong expected agent status -> conflict
+  const conflictAgent = await db.simulations.updateSimulationAggregate(runningAgents, {
+    status: "created",
+    agentStatuses: new Map([[agentId("beginner"), "running"]]),
+  });
+  assert.equal(conflictAgent, "conflict");
+
+  // Missing simulation -> not-found
+  const missing = await db.simulations.updateSimulationAggregate({ ...runningAgents, id: simulationId("missing") }, { status: "created" });
+  assert.equal(missing, "not-found");
+
+  // Correct update -> updated
+  const updated = await db.simulations.updateSimulationAggregate(runningAgents, {
+    status: "created",
+    agentStatuses: new Map([[agentId("beginner"), "ready"], [agentId("explorer"), "ready"]]),
+  });
+  assert.equal(updated, "updated");
+
+  const restored = await db.simulations.findSimulation(source.ready.id);
+  assert.equal(restored?.lifecycle.status, "running");
+  assert.equal(restored?.agents[0]?.lifecycle.status, "running");
+  assert.equal(restored?.agents[1]?.lifecycle.status, "running");
+});
+

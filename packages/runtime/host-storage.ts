@@ -21,6 +21,11 @@ export function hostStorage(source: Persistence) {
       findConfiguration: guard(source.configurations.findConfiguration),
       listConfigurations: guard(source.configurations.listConfigurations),
     }),
+    simulations: Object.freeze({
+      createSimulation: guard(source.simulations.createSimulation),
+      findSimulation: guard(source.simulations.findSimulation),
+      updateSimulationAggregate: guard(source.simulations.updateSimulationAggregate),
+    }),
     observations: Object.freeze({
       createObservation: guard(source.observations.createObservation), findObservation: guard(source.observations.findObservation),
     }),
