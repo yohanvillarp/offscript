@@ -57,24 +57,28 @@ export function browserExplorationTools(
       async (value) => {
         const args = argumentsObject(value, ["description", "location"]);
         const desc = argumentText(args.description);
-        const loc = argumentText(args.location);
+        const currentUrl = typeof browserSession.getCurrentUrl === "function" ? browserSession.getCurrentUrl() : "";
+        const loc = currentUrl && currentUrl !== "about:blank" ? currentUrl : argumentText(args.location);
         for (const existing of state.observations.values()) {
           if (existing.simulationId === state.simulation.id && existing.agentId === id &&
               existing.description === desc && existing.context.location === loc) {
             return { observationId: existing.id, evidenceId: existing.evidenceIds[0] ?? "" };
           }
         }
-        const eid = evidenceId(`ev-${randomUUID()}`);
+        let savedEvidenceId: string | undefined;
         if (evidenceStore && typeof browserSession.screenshot === "function") {
           try {
             const capture = await browserSession.screenshot();
             if (capture.success) {
+              const eid = `ev-${randomUUID()}`;
               await evidenceStore.saveEvidence(state.simulation.id, eid, capture.data, capture.mimeType);
+              savedEvidenceId = eid;
             }
           } catch {
-            // Non-critical: screenshot capture failure should not block observation recording
+            // Failure to capture or store evidence leaves observation honest without ghost evidence references.
           }
         }
+        const evidenceIds = savedEvidenceId ? [evidenceId(savedEvidenceId)] : [];
         const observation = createObservation({
           id: observationId(randomUUID()),
           simulationId: state.simulation.id,
@@ -82,7 +86,7 @@ export function browserExplorationTools(
           observedAt: new Date().toISOString(),
           description: desc,
           context: { location: loc },
-          evidenceIds: [eid],
+          evidenceIds,
         });
         if ((await storage.observations.createObservation(observation)) !== "created") {
           throw new Error("Observation identity already exists.");
@@ -101,7 +105,7 @@ export function browserExplorationTools(
             payload: { observation },
           }),
         );
-        return { observationId: observation.id, evidenceId: eid };
+        return { observationId: observation.id, evidenceId: savedEvidenceId ?? "" };
       },
     ),
     tool(

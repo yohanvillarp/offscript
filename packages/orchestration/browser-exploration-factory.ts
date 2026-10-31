@@ -115,15 +115,44 @@ export function createBrowserExplorationSessionFactory(
       outboxMode: "external",
       instructionFactory: (agent) => buildInstruction(agent, targetUrl),
       toolsFactory: (state, id, publish, sessStorage) => {
+        let activeSession: BrowserUserSession | undefined;
         const accessor = {
-          navigate: async (url: string) => (await getSession(id)).navigate(url),
-          inspect: async () => (await getSession(id)).inspect(),
-          click: async (ref: string) => (await getSession(id)).click(ref),
-          type: async (ref: string, text: string) => (await getSession(id)).type(ref, text),
-          scroll: async (direction: "up" | "down", ref?: string) => (await getSession(id)).scroll(direction, ref),
-          select: async (ref: string, value: string) => (await getSession(id)).select(ref, value),
-          screenshot: async () => (await getSession(id)).screenshot(),
-          getCurrentUrl: () => targetUrl,
+          navigate: async (url: string) => {
+            const session = await getSession(id);
+            activeSession = session;
+            return session.navigate(url);
+          },
+          inspect: async () => {
+            const session = await getSession(id);
+            activeSession = session;
+            return session.inspect();
+          },
+          click: async (ref: string) => {
+            const session = await getSession(id);
+            activeSession = session;
+            return session.click(ref);
+          },
+          type: async (ref: string, text: string) => {
+            const session = await getSession(id);
+            activeSession = session;
+            return session.type(ref, text);
+          },
+          scroll: async (direction: "up" | "down", ref?: string) => {
+            const session = await getSession(id);
+            activeSession = session;
+            return session.scroll(direction, ref);
+          },
+          select: async (ref: string, value: string) => {
+            const session = await getSession(id);
+            activeSession = session;
+            return session.select(ref, value);
+          },
+          screenshot: async () => {
+            const session = await getSession(id);
+            activeSession = session;
+            return session.screenshot();
+          },
+          getCurrentUrl: () => activeSession ? activeSession.getCurrentUrl() : targetUrl,
           getTargetUrl: () => targetUrl,
         };
         return browserExplorationTools(
