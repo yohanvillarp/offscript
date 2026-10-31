@@ -36,3 +36,8 @@ export type InteractionResult = Readonly<{
   url: string;
   error?: string | undefined;
 }>;
+
+export type ScreenshotResult = Readonly<
+  | { success: true; data: Buffer; mimeType: "image/png" }
+  | { success: false; error: string }
+>;

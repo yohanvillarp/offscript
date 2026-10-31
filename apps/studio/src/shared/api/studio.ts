@@ -105,4 +105,22 @@ export async function loadSimulationResults(id: string, signal?: AbortSignal): P
   return parseSimulationResults(result);
 }
 
+export async function loadEvidenceBlob(simulationId: string, evidenceId: string, signal?: AbortSignal): Promise<Blob> {
+  let response: Response;
+  try {
+    response = await fetch(`/api/simulations/${encodeURIComponent(simulationId)}/evidence/${encodeURIComponent(evidenceId)}`, {
+      ...(signal ? { signal } : {}),
+      credentials: "same-origin",
+      headers: { "X-Offscript-Client": "studio" },
+    });
+  } catch (cause) {
+    if (cause instanceof Error && cause.name === "AbortError") throw cause;
+    throw new StudioApiError("CONNECTION_FAILED", "Could not reach OFFSCRIPT host.");
+  }
+  if (!response.ok) {
+    throw new StudioApiError("EVIDENCE_NOT_FOUND", "Could not load visual evidence screenshot.");
+  }
+  return response.blob();
+}
+
 

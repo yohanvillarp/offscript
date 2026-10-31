@@ -70,7 +70,7 @@ Runtime membership is separate from this roster of artificial users: observers a
 | Investigation | A focused effort to test a hypothesis and gather supporting or contradictory evidence. |
 | Confirmed finding | A supported conclusion meeting an explicit confirmation policy; not merely an LLM assertion. |
 
-For example, one user sees a saved item disappear after reload. Another agent can investigate persistence and gather evidence from a separate session. This begins as an observation and suspicion; confirmation requires an agreed evidence standard. These are conceptual distinctions, not an approved database schema or fixed workflow.
+Visual screen evidence (viewport screenshots) is captured during browser exploration turns upon recording observations, correlated through unique `evidenceIds`, stored in bounded local retention (`.offscript/evidence/<simulationId>/`), and previewable directly in Studio via authenticated API routes. For example, one user sees a saved item disappear after reload and captures visual evidence. Another agent can investigate persistence and gather evidence from a separate session. This begins as an observation and suspicion; confirmation requires an agreed evidence standard. These are conceptual distinctions, not an approved database schema or fixed workflow.
 
 ## Planned scope and future capabilities
 

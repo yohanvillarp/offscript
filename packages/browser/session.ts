@@ -1,7 +1,7 @@
 import type { BrowserContext, Page } from "playwright";
 import { assertInScope, isAllowedSubresource, isUrlInScope, normalizeTargetUrl } from "./scope-guard.ts";
 import { capturePageSnapshot } from "./dom-snapshot.ts";
-import type { BrowserSessionOptions, InteractionResult, PageSnapshot } from "./types.ts";
+import type { BrowserSessionOptions, InteractionResult, PageSnapshot, ScreenshotResult } from "./types.ts";
 
 export class BrowserUserSession {
   private readonly context: BrowserContext;
@@ -97,85 +97,48 @@ export class BrowserUserSession {
     return await capturePageSnapshot(this.page, this.currentEpoch);
   }
 
+  private resolveLocator(ref: string) {
+    if (!/^elem_\d+$/.test(ref)) return null;
+    return this.page.locator(`[data-offscript-ref="${ref}"][data-offscript-epoch="${this.currentEpoch}"]`);
+  }
+
   async click(ref: string): Promise<InteractionResult> {
     if (this.closed) return { success: false, action: "click", url: this.getCurrentUrl(), error: "SESSION_CLOSED" };
-    if (!/^elem_\d+$/.test(ref)) {
-      return { success: false, action: "click", url: this.getCurrentUrl(), error: "INVALID_ELEMENT_REF" };
-    }
-
-    const locator = this.page.locator(`[data-offscript-ref="${ref}"][data-offscript-epoch="${this.currentEpoch}"]`);
+    const locator = this.resolveLocator(ref);
+    if (!locator) return { success: false, action: "click", url: this.getCurrentUrl(), error: "INVALID_ELEMENT_REF" };
     try {
-      const count = await locator.count();
-      if (count === 0) {
-        return {
-          success: false,
-          action: "click",
-          url: this.page.url(),
-          error: "STALE_OR_MISSING_ELEMENT_REF: The element is no longer available on the current page snapshot.",
-        };
+      if ((await locator.count()) === 0) {
+        return { success: false, action: "click", url: this.page.url(), error: "STALE_OR_MISSING_ELEMENT_REF" };
       }
-
-      const isDisabled = await locator.first().isDisabled().catch(() => false);
-      if (isDisabled) {
+      if (await locator.first().isDisabled().catch(() => false)) {
         return { success: false, action: "click", url: this.page.url(), error: "ELEMENT_IS_DISABLED" };
       }
-
       await locator.first().click({ timeout: this.actionTimeoutMs });
-
-      // If click triggered a navigation, verify that new URL is in scope
       const newUrl = this.page.url();
       if (!isUrlInScope(newUrl, this.targetUrl)) {
-        return {
-          success: false,
-          action: "click",
-          url: newUrl,
-          error: `Navigation resulted in out-of-scope URL "${newUrl}".`,
-        };
+        return { success: false, action: "click", url: newUrl, error: `Navigation resulted in out-of-scope URL "${newUrl}".` };
       }
-
       return { success: true, action: "click", url: newUrl };
     } catch (cause) {
-      return {
-        success: false,
-        action: "click",
-        url: this.page.url(),
-        error: cause instanceof Error ? cause.message : "CLICK_FAILED",
-      };
+      return { success: false, action: "click", url: this.page.url(), error: cause instanceof Error ? cause.message : "CLICK_FAILED" };
     }
   }
 
   async type(ref: string, text: string): Promise<InteractionResult> {
     if (this.closed) return { success: false, action: "type", url: this.getCurrentUrl(), error: "SESSION_CLOSED" };
-    if (!/^elem_\d+$/.test(ref)) {
-      return { success: false, action: "type", url: this.getCurrentUrl(), error: "INVALID_ELEMENT_REF" };
-    }
-
-    const locator = this.page.locator(`[data-offscript-ref="${ref}"][data-offscript-epoch="${this.currentEpoch}"]`);
+    const locator = this.resolveLocator(ref);
+    if (!locator) return { success: false, action: "type", url: this.getCurrentUrl(), error: "INVALID_ELEMENT_REF" };
     try {
-      const count = await locator.count();
-      if (count === 0) {
-        return {
-          success: false,
-          action: "type",
-          url: this.page.url(),
-          error: "STALE_OR_MISSING_ELEMENT_REF: The element is no longer available on the current page snapshot.",
-        };
+      if ((await locator.count()) === 0) {
+        return { success: false, action: "type", url: this.page.url(), error: "STALE_OR_MISSING_ELEMENT_REF" };
       }
-
-      const isDisabled = await locator.first().isDisabled().catch(() => false);
-      if (isDisabled) {
+      if (await locator.first().isDisabled().catch(() => false)) {
         return { success: false, action: "type", url: this.page.url(), error: "ELEMENT_IS_DISABLED" };
       }
-
       await locator.first().fill(text, { timeout: this.actionTimeoutMs });
       return { success: true, action: "type", url: this.page.url() };
     } catch (cause) {
-      return {
-        success: false,
-        action: "type",
-        url: this.page.url(),
-        error: cause instanceof Error ? cause.message : "TYPE_FAILED",
-      };
+      return { success: false, action: "type", url: this.page.url(), error: cause instanceof Error ? cause.message : "TYPE_FAILED" };
     }
   }
 
@@ -183,10 +146,8 @@ export class BrowserUserSession {
     if (this.closed) return { success: false, action: "scroll", url: this.getCurrentUrl(), error: "SESSION_CLOSED" };
     try {
       if (ref) {
-        if (!/^elem_\d+$/.test(ref)) {
-          return { success: false, action: "scroll", url: this.getCurrentUrl(), error: "INVALID_ELEMENT_REF" };
-        }
-        const locator = this.page.locator(`[data-offscript-ref="${ref}"][data-offscript-epoch="${this.currentEpoch}"]`);
+        const locator = this.resolveLocator(ref);
+        if (!locator) return { success: false, action: "scroll", url: this.getCurrentUrl(), error: "INVALID_ELEMENT_REF" };
         if ((await locator.count()) === 0) {
           return { success: false, action: "scroll", url: this.page.url(), error: "STALE_OR_MISSING_ELEMENT_REF" };
         }
@@ -197,27 +158,19 @@ export class BrowserUserSession {
       }
       return { success: true, action: "scroll", url: this.page.url() };
     } catch (cause) {
-      return {
-        success: false,
-        action: "scroll",
-        url: this.page.url(),
-        error: cause instanceof Error ? cause.message : "SCROLL_FAILED",
-      };
+      return { success: false, action: "scroll", url: this.page.url(), error: cause instanceof Error ? cause.message : "SCROLL_FAILED" };
     }
   }
 
   async select(ref: string, value: string): Promise<InteractionResult> {
     if (this.closed) return { success: false, action: "select", url: this.getCurrentUrl(), error: "SESSION_CLOSED" };
-    if (!/^elem_\d+$/.test(ref)) {
-      return { success: false, action: "select", url: this.getCurrentUrl(), error: "INVALID_ELEMENT_REF" };
-    }
-    const locator = this.page.locator(`[data-offscript-ref="${ref}"][data-offscript-epoch="${this.currentEpoch}"]`);
+    const locator = this.resolveLocator(ref);
+    if (!locator) return { success: false, action: "select", url: this.getCurrentUrl(), error: "INVALID_ELEMENT_REF" };
     try {
       if ((await locator.count()) === 0) {
         return { success: false, action: "select", url: this.page.url(), error: "STALE_OR_MISSING_ELEMENT_REF" };
       }
-      const isDisabled = await locator.first().isDisabled().catch(() => false);
-      if (isDisabled) {
+      if (await locator.first().isDisabled().catch(() => false)) {
         return { success: false, action: "select", url: this.page.url(), error: "ELEMENT_IS_DISABLED" };
       }
       await locator.first().selectOption(value, { timeout: this.actionTimeoutMs });
@@ -227,12 +180,17 @@ export class BrowserUserSession {
       }
       return { success: true, action: "select", url: newUrl };
     } catch (cause) {
-      return {
-        success: false,
-        action: "select",
-        url: this.page.url(),
-        error: cause instanceof Error ? cause.message : "SELECT_FAILED",
-      };
+      return { success: false, action: "select", url: this.page.url(), error: cause instanceof Error ? cause.message : "SELECT_FAILED" };
+    }
+  }
+
+  async screenshot(): Promise<ScreenshotResult> {
+    if (this.closed) return { success: false, error: "SESSION_CLOSED" };
+    try {
+      const data = await this.page.screenshot({ type: "png" });
+      return { success: true, data, mimeType: "image/png" };
+    } catch (cause) {
+      return { success: false, error: cause instanceof Error ? cause.message : "SCREENSHOT_FAILED" };
     }
   }
 

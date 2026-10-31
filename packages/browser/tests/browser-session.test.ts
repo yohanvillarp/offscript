@@ -171,6 +171,26 @@ describe("browser session and lifecycle", () => {
     }
   });
 
+  it("captures visual viewport screenshots and rejects when closed", async () => {
+    const session = await manager.createSession({ targetUrl: server.origin });
+    try {
+      await session.navigate("/");
+      const capture = await session.screenshot();
+      assert.equal(capture.success, true);
+      if (capture.success) {
+        assert.equal(capture.mimeType, "image/png");
+        assert.ok(Buffer.isBuffer(capture.data));
+        assert.ok(capture.data.length > 100);
+      }
+    } finally {
+      await session.close();
+    }
+
+    const closedCapture = await session.screenshot();
+    assert.equal(closedCapture.success, false);
+    assert.equal(closedCapture.error, "SESSION_CLOSED");
+  });
+
   it("closes manager cleanly without throwing", async () => {
     const tempManager = createBrowserManager({ headless: true });
     const tempSession = await tempManager.createSession({ targetUrl: server.origin });

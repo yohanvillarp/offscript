@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { parseSimulationResults } from "../../../packages/contracts/index.ts";
+import { parseSimulationResults, parseSimulationExecutionStatus } from "../../../packages/contracts/index.ts";
 import { participantCatalog } from "../src/shared/model/participants.ts";
 
 test("simulation results associate findings and observations with known participants", () => {
@@ -69,4 +69,21 @@ test("simulation results associate findings and observations with known particip
     participantCatalog.find((p) => p.profileId === agentId)?.name,
   );
   assert.deepEqual(participants, ["Raven", "Fox"]);
+});
+
+test("simulation execution status parses recent activity for live observability", () => {
+  const parsed = parseSimulationExecutionStatus({
+    simulationId: "sim-1",
+    phase: "running",
+    mode: "browser-exploration",
+    turnsCount: 2,
+    activeAgents: ["explorer"],
+    recentActivity: [
+      { agentId: "explorer", action: "navigate", location: "/", timestamp: "2026-10-31T01:00:00.000Z" },
+      { agentId: "explorer", action: "click", location: "elem_1", timestamp: "2026-10-31T01:00:01.000Z" },
+    ],
+  });
+  assert.equal(parsed.recentActivity?.length, 2);
+  assert.equal(parsed.recentActivity?.[0]?.action, "navigate");
+  assert.equal(parsed.recentActivity?.[1]?.action, "click");
 });

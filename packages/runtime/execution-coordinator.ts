@@ -6,6 +6,7 @@ import type { HostStorage } from "./host-storage.ts";
 import type { HostedSession } from "./session-registry.ts";
 import type { ActiveExecution, ExecutionSessionFactory, ExecutionSessionHandle } from "./execution-types.ts";
 import { settleSimulationAggregate } from "./execution-settlement.ts";
+import type { EvidenceStore } from "./evidence-store.ts";
 
 export type { ExecutionSessionContext, ExecutionSessionFactory, ExecutionSessionHandle } from "./execution-types.ts";
 
@@ -13,16 +14,19 @@ export function executionCoordinator(dependencies: {
   storage: HostStorage;
   prepareSession: <T extends HostedSession>(id: SimulationId, create: () => T) => T;
   factory?: ExecutionSessionFactory | undefined;
+  evidenceStore?: EvidenceStore | undefined;
 }) {
-  const { storage, prepareSession, factory } = dependencies;
+  const { storage, prepareSession, factory, evidenceStore } = dependencies;
   const active = new Map<SimulationId, ActiveExecution>();
   let closed = false;
 
   function toStatus(record: ActiveExecution): SimulationExecutionStatus {
     let turnsCount = record.turnsCount;
+    let recentActivity: readonly { agentId: string; action: string; location?: string | undefined; timestamp: string }[] | undefined;
     if (record.session?.snapshot) {
       const snap = record.session.snapshot();
       if (snap.turns) turnsCount = snap.turns.reduce((sum, item) => sum + item.count, 0);
+      if (snap.recentActivity) recentActivity = snap.recentActivity;
     }
     return Object.freeze({
       simulationId: record.simulationId, phase: record.phase, mode: record.mode,
@@ -30,6 +34,7 @@ export function executionCoordinator(dependencies: {
       ...(record.failureReason ? { failureReason: record.failureReason } : {}),
       startedAt: record.startedAt,
       ...(record.stoppedAt ? { stoppedAt: record.stoppedAt } : {}),
+      ...(recentActivity ? { recentActivity } : {}),
     });
   }
 
@@ -114,7 +119,11 @@ export function executionCoordinator(dependencies: {
 
     try {
       const session = prepareSession(id, () =>
-        factory(runningSim, config.limits, storage, { mode, targetUrl: config.targetUrl }),
+        factory(runningSim, config.limits, storage, {
+          mode,
+          targetUrl: config.targetUrl,
+          evidenceStore,
+        }),
       );
       record.session = session;
       record.phase = "running";

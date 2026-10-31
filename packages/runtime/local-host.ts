@@ -18,6 +18,7 @@ import { inspectProject, createTargetProbe } from "../projects/index.ts";
 import { ContractValidationError, evaluateFindingAssessment, parseLocalTargetUrl } from "../contracts/index.ts";
 import type { CompletedInvestigationSummary, SimulationExecutionMode, SimulationResults, SimulationSetup } from "../contracts/index.ts";
 import { executionCoordinator } from "./execution-coordinator.ts";
+import { createEvidenceStore } from "./evidence-store.ts";
 
 export type HostedSessionContext = Readonly<{ storage: HostStorage; outboxMode: "external" }>;
 
@@ -26,6 +27,7 @@ export function createLocalHost(options: LocalHostOptions) {
   const onDiagnostic = options.onDiagnostic;
   const token = randomBytes(32).toString("base64url");
   const studioSession = config.studioDirectory ? createStudioSession() : undefined;
+  const evidenceStore = createEvidenceStore(config.dataDirectory);
   const registry = sessionRegistry();
   const deleting = new Set<SimulationId>();
   const probe = createTargetProbe();
@@ -72,6 +74,7 @@ export function createLocalHost(options: LocalHostOptions) {
         storage: guarded.storage,
         prepareSession: (id, create) => registry.add(id, create),
         factory: options.sessionFactory,
+        evidenceStore,
       });
       server = createLocalServer({ token, port: () => port, allowedOrigins: config.allowedOrigins, phase: () => phase,
         configurations: api,
@@ -158,7 +161,11 @@ export function createLocalHost(options: LocalHostOptions) {
       if (phase !== "ready" || closing || !storage) throw new Error("Host is not accepting deletion requests.");
       if (registry.has(id) || deleting.has(id) || coordinator?.hasActive(id)) return "not-allowed";
       deleting.add(id);
-      try { return await executeDeleteConfiguredSimulation(id, storage.configurations); }
+      try {
+        const result = await executeDeleteConfiguredSimulation(id, storage.configurations);
+        if (result === "deleted") void evidenceStore.deleteSimulationEvidence(id);
+        return result;
+      }
       finally { deleting.delete(id); }
     },
     async startSimulation(id: SimulationId, mode: SimulationExecutionMode) {
@@ -202,6 +209,10 @@ export function createLocalHost(options: LocalHostOptions) {
         investigations,
         findings,
       });
+    },
+    async getEvidence(id: SimulationId, evidenceId: string) {
+      if (phase !== "ready" || closing) throw new Error("Host is not accepting evidence queries.");
+      return evidenceStore.getEvidence(simulationId(id), evidenceId);
     },
     prepareSession<T extends HostedSession>(id: SimulationId, create: (context: HostedSessionContext) => T): T {
       simulationId(id);

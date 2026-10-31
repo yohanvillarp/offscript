@@ -19,6 +19,7 @@ export type ConfigurationServices = Readonly<{
   stopSimulation(id: ReturnType<typeof simulationId>): Promise<SimulationExecutionStatus>;
   inspectExecution(id: ReturnType<typeof simulationId>): Promise<SimulationExecutionStatus>;
   getSimulationResults(id: ReturnType<typeof simulationId>): Promise<SimulationResults>;
+  getEvidence?(id: ReturnType<typeof simulationId>, evidenceId: string): Promise<{ data: Buffer; contentType: string } | undefined>;
   recoverSimulation?(id: ReturnType<typeof simulationId>, action?: "fail" | "cancel", reason?: string): Promise<SimulationExecutionStatus>;
 }>;
 
@@ -69,6 +70,16 @@ export function configurationRoutes(server: FastifyInstance, services: Configura
     const value = await services.findConfiguration(id);
     if (!value) return reply.code(404).send({ error: "NOT_FOUND" });
     return services.getSimulationResults(id);
+  });
+  server.get<{ Params: { id: string; evidenceId: string } }>("/api/simulations/:id/evidence/:evidenceId", async (request, reply) => {
+    if (!services.getEvidence) return reply.code(404).send({ error: "NOT_FOUND" });
+    const evId = request.params.evidenceId;
+    if (!evId || evId.includes("..") || evId.includes("/") || evId.includes("\\")) {
+      return reply.code(400).send({ error: "INVALID_REQUEST" });
+    }
+    const evidence = await services.getEvidence(simulationId(request.params.id), evId);
+    if (!evidence) return reply.code(404).send({ error: "NOT_FOUND" });
+    return reply.type(evidence.contentType).header("Cache-Control", "public, max-age=86400").send(evidence.data);
   });
   server.post<{ Params: { id: string } }>("/api/simulations/:id/stop", async (request) => {
     return services.stopSimulation(simulationId(request.params.id));
