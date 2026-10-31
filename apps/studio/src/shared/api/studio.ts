@@ -1,6 +1,7 @@
-import { parseProjectDescriptor, parseSimulationConfiguration, parseSimulationSetup } from "@offscript/contracts";
-import type { SimulationConfiguration, SimulationSetup } from "@offscript/contracts";
+import { parseProjectDescriptor, parseSimulationConfiguration, parseSimulationExecutionStatus, parseSimulationSetup } from "@offscript/contracts";
+import type { SimulationConfiguration, SimulationExecutionStatus, SimulationSetup } from "@offscript/contracts";
 import { parseTargetConnection } from "@offscript/contracts";
+
 
 export class StudioApiError extends Error {
   readonly code: string;
@@ -60,3 +61,23 @@ export async function saveConfiguration(id: string, setup: SimulationSetup): Pro
   }
   return saved;
 }
+
+export async function startControlledDemo(id: string): Promise<SimulationExecutionStatus> {
+  const result = await request(`/api/simulations/${encodeURIComponent(id)}/start`, {
+    method: "POST", body: JSON.stringify({ mode: "controlled-demo" }),
+  });
+  return parseSimulationExecutionStatus(result);
+}
+
+export async function inspectExecution(id: string, signal?: AbortSignal): Promise<SimulationExecutionStatus> {
+  const result = await request(`/api/simulations/${encodeURIComponent(id)}/execution`, signal ? { signal } : {});
+  return parseSimulationExecutionStatus(result);
+}
+
+export async function stopSimulation(id: string): Promise<SimulationExecutionStatus> {
+  const result = await request(`/api/simulations/${encodeURIComponent(id)}/stop`, {
+    method: "POST", body: JSON.stringify({}),
+  });
+  return parseSimulationExecutionStatus(result);
+}
+
