@@ -16,8 +16,9 @@ export function executionCoordinator(dependencies: {
   prepareSession: <T extends HostedSession>(id: SimulationId, create: () => T) => T;
   factory?: ExecutionSessionFactory | undefined;
   evidenceStore?: EvidenceStore | undefined;
+  releaseSession?: ((id: SimulationId) => void) | undefined;
 }) {
-  const { storage, prepareSession, factory, evidenceStore } = dependencies;
+  const { storage, prepareSession, factory, evidenceStore, releaseSession } = dependencies;
   const active = new Map<SimulationId, ActiveExecution>();
   let closed = false;
 
@@ -49,6 +50,7 @@ export function executionCoordinator(dependencies: {
     const result = await settleSimulationAggregate(storage, record.simulationId, outcome, reason);
     let closeError: unknown;
     try { await record.session?.close(); } catch (err) { closeError = err; }
+    try { releaseSession?.(record.simulationId); } catch { /* Session release must not break settlement */ }
     record.stoppedAt = new Date().toISOString();
     if (closeError) {
       record.phase = "failed";
@@ -225,5 +227,17 @@ export function executionCoordinator(dependencies: {
     active.clear();
   }
 
-  return Object.freeze({ start, stop, inspect, close, hasActive: (id: SimulationId) => active.has(id) });
+  function hasActive(id: SimulationId): boolean {
+    const record = active.get(id);
+    return record !== undefined && (record.phase === "starting" || record.phase === "running" || record.phase === "stopping");
+  }
+
+  return Object.freeze({
+    start,
+    stop,
+    inspect,
+    close,
+    hasActive,
+    remove: (id: SimulationId) => { active.delete(id); },
+  });
 }

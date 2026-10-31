@@ -19,12 +19,12 @@ const concepts = [
 ];
 
 const profiles = [
-  ["Explorer (Raven)", "Curious and thorough. Explores deep navigation, tests side branches, and inspects edge cases."],
-  ["Impatient (Fox)", "Fast-paced and agile. Rapid clicks and quick actions that uncover race conditions or lagging UI."],
-  ["Beginner (Compass)", "Needs clear visual affordances. Uncovers confusing layouts, vague error messages, or missing guides."],
-  ["Regular (Sparrow)", "Follows typical happy paths and daily user habits, confirming essential functionality remains intact."],
-  ["Meticulous (Owl)", "Exhaustive form and boundary tester. Enters edge values and inspects fine-grained layout consistency."],
-  ["Distrustful (Badger)", "Adversarial skeptic. Tests defensive states, unusual sequences, and boundary failure modes."],
+  ["Explorer (Alex)", "Curious and thorough. Explores deep navigation, tests side branches, and inspects edge cases."],
+  ["Impatient (Leo)", "Fast-paced and agile. Rapid clicks and quick actions that uncover race conditions or lagging UI."],
+  ["Beginner (Chloe)", "Needs clear visual affordances. Uncovers confusing layouts, vague error messages, or missing guides."],
+  ["Regular (David)", "Follows typical happy paths and daily user habits, confirming essential functionality remains intact."],
+  ["Meticulous (Elena)", "Exhaustive form and boundary tester. Enters edge values and inspects fine-grained layout consistency."],
+  ["Distrustful (Marcus)", "Adversarial skeptic. Tests defensive states, unusual sequences, and boundary failure modes."],
 ];
 
 export function Reference() {

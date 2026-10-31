@@ -57,8 +57,9 @@ test("host starts and inspects controlled demo execution against the cart fixtur
   const inspectedAfterStop = await host.inspectExecution(id);
   assert.equal(inspectedAfterStop.phase, "cancelled");
 
-  // Deletion still blocked because simulation is terminal (not created)
-  assert.equal(await host.deleteConfiguration(id), "not-allowed");
+  // Deletion succeeds once stopped and execution is no longer active
+  assert.equal(await host.deleteConfiguration(id), "deleted");
+  assert.equal(await host.findConfiguration(id), undefined);
 });
 
 test("partial startup failure marks simulation as failed and rejects orphan running records", async (t) => {

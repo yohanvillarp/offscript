@@ -18,10 +18,10 @@ OFFSCRIPT brings multi-agent software exploration into a local developer workflo
 - Save a simulation with an application URL, concrete goal, selected users and execution limits.
 - Run the controlled cart demo or the deterministic browser integration on an explicitly authorized target.
 - Inspect attributed observations, collaborative investigations, available screenshots and uncertainty-aware results.
-- Stop execution, recover interrupted records explicitly, and delete eligible configurations that have not started.
+- Stop execution, recover interrupted records explicitly, and delete saved simulations and their associated records when no execution is active.
 - Keep configuration, results and evidence in the selected project's local `.offscript` directory.
 
-Six behavioral profiles are available: Explorer/Raven, Impatient/Fox, Beginner/Compass, Regular/Sparrow, Meticulous/Owl and Distrustful/Badger. Their instructions express different tendencies; the default scripted runner does not demonstrate those differences. An observation or an assigned collaborator is not a confirmed defect.
+Six behavioral profiles are available: Explorer (Alex), Impatient (Leo), Beginner (Chloe), Regular (David), Meticulous (Elena), and Distrustful (Marcus). Their instructions express different tendencies; the default scripted runner does not demonstrate those differences. An observation or an assigned collaborator is not a confirmed defect.
 
 ## Installation & Quick start
 

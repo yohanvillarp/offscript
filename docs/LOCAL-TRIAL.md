@@ -69,7 +69,7 @@ Do not use `make dev-studio`, `vite preview`, or a separate Vite origin for this
 1. Choose **New simulation** and continue past the first-visit introduction.
 2. Confirm the detected project path and suggested name. Edit the simulation name if desired.
 3. Review or enter the target URL and a concrete goal. Use **Check connection** to check local availability if desired. If you want the target itself running, start it separately using that project's normal command; OFFSCRIPT does not do so.
-4. Select Raven/Explorer, Fox/Impatient, and/or Compass/Beginner.
+4. Select Alex (Explorer), Leo (Impatient), and/or Chloe (Beginner).
 5. Review the summary. Expand **Execution limits** if you want to change the stored defaults.
 6. Choose **Save simulation**. Studio reads the saved record back before confirming success.
 7. Return to the simulations list. Select the simulation name to inspect its goal, project, users, ID, and limits in the detail panel; refresh to reload persisted records.

@@ -75,6 +75,7 @@ export function createLocalHost(options: LocalHostOptions) {
         prepareSession: (id, create) => registry.add(id, create),
         factory: options.sessionFactory,
         evidenceStore,
+        releaseSession: (id) => registry.remove(id),
       });
       server = createLocalServer({ token, port: () => port, allowedOrigins: config.allowedOrigins, phase: () => phase,
         configurations: api,
@@ -163,7 +164,10 @@ export function createLocalHost(options: LocalHostOptions) {
       deleting.add(id);
       try {
         const result = await executeDeleteConfiguredSimulation(id, storage.configurations);
-        if (result === "deleted") void evidenceStore.deleteSimulationEvidence(id);
+        if (result === "deleted") {
+          void evidenceStore.deleteSimulationEvidence(id);
+          coordinator?.remove(id);
+        }
         return result;
       }
       finally { deleting.delete(id); }
