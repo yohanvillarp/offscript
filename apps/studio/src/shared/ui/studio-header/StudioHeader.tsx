@@ -3,7 +3,7 @@ import { ArrowUpRight, BookOpen, Menu, X } from "lucide-react";
 import { Link, NavLink, useLocation } from "react-router";
 import "@/shared/ui/studio-header/studio-header.css";
 
-const documentationUrl = "https://github.com/yohanvillarp/offscript/tree/main/docs";
+const documentationUrl = "https://offscript.nikelyh.tech";
 
 export function StudioHeader() {
   const { pathname } = useLocation();
