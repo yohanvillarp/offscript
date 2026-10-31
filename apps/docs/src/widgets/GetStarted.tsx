@@ -24,7 +24,7 @@ export function GetStarted() {
               <CheckCircle2 size={16} className="text-accent" />
               <p className="small-label">Stable Release</p>
             </div>
-            <p className="mt-2 text-sm text-foreground font-mono">v1.0.0 on npm</p>
+            <p className="mt-2 text-sm text-foreground font-mono">v1.0.1 on npm</p>
             <p className="mt-2 text-xs leading-relaxed text-muted">
               Published package: <code>@nikelyh/offscript</code>
             </p>

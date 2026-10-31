@@ -6,7 +6,7 @@
 
 **Your users don't follow a script. Neither do ours.**
 
-Current stable release: **v1.0.0** on [npm](https://www.npmjs.com/package/@nikelyh/offscript).
+Current stable release: **v1.0.1** on [npm](https://www.npmjs.com/package/@nikelyh/offscript).
 Online documentation: [offscript.nikelyh.tech](https://offscript.nikelyh.tech).
 
 OFFSCRIPT brings multi-agent software exploration into a local developer workflow: configure a target and goal, choose artificial users, run a bounded session, and inspect observations, investigations and visual evidence in Studio or the terminal.
@@ -36,7 +36,7 @@ npm install -g @nikelyh/offscript
 Or run directly with `npx`:
 
 ```sh
-npx --yes @nikelyh/offscript@1.0.0 studio
+npx --yes @nikelyh/offscript@1.0.1 studio
 ```
 
 For browser exploration, install the required Chromium binary:
@@ -110,10 +110,10 @@ From the OFFSCRIPT checkout:
 npm pack
 ```
 
-This builds `nikelyh-offscript-1.0.0.tgz`. From your target project's directory:
+This builds `nikelyh-offscript-1.0.1.tgz`. From your target project's directory:
 
 ```sh
-npm exec --yes --package="/absolute/path/nikelyh-offscript-1.0.0.tgz" -- offscript studio
+npm exec --yes --package="/absolute/path/nikelyh-offscript-1.0.1.tgz" -- offscript studio
 ```
 
 The current directory becomes the project root. Use a real absolute archive path; Windows paths are supported. npm installs dependencies in its execution cache without adding OFFSCRIPT to the target's package manifest. The first run can need network access and native dependency setup.

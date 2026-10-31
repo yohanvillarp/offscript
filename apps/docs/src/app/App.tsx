@@ -28,7 +28,7 @@ export function App() {
             <img src="/brand/logo-perspectives.svg" width="22" height="22" alt="" className="shrink-0" />
             <strong>offscript</strong>
             <span className="rounded-sm border border-separator px-1.5 py-0.5 font-mono text-[0.7rem] text-accent">
-              v1.0.0
+              v1.0.1
             </span>
           </div>
           <span>Different users. Shared discoveries.</span>
