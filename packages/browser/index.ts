@@ -16,4 +16,5 @@ export type {
   ElementDescriptor,
   InteractionResult,
   PageSnapshot,
+  ScreenshotResult,
 } from "./types.ts";
