@@ -1,5 +1,10 @@
-import { parseProjectDescriptor, parseSimulationConfiguration, parseSimulationExecutionStatus, parseSimulationSetup } from "@offscript/contracts";
-import type { SimulationConfiguration, SimulationExecutionStatus, SimulationSetup } from "@offscript/contracts";
+import {
+  parseProjectDescriptor, parseSimulationConfiguration, parseSimulationExecutionStatus,
+  parseSimulationResults, parseSimulationSetup,
+} from "@offscript/contracts";
+import type {
+  SimulationConfiguration, SimulationExecutionStatus, SimulationResults, SimulationSetup,
+} from "@offscript/contracts";
 import { parseTargetConnection } from "@offscript/contracts";
 
 
@@ -87,4 +92,10 @@ export async function stopSimulation(id: string): Promise<SimulationExecutionSta
   });
   return parseSimulationExecutionStatus(result);
 }
+
+export async function loadSimulationResults(id: string, signal?: AbortSignal): Promise<SimulationResults> {
+  const result = await request(`/api/simulations/${encodeURIComponent(id)}/results`, signal ? { signal } : {});
+  return parseSimulationResults(result);
+}
+
 

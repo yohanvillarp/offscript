@@ -16,8 +16,8 @@ import { executeConfigureSimulation, executeCheckTarget } from "../application/i
 import { executeDeleteConfiguredSimulation } from "../application/index.ts";
 import type { DeleteConfiguredSimulationResult } from "../application/index.ts";
 import { inspectProject, createTargetProbe } from "../projects/index.ts";
-import { ContractValidationError, parseLocalTargetUrl } from "../contracts/index.ts";
-import type { SimulationExecutionMode, SimulationSetup } from "../contracts/index.ts";
+import { ContractValidationError, evaluateFindingAssessment, parseLocalTargetUrl } from "../contracts/index.ts";
+import type { CompletedInvestigationSummary, SimulationExecutionMode, SimulationResults, SimulationSetup } from "../contracts/index.ts";
 import { executionCoordinator } from "./execution-coordinator.ts";
 
 export type HostedSessionContext = Readonly<{ storage: HostStorage; outboxMode: "external" }>;
@@ -176,6 +176,20 @@ export function createLocalHost(options: LocalHostOptions) {
       if (phase !== "ready" || closing) throw new Error("Host is not accepting execution inspection.");
       if (!coordinator) throw new Error("No execution session factory configured on this host.");
       return coordinator.inspect(simulationId(id));
+    },
+    async getSimulationResults(id: SimulationId): Promise<SimulationResults> {
+      const storage = guarded?.storage;
+      if (phase !== "ready" || closing || !storage) throw new Error("Host is not accepting results queries.");
+      const observations = await storage.observations.listObservations(simulationId(id));
+      const investigations = await storage.investigations.listInvestigations(simulationId(id));
+      const completed = investigations.filter((inv): inv is CompletedInvestigationSummary => inv.lifecycle.status === "completed");
+      const findings = completed.map(inv => evaluateFindingAssessment(inv, observations));
+      return Object.freeze({
+        simulationId: id,
+        observations,
+        investigations,
+        findings,
+      });
     },
     prepareSession<T extends HostedSession>(id: SimulationId, create: (context: HostedSessionContext) => T): T {
       simulationId(id);

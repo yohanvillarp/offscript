@@ -123,3 +123,20 @@ test("updateSimulationAggregate atomically updates simulation and agents with co
   assert.equal(restored?.agents[1]?.lifecycle.status, "running");
 });
 
+test("listObservations and listInvestigations return simulation-scoped ordered results", async (t) => {
+  const db = storage(t).open(); db.migrate();
+  const source = await seed(db);
+  const obsList = await db.observations.listObservations(source.simulation.id);
+  assert.equal(obsList.length, 1);
+  assert.deepEqual(obsList[0], source.observation);
+
+  const invList = await db.investigations.listInvestigations(source.simulation.id);
+  assert.equal(invList.length, 1);
+  assert.deepEqual(invList[0], source.investigation);
+
+  const emptyObs = await db.observations.listObservations(simulationId("unknown"));
+  assert.deepEqual(emptyObs, []);
+  const emptyInv = await db.investigations.listInvestigations(simulationId("unknown"));
+  assert.deepEqual(emptyInv, []);
+});
+

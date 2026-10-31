@@ -6,6 +6,10 @@ import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { test } from "node:test";
 import { openBrowser } from "../../../scripts/server/open-browser.ts";
+import { openPersistence } from "../../persistence/index.ts";
+import { simulationId } from "../../domain/index.ts";
+import { parseSimulationSetup } from "../../contracts/index.ts";
+import { executeConfigureSimulation } from "../../application/index.ts";
 
 const launcher = fileURLToPath(new URL("../../../offscript.mjs", import.meta.url));
 
@@ -20,6 +24,57 @@ test("help, version and rejected arguments do not create project resources", () 
     }
     assert.deepEqual(readdirSync(root), []);
   } finally { rmSync(root, { recursive: true }); }
+});
+
+test("list and results commands inspect project data and report missing records", async () => {
+  const root = mkdtempSync(join(tmpdir(), "offscript-cli-data-"));
+  try {
+    const emptyList = spawnSync(process.execPath, [launcher, "list", "--project", root], { encoding: "utf8" });
+    assert.equal(emptyList.status, 0);
+    assert.ok(emptyList.stdout.includes("No saved simulations found in this project."));
+
+    const persistence = openPersistence({ projectRoot: root });
+    persistence.migrate();
+    const simId = simulationId("sim-cli-inspect");
+    await executeConfigureSimulation({
+      simulationId: simId,
+      projectRoot: root,
+      setup: parseSimulationSetup({
+        name: "CLI Test Sim",
+        targetUrl: "http://localhost:5173",
+        environment: { kind: "web", deployment: "local" },
+        goal: "Test CLI inspection workflow",
+        userProfileIds: ["explorer", "beginner"],
+      }),
+    }, {
+      projects: {
+        inspectProject: async () => ({ rootPath: root, suggestedName: "CLI Test", nameSource: "directory" }),
+      },
+      configurations: persistence.configurations,
+    });
+    persistence.close();
+
+    const populatedList = spawnSync(process.execPath, [launcher, "list", "--project", root], { encoding: "utf8" });
+    assert.equal(populatedList.status, 0);
+    assert.ok(populatedList.stdout.includes("CLI Test Sim"));
+    assert.ok(populatedList.stdout.includes("sim-cli-inspect"));
+
+    const missingResult = spawnSync(process.execPath, [launcher, "results", "unknown-sim", "--project", root], { encoding: "utf8" });
+    assert.equal(missingResult.status, 1);
+    assert.ok(missingResult.stderr.includes("Simulation not found"));
+
+    const populatedResult = spawnSync(process.execPath, [launcher, "results", "sim-cli-inspect", "--project", root], { encoding: "utf8" });
+    assert.equal(populatedResult.status, 0);
+    assert.ok(populatedResult.stdout.includes("Simulation: CLI Test Sim (sim-cli-inspect)"));
+    assert.ok(populatedResult.stdout.includes("--- Findings (0) ---"));
+    assert.ok(populatedResult.stdout.includes("--- Observations (0) ---"));
+  } finally {
+    try {
+      rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+    } catch {
+      // Best-effort cleanup on Windows if locked by OS
+    }
+  }
 });
 
 test("browser delegation passes an encoded file URL without shell interpretation and reports failure", async () => {

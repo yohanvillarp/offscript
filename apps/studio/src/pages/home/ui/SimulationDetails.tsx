@@ -5,6 +5,7 @@ import { participantCatalog } from "@/shared/model/participants";
 import { UserAvatar } from "@/shared/ui/UserAvatar";
 import { SimulationUserDetails } from "@/pages/home/ui/SimulationUserDetails";
 import { SimulationExecutionControl } from "@/pages/home/ui/SimulationExecutionControl";
+import { SimulationResultsView } from "@/pages/home/ui/SimulationResultsView";
 import { DeleteSimulation } from "@/pages/home/ui/DeleteSimulation";
 
 type Props = Readonly<{
@@ -68,6 +69,7 @@ export function SimulationDetails({ item, position, total, selectedUser, onSelec
           </dl>
         </section>
         <SimulationExecutionControl simulationId={item.simulationId} targetUrl={item.targetUrl} onBusy={setExecuting} />
+        <SimulationResultsView simulationId={item.simulationId} refreshTrigger={executing ? "running" : "idle"} />
         <div><p className="text-xs text-muted">Simulation ID</p><p className="mt-2 break-all font-mono text-xs">{item.simulationId}</p></div>
         <DeleteSimulation key={item.simulationId} id={item.simulationId} name={item.name} onBusy={setDeleting}
           onDeleted={() => { dialog.current?.close(); onDeleted(item.simulationId); }} />

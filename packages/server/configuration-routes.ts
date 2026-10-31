@@ -3,7 +3,7 @@ import { simulationId } from "../domain/index.ts";
 import { parseSimulationSetup, parseStartSimulationRequest } from "../contracts/index.ts";
 import type {
   ProjectDescriptor, SimulationConfiguration, SimulationExecutionMode, SimulationExecutionStatus,
-  SimulationSetup, TargetConnection,
+  SimulationResults, SimulationSetup, TargetConnection,
 } from "../contracts/index.ts";
 import { parseLocalTargetUrl } from "../contracts/index.ts";
 import type { DeleteConfiguredSimulationResult } from "../application/index.ts";
@@ -18,6 +18,7 @@ export type ConfigurationServices = Readonly<{
   startSimulation(id: ReturnType<typeof simulationId>, mode: SimulationExecutionMode): Promise<SimulationExecutionStatus>;
   stopSimulation(id: ReturnType<typeof simulationId>): Promise<SimulationExecutionStatus>;
   inspectExecution(id: ReturnType<typeof simulationId>): Promise<SimulationExecutionStatus>;
+  getSimulationResults(id: ReturnType<typeof simulationId>): Promise<SimulationResults>;
 }>;
 
 
@@ -62,6 +63,12 @@ export function configurationRoutes(server: FastifyInstance, services: Configura
   });
   server.get<{ Params: { id: string } }>("/api/simulations/:id/execution", async (request) => {
     return services.inspectExecution(simulationId(request.params.id));
+  });
+  server.get<{ Params: { id: string } }>("/api/simulations/:id/results", async (request, reply) => {
+    const id = simulationId(request.params.id);
+    const value = await services.findConfiguration(id);
+    if (!value) return reply.code(404).send({ error: "NOT_FOUND" });
+    return services.getSimulationResults(id);
   });
   server.post<{ Params: { id: string } }>("/api/simulations/:id/stop", async (request) => {
     return services.stopSimulation(simulationId(request.params.id));

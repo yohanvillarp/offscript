@@ -4,5 +4,5 @@
     "noEmit": false, "noEmitOnError": true, "rootDir": ".", "outDir": "dist",
     "rewriteRelativeImportExtensions": true, "types": ["node"], "lib": ["ES2023", "DOM"]
   },
-  "include": ["scripts/server/run.ts"]
+  "include": ["scripts/server/run.ts", "scripts/server/cli-results.ts"]
 }

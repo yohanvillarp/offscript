@@ -149,6 +149,28 @@ test("simulation execution control supports browser-exploration mode against an 
 });
 
 
+test("GET /api/simulations/:id/results returns results DTO and handles unknown simulations", async t => {
+  const temp = hostContext(t); const host = temp.host(); const origin = await host.start();
+  const headers = { authorization: `Bearer ${host.credentials().token}`, "content-type": "application/json" };
+  assert.equal((await http(origin, "/api/simulations/missing-sim/results")).status, 401);
+  assert.equal((await http(origin, "/api/simulations/missing-sim/results", { headers })).status, 404);
+
+  const id = "sim-results-test";
+  const created = await http(origin, "/api/simulations", { method: "POST", headers, body: JSON.stringify({
+    simulationId: id, setup,
+  }) });
+  assert.equal(created.status, 201);
+
+  const response = await http(origin, `/api/simulations/${id}/results`, { headers });
+  assert.equal(response.status, 200);
+  const data = JSON.parse(response.body);
+  assert.equal(data.simulationId, id);
+  assert.deepEqual(data.observations, []);
+  assert.deepEqual(data.investigations, []);
+  assert.deepEqual(data.findings, []);
+});
+
+
 test("local-file entry uses a one-time body credential and an HttpOnly API cookie; public assets expose no project files", async t => {
   const temp = hostContext(t); const assets = join(temp.root, "studio-build"); mkdirSync(join(assets, "assets"), { recursive: true });
   writeFileSync(join(assets, "index.html"), "<html><title>Studio</title></html>"); writeFileSync(join(assets, "assets", "app.js"), "console.log('studio')");
