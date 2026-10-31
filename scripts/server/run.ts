@@ -9,9 +9,14 @@ process.env.MOZAIK_API_KEY ??= "";
 
 const originalWarn = console.warn;
 console.warn = (...args: unknown[]) => {
-  if (typeof args[0] === "string" && args[0].includes("mozaik cloud: no API key")) return;
+  if (typeof args[0] === "string" && args[0].includes("mozaik cloud")) return;
   originalWarn.apply(console, args);
 };
+const originalStderrWrite = process.stderr.write.bind(process.stderr);
+process.stderr.write = ((chunk: unknown, ...rest: unknown[]) => {
+  if (typeof chunk === "string" && chunk.includes("mozaik cloud")) return true;
+  return (originalStderrWrite as (...args: unknown[]) => boolean)(chunk, ...rest);
+}) as typeof process.stderr.write;
 
 let requestStop: () => void = () => {};
 const stopping = new Promise<void>(resolve => { requestStop = resolve; });
@@ -47,6 +52,8 @@ try {
         });
       }
     }
+    console.log("AI Mode: Local Autonomous Runner (offline, no API key required).");
+    console.log("Browser exploration requires Chromium: npx playwright install chromium");
     console.log("Press Ctrl+C to stop. No exploration starts automatically.");
     await stopping;
   }

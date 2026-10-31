@@ -91,11 +91,20 @@ export function GetStarted() {
                   <span>1</span>Install OFFSCRIPT &amp; Chromium
                 </h3>
                 <p>
-                  To unlock full autonomous browser exploration, install the global CLI along with the Chromium engine:
+                  To unlock full autonomous browser exploration, install the global CLI, then download the Chromium browser binary:
                 </p>
-                <CodeBlock code="npm install -g @nikelyh/offscript\nnpx playwright install chromium" />
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs text-muted mb-1 font-medium">Step A: Install the global CLI</p>
+                    <CodeBlock code="npm install -g @nikelyh/offscript" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted mb-1 font-medium">Step B: Install Chromium browser engine</p>
+                    <CodeBlock code="npx playwright install chromium" />
+                  </div>
+                </div>
                 <p className="supporting-note">
-                  <strong>Why both?</strong> The global CLI provides the runtime, Studio, and orchestration engine. Playwright manages the headless Chromium browser independently so autonomous agents can navigate, inspect, and interact with your web application.
+                  <strong>Why both?</strong> The global CLI provides the runtime, Studio, and orchestration engine. Chromium is required by Playwright so artificial users can open and interact with your web application.
                 </p>
               </article>
 

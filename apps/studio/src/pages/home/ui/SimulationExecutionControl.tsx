@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertCircle, Compass, Play, Square } from "lucide-react";
+import { AlertCircle, Compass, Sparkles, Square } from "lucide-react";
 import { parseLocalTargetUrl } from "@offscript/contracts";
 import type { SimulationExecutionStatus } from "@offscript/contracts";
 import {
@@ -13,6 +13,7 @@ import {
 } from "@/shared/api/studio";
 import { LiveActivityFeed } from "./LiveActivityFeed";
 import { ExecutionFailureAlert } from "./ExecutionFailureAlert";
+import { AiEngineGuide } from "./AiEngineGuide";
 
 type Props = Readonly<{
   simulationId: string;
@@ -24,20 +25,14 @@ export function SimulationExecutionControl({ simulationId, targetUrl, onBusy }: 
   const [status, setStatus] = useState<SimulationExecutionStatus | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
+  const [headless, setHeadless] = useState(false);
   const unmounted = useRef(false);
 
   useEffect(() => {
     unmounted.current = false;
     const abort = new AbortController();
-    void inspectExecution(simulationId, abort.signal)
-      .then((result) => {
-        if (!unmounted.current) setStatus(result);
-      })
-      .catch(() => {});
-    return () => {
-      unmounted.current = true;
-      abort.abort();
-    };
+    void inspectExecution(simulationId, abort.signal).then((res) => { if (!unmounted.current) setStatus(res); }).catch(() => {});
+    return () => { unmounted.current = true; abort.abort(); };
   }, [simulationId]);
 
   const phase = status?.phase ?? "idle";
@@ -45,17 +40,10 @@ export function SimulationExecutionControl({ simulationId, targetUrl, onBusy }: 
   const mode = status?.mode ?? "browser-exploration";
 
   useEffect(() => {
-    if (!isRunning) {
-      onBusy?.(false);
-      return;
-    }
+    if (!isRunning) { onBusy?.(false); return; }
     onBusy?.(true);
     const timer = setInterval(() => {
-      void inspectExecution(simulationId)
-        .then((result) => {
-          if (!unmounted.current) setStatus(result);
-        })
-        .catch(() => {});
+      void inspectExecution(simulationId).then((res) => { if (!unmounted.current) setStatus(res); }).catch(() => {});
     }, 1500);
     return () => clearInterval(timer);
   }, [simulationId, isRunning, onBusy]);
@@ -83,7 +71,7 @@ export function SimulationExecutionControl({ simulationId, targetUrl, onBusy }: 
       }
       const result =
         targetMode === "browser-exploration"
-          ? await startBrowserExploration(simulationId)
+          ? await startBrowserExploration(simulationId, { headless })
           : await startControlledDemo(simulationId);
       setStatus(result);
     } catch (cause) {
@@ -98,29 +86,17 @@ export function SimulationExecutionControl({ simulationId, targetUrl, onBusy }: 
   }
 
   async function handleStop() {
-    setLoading(true);
-    setError(undefined);
-    try {
-      const result = await stopSimulation(simulationId);
-      setStatus(result);
-    } catch {
-      setError("Could not stop execution.");
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true); setError(undefined);
+    try { setStatus(await stopSimulation(simulationId)); }
+    catch { setError("Could not stop execution."); }
+    finally { setLoading(false); }
   }
 
   async function handleRecover() {
-    setLoading(true);
-    setError(undefined);
-    try {
-      const result = await recoverSimulation(simulationId, "fail");
-      setStatus(result);
-    } catch {
-      setError("Could not recover interrupted simulation.");
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true); setError(undefined);
+    try { setStatus(await recoverSimulation(simulationId, "fail")); }
+    catch { setError("Could not recover interrupted simulation."); }
+    finally { setLoading(false); }
   }
 
   return (
@@ -180,13 +156,25 @@ export function SimulationExecutionControl({ simulationId, targetUrl, onBusy }: 
         </div>
       )}
 
-      <div className="mt-4 flex flex-col gap-2">
+      {phase === "idle" && (
+        <div className="mt-3 rounded-md border border-accent/30 bg-accent/10 p-3 text-xs leading-relaxed text-muted">
+          <p className="flex items-center gap-1.5 font-semibold text-accent">
+            <Sparkles aria-hidden="true" className="size-4 shrink-0" />
+            <span>Ready for exploration</span>
+          </p>
+          <p className="mt-1">
+            Click below to start autonomous users exploring <strong className="font-mono text-foreground">{targetUrl ?? "your application"}</strong>.
+          </p>
+        </div>
+      )}
+
+      <div className="mt-4 flex flex-col gap-3">
         {isRunning ? (
           <button
             type="button"
             disabled={loading || phase === "stopping"}
             onClick={handleStop}
-            className="flex w-full items-center justify-center gap-2 rounded-md bg-danger px-3 py-2 text-xs font-medium text-white shadow-xs hover:bg-danger/90 disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-md bg-danger px-3 py-2.5 text-xs font-medium text-white shadow-xs hover:bg-danger/90 disabled:opacity-50"
           >
             <Square aria-hidden="true" className="size-3.5 fill-current" />
             <span>{phase === "stopping" ? "Stopping..." : "Stop execution"}</span>
@@ -196,31 +184,47 @@ export function SimulationExecutionControl({ simulationId, targetUrl, onBusy }: 
             type="button"
             disabled={loading}
             onClick={handleRecover}
-            className="flex w-full items-center justify-center gap-2 rounded-md bg-danger px-3 py-2 text-xs font-medium text-white shadow-xs hover:bg-danger/90 disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-md bg-danger px-3 py-2.5 text-xs font-medium text-white shadow-xs hover:bg-danger/90 disabled:opacity-50"
           >
             <Square aria-hidden="true" className="size-3.5 fill-current" />
             <span>{loading ? "Recovering..." : "Recover interrupted simulation"}</span>
           </button>
         ) : (
           <>
+            <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-muted hover:text-foreground">
+              <input
+                type="checkbox"
+                checked={!headless}
+                onChange={(e) => setHeadless(!e.target.checked)}
+                className="rounded border-separator text-accent focus:ring-accent"
+              />
+              <span>Show browser window on desktop (Headed mode)</span>
+            </label>
+
             <button
               type="button"
               disabled={loading || phase === "completed"}
               onClick={() => handleStart("browser-exploration")}
-              className="flex w-full items-center justify-center gap-2 rounded-md bg-accent px-4 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-accent/90 disabled:opacity-50 transition-colors"
+              className={`flex w-full items-center justify-center gap-2 rounded-md bg-accent px-4 py-3 text-sm font-semibold text-white shadow-md hover:bg-accent/90 disabled:opacity-50 transition-all ${
+                phase === "idle" ? "ring-4 ring-accent/30 animate-pulse hover:animate-none" : ""
+              }`}
             >
-              <Compass aria-hidden="true" className="size-3.5" />
-              <span>{loading ? "Starting..." : "Run browser exploration"}</span>
+              <Compass aria-hidden="true" className="size-4" />
+              <span>{loading ? "Starting exploration…" : "Run browser exploration"}</span>
             </button>
-            <button
-              type="button"
-              disabled={loading || phase === "completed"}
-              onClick={() => handleStart("controlled-demo")}
-              className="flex w-full items-center justify-center gap-2 rounded-md border border-separator bg-surface px-3 py-1.5 text-xs font-medium text-muted hover:text-foreground disabled:opacity-50"
-            >
-              <Play aria-hidden="true" className="size-3 fill-current" />
-              <span>Run controlled demo</span>
-            </button>
+
+            <AiEngineGuide />
+
+            <div className="pt-2 text-center border-t border-separator/40">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleStart("controlled-demo")}
+                className="text-[11px] text-muted hover:text-foreground hover:underline"
+              >
+                Need an offline sandbox instead? Run simulated cart demo
+              </button>
+            </div>
           </>
         )}
       </div>

@@ -91,7 +91,11 @@ export function executionCoordinator(dependencies: {
     });
   }
 
-  async function start(id: SimulationId, mode: SimulationExecutionMode): Promise<SimulationExecutionStatus> {
+  async function start(
+    id: SimulationId,
+    mode: SimulationExecutionMode,
+    options: Readonly<{ headless?: boolean | undefined }> = {},
+  ): Promise<SimulationExecutionStatus> {
     if (closed) throw new ApplicationError("EXECUTION_START_FAILED", "Host is closing.");
     if (!factory) throw new ApplicationError("EXECUTION_START_FAILED", "No execution session factory configured on this host.");
     if (mode !== "controlled-demo" && mode !== "browser-exploration") {
@@ -140,6 +144,7 @@ export function executionCoordinator(dependencies: {
           mode,
           targetUrl: config.targetUrl,
           evidenceStore,
+          ...(options.headless !== undefined ? { headless: options.headless } : {}),
         }),
       );
       record.session = session;

@@ -68,7 +68,7 @@ export function createBrowserExplorationSessionFactory(
     const targetUrl = resolvedTargetUrl;
 
     const browserManager: BrowserManager = createBrowserManager({
-      headless: options.headless ?? true,
+      headless: context?.headless ?? options.headless ?? true,
     });
     const sessions = new Map<AgentId, Promise<BrowserUserSession>>();
 

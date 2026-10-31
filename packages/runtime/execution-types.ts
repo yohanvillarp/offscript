@@ -23,6 +23,7 @@ export type ExecutionSessionContext = Readonly<{
   mode?: SimulationExecutionMode | undefined;
   targetUrl?: string | undefined;
   evidenceStore?: EvidenceStore | undefined;
+  headless?: boolean | undefined;
 }>;
 
 export type ExecutionSessionFactory = (
