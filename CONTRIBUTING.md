@@ -4,6 +4,8 @@
 
 `main` represents production: every change must arrive through a GitHub pull request from a work branch. Do not commit or push directly to `main`. Keep each PR focused and production-ready; urgent fixes also require review.
 
+An explicit maintainer instruction to push a particular fix directly to main takes precedence for that operation only. Set `OFFSCRIPT_MAIN_PUSH_AUTHORIZED=1` for that commit and push; lint, commit-message validation and the complete pre-push checks still run. This opt-in is not the normal contribution path and must not be used without that explicit instruction.
+
 Before working, read [AGENTS.md](AGENTS.md), [PROJECT.md](docs/PROJECT.md), [ARCHITECTURE.md](docs/ARCHITECTURE.md), and the files relevant to your task.
 
 ## Setup

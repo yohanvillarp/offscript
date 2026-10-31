@@ -43,6 +43,10 @@ Create a separate Vercel project connected to this repository:
 
 Using the repository root makes shared visual sources available without access outside Vercel's Root Directory. The root `vercel.json` explicitly installs and builds only docs; it does not install the root package, build Studio or start the local host. Keep automatic skipping of unaffected projects disabled until detection of shared visual changes has been verified. No environment variables are required. Do not add provider keys, npm tokens or local host credentials.
 
+Alternatively, if the Vercel project's Root Directory is `apps/docs`, its local `vercel.json` uses `npm ci`, `npm run build` and `dist`, without a repeated `apps/docs` prefix. Enable **Include source files outside of the Root Directory in the Build Step** so Studio's visual sources are available. Select Node.js 24.x in project settings. Do not combine an app-root deployment with the repository-root commands in the table above.
+
+If `npm ci` reports a missing lockfile, check this Root Directory/command pairing first: `apps/docs/package-lock.json` is tracked. Do not switch to `npm install` to conceal an incorrect working directory. `node_modules/`, `dist/` and `.vercel/` remain ignored; source, configuration and the lockfile must be committed.
+
 Use branch previews to review the design before merging to main. Link `offscript.nikelyh.tech` in Vercel Domains only when ready; apply the DNS records Vercel gives for that project, verify ownership/HTTPS and test the resulting deployment. No DNS records or deployments are created by this repository change. Ignore `.vercel/` local project linkage.
 
 References: [Vite on Vercel](https://vercel.com/docs/frameworks/frontend/vite), [Root Directory settings](https://vercel.com/docs/deployments/configure-a-build#root-directory).

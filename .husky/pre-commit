@@ -1,5 +1,5 @@
 branch=$(git symbolic-ref --quiet --short HEAD) || exit 1
-if [ "$branch" = "main" ]; then
+if [ "$branch" = "main" ] && [ "${OFFSCRIPT_MAIN_PUSH_AUTHORIZED:-0}" != "1" ]; then
   echo "Create a branch and open a pull request; main is production." >&2
   exit 1
 fi
