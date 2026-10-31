@@ -16,9 +16,9 @@ export function TargetStep({ draft, errors, onChange, suggestion }: Props) {
         <p className="mt-2 text-sm text-muted">Define what this simulation will explore.</p>
       </div>
       <div className="grid min-w-0 gap-6 lg:grid-cols-2">
-        <DraftField id="name" label="Simulation name" value={draft.name} error={errors.name} onChange={(name) => onChange({ name })} />
+        <DraftField id="name" label="Simulation name" value={draft.name} placeholder="e.g. Checkout flow exploration" error={errors.name} onChange={(name) => onChange({ name })} />
         <div className="space-y-3">
-          <DraftField id="url" label="Application URL" type="url" value={draft.url} error={errors.url} onChange={(url) => onChange({ url })}
+          <DraftField id="url" label="Application URL" type="url" value={draft.url} placeholder={suggestion?.url ?? "http://localhost:3000"} error={errors.url} onChange={(url) => onChange({ url })}
             hint={suggestion && draft.url === suggestion.url ? `Suggested from ${suggestion.source === "vite-script" ? `the port in npm run ${suggestion.scriptName}` : "Vite's default port"}. Project configuration may override it.` : "Use a complete HTTP or HTTPS address."} />
           <TargetConnection key={draft.url} url={draft.url} />
         </div>
@@ -28,6 +28,7 @@ export function TargetStep({ draft, errors, onChange, suggestion }: Props) {
         label="Exploration goal"
         multiline
         value={draft.goal}
+        placeholder="e.g. Navigate through the catalog, search for products, add an item to the cart, and proceed to checkout."
         error={errors.goal}
         onChange={(goal) => onChange({ goal })}
         hint="Describe the outcome all selected users should pursue, rather than a sequence of steps. Each user will approach it differently."
