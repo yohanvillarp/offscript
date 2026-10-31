@@ -1,0 +1,52 @@
+name: release-publish
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      force_publish:
+        description: 'Publish directly to npm using Trusted Publishing'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  release-please:
+    name: Google Release Please
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      releases_created: ${{ steps.release.outputs.releases_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          config-file: .release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  npm-publish:
+    name: npm publish (Trusted Publishing)
+    needs: release-please
+    if: ${{ needs.release-please.outputs.releases_created == 'true' || inputs.force_publish == true }}
+    runs-on: ubuntu-latest
+    environment: offscript-actions
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm ci
+      - run: npm ci --prefix apps/studio
+      - run: npm run build:local
+      - run: npm publish --provenance --access public
