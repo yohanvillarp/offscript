@@ -6,7 +6,7 @@
 
 **Your users don't follow a script. Neither do ours.**
 
-Current stable release: **v1.7.0** on [npm](https://www.npmjs.com/package/@nikelyh/offscript).
+Current stable release: **v1.6.1** on [npm](https://www.npmjs.com/package/@nikelyh/offscript).
 Online documentation: [offscript.nikelyh.tech](https://offscript.nikelyh.tech).
 
 OFFSCRIPT brings multi-agent software exploration into a local developer workflow: configure a target and goal, choose artificial users, run a bounded session, and inspect observations, investigations and visual evidence in Studio or the terminal.
