@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.0](https://github.com/yohanvillarp/offscript/compare/offscript-v1.3.0...offscript-v1.4.0) (2026-10-31)
+
+
+### Features
+
+* **studio:** humanize participant personas with unique avatars and remove outdated execution copy ([753e258](https://github.com/yohanvillarp/offscript/commit/753e258252ac87623e3f49d0b8959f48d2006a89))
+* **studio:** humanize participant personas with unique avatars and remove outdated execution copy ([8e455ce](https://github.com/yohanvillarp/offscript/commit/8e455ce34a3467aee3501d1fe13ea35f483cd28e))
+
 ## [1.3.0](https://github.com/yohanvillarp/offscript/compare/offscript-v1.2.0...offscript-v1.3.0) (2026-10-31)
 
 
