@@ -133,8 +133,8 @@ export function SimulationResultsView({ simulationId, refreshTrigger }: Props) {
           </div>
 
           <div role="tabpanel" className="mt-2">
-            {tab === "findings" && <FindingsListView findings={results?.findings ?? []} />}
-            {tab === "observations" && <ObservationsListView observations={results?.observations ?? []} />}
+            {tab === "findings" && <FindingsListView simulationId={simulationId} findings={results?.findings ?? []} />}
+            {tab === "observations" && <ObservationsListView simulationId={simulationId} observations={results?.observations ?? []} />}
             {tab === "investigations" && <InvestigationsListView investigations={results?.investigations ?? []} />}
           </div>
         </div>

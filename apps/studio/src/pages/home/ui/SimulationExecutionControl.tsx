@@ -9,6 +9,7 @@ import {
   stopSimulation,
   StudioApiError,
 } from "@/shared/api/studio";
+import { LiveActivityFeed } from "./LiveActivityFeed";
 
 type Props = Readonly<{
   simulationId: string;
@@ -148,6 +149,10 @@ export function SimulationExecutionControl({ simulationId, targetUrl, onBusy }: 
             </div>
           )}
         </dl>
+      )}
+
+      {status?.recentActivity && status.recentActivity.length > 0 && (
+        <LiveActivityFeed activity={status.recentActivity} />
       )}
 
       {error && (

@@ -1,17 +1,25 @@
-import { CheckCircle2, AlertTriangle, XCircle, HelpCircle } from "lucide-react";
+import { useState } from "react";
+import { Camera, CheckCircle2, AlertTriangle, XCircle, HelpCircle } from "lucide-react";
 import type { FindingAssessment } from "@offscript/contracts";
 import { participantCatalog } from "@/shared/model/participants";
 import { UserAvatar } from "@/shared/ui/UserAvatar";
+import { EvidencePreviewModal } from "./EvidencePreviewModal";
 
-type Props = Readonly<{ findings: readonly FindingAssessment[] }>;
+type Props = Readonly<{
+  simulationId: string;
+  findings: readonly FindingAssessment[];
+}>;
 
-export function FindingsListView({ findings }: Props) {
+export function FindingsListView({ simulationId, findings }: Props) {
+  const [selectedEvidence, setSelectedEvidence] = useState<string | undefined>(undefined);
+
   if (findings.length === 0) {
     return <p className="text-xs text-muted">No findings evaluated for this simulation yet.</p>;
   }
 
   return (
-    <ul className="space-y-3">
+    <>
+      <ul className="space-y-3">
       {findings.map((finding) => {
         const isConfirmed = finding.isConfirmedFinding;
         const confidence = finding.confidence;
@@ -89,9 +97,16 @@ export function FindingsListView({ findings }: Props) {
                   <span>Evidence:</span>
                   <div className="flex flex-wrap gap-1">
                     {finding.evidenceIds.map((eid) => (
-                      <span key={eid} className="rounded bg-surface-subtle px-1.5 py-0.5 font-mono text-[10px] text-foreground">
-                        {eid}
-                      </span>
+                      <button
+                        key={eid}
+                        type="button"
+                        onClick={() => setSelectedEvidence(eid)}
+                        className="inline-flex items-center gap-1 rounded bg-surface-subtle px-1.5 py-0.5 font-mono text-[10px] text-foreground hover:bg-surface-hover hover:text-accent transition-colors"
+                        title="Click to preview visual evidence screenshot"
+                      >
+                        <Camera aria-hidden="true" className="size-2.5 text-accent" />
+                        <span>{eid}</span>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -101,5 +116,14 @@ export function FindingsListView({ findings }: Props) {
         );
       })}
     </ul>
+
+    {selectedEvidence && (
+      <EvidencePreviewModal
+        simulationId={simulationId}
+        evidenceId={selectedEvidence}
+        onClose={() => setSelectedEvidence(undefined)}
+      />
+    )}
+  </>
   );
 }
