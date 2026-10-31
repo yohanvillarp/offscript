@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.1](https://github.com/yohanvillarp/offscript/compare/offscript-v1.1.0...offscript-v1.1.1) (2026-10-31)
+
+
+### Bug Fixes
+
+* **studio:** reset scroll to top on screen transitions and decouple panel rendering ([f4a9393](https://github.com/yohanvillarp/offscript/commit/f4a939387e8b40a982366a6893832183ebb578c2))
+* **studio:** reset scroll to top on screen transitions and decouple panel rendering ([3f3e991](https://github.com/yohanvillarp/offscript/commit/3f3e99166508f7c023f48e2dcc3b0cc0aa750caf))
+
 ## [1.1.0](https://github.com/yohanvillarp/offscript/compare/offscript-v1.0.1...offscript-v1.1.0) (2026-10-31)
 
 
