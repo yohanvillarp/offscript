@@ -70,6 +70,16 @@ test("autonomous browser exploration executes via local host on a real web appli
     assert.equal(exec.simulationId, simId);
     assert.equal(exec.mode, "browser-exploration");
     assert.ok(exec.turnsCount >= 1);
+    assert.ok(exec.recentActivity && exec.recentActivity.length > 0);
+    assert.equal(exec.recentActivity[0]?.agentId, explorer);
+
+    // Verify visual evidence was captured and stored
+    const parsedEvidenceIds = JSON.parse(firstRow.evidenceIds) as string[];
+    const firstEvId = parsedEvidenceIds[0];
+    assert.ok(firstEvId);
+    const evidence = await host.getEvidence(simId, firstEvId);
+    assert.ok(evidence);
+    assert.equal(evidence.contentType, "image/png");
 
     // Stop execution cleanly
     const stopResult = await host.stopSimulation(simId);

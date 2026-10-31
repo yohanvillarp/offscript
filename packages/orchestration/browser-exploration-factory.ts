@@ -122,6 +122,7 @@ export function createBrowserExplorationSessionFactory(
           type: async (ref: string, text: string) => (await getSession(id)).type(ref, text),
           scroll: async (direction: "up" | "down", ref?: string) => (await getSession(id)).scroll(direction, ref),
           select: async (ref: string, value: string) => (await getSession(id)).select(ref, value),
+          screenshot: async () => (await getSession(id)).screenshot(),
           getCurrentUrl: () => targetUrl,
           getTargetUrl: () => targetUrl,
         };
@@ -131,6 +132,7 @@ export function createBrowserExplorationSessionFactory(
           accessor as unknown as BrowserUserSession,
           publish,
           sessStorage,
+          context?.evidenceStore,
         );
       },
       onClose: async () => {

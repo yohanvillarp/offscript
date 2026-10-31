@@ -11,6 +11,7 @@ import type { ExplorationState, ToolName } from "../state.ts";
 import { argumentsObject, argumentText } from "./arguments.ts";
 import type { BrowserUserSession } from "../../browser/index.ts";
 import { browserInteractionTools } from "./browser-interaction-tools.ts";
+import type { EvidenceStore } from "../../runtime/evidence-store.ts";
 
 export function browserExplorationTools(
   state: ExplorationState,
@@ -18,6 +19,7 @@ export function browserExplorationTools(
   browserSession: BrowserUserSession,
   publish: (event: SemanticEvent) => void,
   storage: ExplorationStorage = sessionStorage(state),
+  evidenceStore?: EvidenceStore | undefined,
 ): Tool[] {
   function tool(
     name: ToolName,
@@ -47,7 +49,7 @@ export function browserExplorationTools(
 
   const text = { type: "string", minLength: 1 };
   const tools = [
-    ...browserInteractionTools(tool, browserSession),
+    ...browserInteractionTools(tool, browserSession, (action, detail) => state.recordActivity(id, action, detail)),
     tool(
       "record_observation",
       "Record noticed behavior or unexpected findings as untrusted observation data, without confirming a defect.",
@@ -63,6 +65,16 @@ export function browserExplorationTools(
           }
         }
         const eid = evidenceId(`ev-${randomUUID()}`);
+        if (evidenceStore && typeof browserSession.screenshot === "function") {
+          try {
+            const capture = await browserSession.screenshot();
+            if (capture.success) {
+              await evidenceStore.saveEvidence(state.simulation.id, eid, capture.data, capture.mimeType);
+            }
+          } catch {
+            // Non-critical: screenshot capture failure should not block observation recording
+          }
+        }
         const observation = createObservation({
           id: observationId(randomUUID()),
           simulationId: state.simulation.id,
@@ -76,6 +88,7 @@ export function browserExplorationTools(
           throw new Error("Observation identity already exists.");
         }
         state.observations.set(observation.id, observation);
+        state.recordActivity(id, "observe", loc);
         publish(
           parseSemanticEvent({
             eventId: randomUUID(),
@@ -122,6 +135,7 @@ export function browserExplorationTools(
             investigations: storage.investigations,
           },
         );
+        state.recordActivity(id, "request_investigation", argumentText(args.hypothesis));
         return { investigationId: result.investigation.id, publication: result.publication.status };
       },
     ),
@@ -166,6 +180,7 @@ export function browserExplorationTools(
             investigations: storage.investigations,
           },
         );
+        state.recordActivity(id, "complete_investigation", args.outcome);
         return {
           investigationId: result.investigation.id,
           outcome: result.investigation.lifecycle.result.outcome,

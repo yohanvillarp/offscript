@@ -13,6 +13,7 @@ export type ToolFactory = (
 export function browserInteractionTools(
   tool: ToolFactory,
   browserSession: BrowserUserSession,
+  onActivity?: (action: string, detail?: string) => void,
 ): Tool[] {
   const text = { type: "string", minLength: 1 };
 
@@ -24,6 +25,7 @@ export function browserInteractionTools(
       async (value) => {
         const args = argumentsObject(value, ["url"]);
         const url = argumentText(args.url);
+        onActivity?.("navigate", url);
         const result = await browserSession.navigate(url);
         if (!result.success) throw new Error(result.error || "Navigation failed.");
         return { currentUrl: result.url };
@@ -34,6 +36,7 @@ export function browserInteractionTools(
       "Inspect current page DOM and accessibility tree, returning visible text, title, and interactive element handles.",
       {},
       async () => {
+        onActivity?.("inspect");
         const snapshot = await browserSession.inspect();
         return {
           url: snapshot.url,
@@ -61,6 +64,7 @@ export function browserInteractionTools(
       async (value) => {
         const args = argumentsObject(value, ["ref"]);
         const ref = argumentText(args.ref);
+        onActivity?.("click", ref);
         const result = await browserSession.click(ref);
         if (!result.success) throw new Error(result.error || "Click failed.");
         return { currentUrl: result.url };
@@ -74,6 +78,7 @@ export function browserInteractionTools(
         const args = argumentsObject(value, ["ref", "text"]);
         const ref = argumentText(args.ref);
         const inputContent = typeof args.text === "string" ? args.text : "";
+        onActivity?.("type", ref);
         const result = await browserSession.type(ref, inputContent);
         if (!result.success) throw new Error(result.error || "Type failed.");
         return { currentUrl: result.url };
@@ -86,6 +91,7 @@ export function browserInteractionTools(
       async (value) => {
         const args = argumentsObject(value, ["direction"]);
         const dir = args.direction === "up" ? "up" : "down";
+        onActivity?.("scroll", dir);
         const result = await browserSession.scroll(dir);
         if (!result.success) throw new Error(result.error || "Scroll failed.");
         return { currentUrl: result.url };
@@ -99,6 +105,7 @@ export function browserInteractionTools(
         const args = argumentsObject(value, ["ref", "value"]);
         const ref = argumentText(args.ref);
         const val = argumentText(args.value);
+        onActivity?.("select", `${ref}=${val}`);
         const result = await browserSession.select(ref, val);
         if (!result.success) throw new Error(result.error || "Select failed.");
         return { currentUrl: result.url };

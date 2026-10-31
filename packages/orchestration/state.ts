@@ -19,6 +19,13 @@ export type ToolName =
 export type RuntimeFailure = Readonly<{ stage: string; agentId: AgentId | undefined; cause: unknown }>;
 export type TurnState = { busy: boolean; turns: number; inferenceCalls: number; pending: string[]; reservations: number };
 
+export type ActivityRecord = Readonly<{
+  agentId: string;
+  action: string;
+  location?: string | undefined;
+  timestamp: string;
+}>;
+
 export class ExplorationState extends RuntimeState {
   readonly outbox = createMemoryOutbox();
   readonly observations = new Map<ObservationId, Observation>();
@@ -32,6 +39,7 @@ export class ExplorationState extends RuntimeState {
   readonly reactions = new Set<string>();
   readonly seenEvents = new Set<string>();
   readonly dispatchedEvents = new Map<string, string>();
+  readonly recentActivity: ActivityRecord[] = [];
   closed = false;
   pendingCallbacks = 0;
   systemId = "";
@@ -39,6 +47,13 @@ export class ExplorationState extends RuntimeState {
   simulation: Simulation;
 
   constructor(simulation: Simulation) { super(); this.simulation = simulation; }
+
+  recordActivity(agentId: string, action: string, location?: string): void {
+    if (this.recentActivity.length >= 20) this.recentActivity.shift();
+    this.recentActivity.push(Object.freeze({
+      agentId, action, timestamp: new Date().toISOString(), ...(location ? { location } : {}),
+    }));
+  }
 
   fail(stage: string, agentId: AgentId | undefined, cause: unknown): void {
     this.failures.push(Object.freeze({ stage, agentId, cause }));
