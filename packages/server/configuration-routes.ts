@@ -1,7 +1,10 @@
 import type { FastifyInstance } from "fastify";
 import { simulationId } from "../domain/index.ts";
-import { parseSimulationSetup } from "../contracts/index.ts";
-import type { ProjectDescriptor, SimulationConfiguration, SimulationSetup, TargetConnection } from "../contracts/index.ts";
+import { parseSimulationSetup, parseStartSimulationRequest } from "../contracts/index.ts";
+import type {
+  ProjectDescriptor, SimulationConfiguration, SimulationExecutionMode, SimulationExecutionStatus,
+  SimulationSetup, TargetConnection,
+} from "../contracts/index.ts";
 import { parseLocalTargetUrl } from "../contracts/index.ts";
 import type { DeleteConfiguredSimulationResult } from "../application/index.ts";
 
@@ -12,7 +15,11 @@ export type ConfigurationServices = Readonly<{
   findConfiguration(id: ReturnType<typeof simulationId>): Promise<SimulationConfiguration | undefined>;
   listConfigurations(): Promise<readonly SimulationConfiguration[]>;
   deleteConfiguration(id: ReturnType<typeof simulationId>): Promise<DeleteConfiguredSimulationResult>;
+  startSimulation(id: ReturnType<typeof simulationId>, mode: SimulationExecutionMode): Promise<SimulationExecutionStatus>;
+  stopSimulation(id: ReturnType<typeof simulationId>): Promise<SimulationExecutionStatus>;
+  inspectExecution(id: ReturnType<typeof simulationId>): Promise<SimulationExecutionStatus>;
 }>;
+
 
 export function configurationRoutes(server: FastifyInstance, services: ConfigurationServices): void {
   server.get("/api/project", async () => services.inspectProject());
@@ -47,5 +54,16 @@ export function configurationRoutes(server: FastifyInstance, services: Configura
     const value = await services.findConfiguration(simulationId(request.params.id));
     if (!value) return reply.code(404).send({ error: "NOT_FOUND" });
     return value;
+  });
+  server.post<{ Params: { id: string } }>("/api/simulations/:id/start", { bodyLimit: 4096 }, async (request, reply) => {
+    const { mode } = parseStartSimulationRequest(request.body);
+    const status = await services.startSimulation(simulationId(request.params.id), mode);
+    return reply.code(200).send(status);
+  });
+  server.get<{ Params: { id: string } }>("/api/simulations/:id/execution", async (request) => {
+    return services.inspectExecution(simulationId(request.params.id));
+  });
+  server.post<{ Params: { id: string } }>("/api/simulations/:id/stop", async (request) => {
+    return services.stopSimulation(simulationId(request.params.id));
   });
 }

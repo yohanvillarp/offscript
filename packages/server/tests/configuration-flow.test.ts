@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { request, createServer } from "node:http";
 import { join } from "node:path";
 import { test } from "node:test";
-import { simulationId } from "../../domain/index.ts";
+import { agentId, simulationId } from "../../domain/index.ts";
 import { parseSimulationSetup } from "../../contracts/index.ts";
 import { hostContext } from "../../runtime/tests/host-context.ts";
 
@@ -65,6 +65,57 @@ test("authenticated HTTP creation/read/list persist setup without starting agent
   restarted.prepareSession(blockedId, () => ({ canAcceptEvent: () => false, publishEvent() {}, async close() {} }));
   assert.equal((await http(newOrigin, "/api/simulations/hosted-http", { method: "DELETE", headers: auth })).status, 409);
 });
+
+test("authenticated execution routes start, inspect, and stop controlled demo runs", async (t) => {
+  const temp = hostContext(t);
+  const host = temp.host({
+    sessionFactory: () => ({
+      startTurn() { return true; },
+      async close() {},
+      snapshot() { return { turns: [{ agentId: agentId("explorer"), count: 1 }] }; },
+      canAcceptEvent() { return true; },
+      publishEvent() {},
+    }),
+  });
+  const origin = await host.start();
+  const headers = { authorization: `Bearer ${host.credentials().token}`, "content-type": "application/json" };
+  const id = "sim-exec-http";
+  await host.configureSimulation({ simulationId: simulationId(id), setup: parseSimulationSetup(setup) });
+
+  // Unauthenticated access rejected
+  assert.equal((await http(origin, `/api/simulations/${id}/start`, { method: "POST", body: JSON.stringify({ mode: "controlled-demo" }), headers: { "content-type": "application/json" } })).status, 401);
+  assert.equal((await http(origin, `/api/simulations/${id}/execution`)).status, 401);
+  assert.equal((await http(origin, `/api/simulations/${id}/stop`, { method: "POST" })).status, 401);
+
+  // Missing or invalid mode rejected
+  assert.equal((await http(origin, `/api/simulations/${id}/start`, { method: "POST", headers, body: JSON.stringify({}) })).status, 400);
+  assert.equal((await http(origin, `/api/simulations/${id}/start`, { method: "POST", headers, body: JSON.stringify({ mode: "real-browser" }) })).status, 400);
+
+  // Inspect initially idle
+  const idle = await http(origin, `/api/simulations/${id}/execution`, { headers });
+  assert.equal(idle.status, 200);
+  assert.equal(JSON.parse(idle.body).phase, "idle");
+
+  // Start controlled demo
+  const started = await http(origin, `/api/simulations/${id}/start`, { method: "POST", headers, body: JSON.stringify({ mode: "controlled-demo" }) });
+  assert.equal(started.status, 200);
+  assert.equal(JSON.parse(started.body).phase, "running");
+
+  // Duplicate start rejected with 409
+  const duplicate = await http(origin, `/api/simulations/${id}/start`, { method: "POST", headers, body: JSON.stringify({ mode: "controlled-demo" }) });
+  assert.equal(duplicate.status, 409);
+
+  // Inspect reflects running phase
+  const inspected = await http(origin, `/api/simulations/${id}/execution`, { headers });
+  assert.equal(inspected.status, 200);
+  assert.equal(JSON.parse(inspected.body).phase, "running");
+
+  // Stop simulation
+  const stopped = await http(origin, `/api/simulations/${id}/stop`, { method: "POST", headers, body: JSON.stringify({}) });
+  assert.equal(stopped.status, 200);
+  assert.equal(JSON.parse(stopped.body).phase, "cancelled");
+});
+
 
 test("local-file entry uses a one-time body credential and an HttpOnly API cookie; public assets expose no project files", async t => {
   const temp = hostContext(t); const assets = join(temp.root, "studio-build"); mkdirSync(join(assets, "assets"), { recursive: true });

@@ -1,8 +1,11 @@
 import { createLocalHost } from "../../packages/runtime/host.ts";
+import { createControlledDemoSessionFactory } from "../../packages/orchestration/index.ts";
 import { createHostAccessFile } from "./access-file.ts";
 import { createStudioEntryFile } from "./studio-entry-file.ts";
 import { openBrowser } from "./open-browser.ts";
 import { startupError } from "./startup-error.ts";
+
+process.env.MOZAIK_API_KEY ??= "";
 
 let requestStop: () => void = () => {};
 const stopping = new Promise<void>(resolve => { requestStop = resolve; });
@@ -17,6 +20,7 @@ try {
   const portText = process.env.OFFSCRIPT_PORT;
   if (portText !== undefined && !/^\d+$/.test(portText)) throw new Error("Invalid port configuration.");
   host = createLocalHost({ projectRoot: process.env.OFFSCRIPT_PROJECT_ROOT ?? process.cwd(),
+    sessionFactory: createControlledDemoSessionFactory(),
     ...(process.env.OFFSCRIPT_STUDIO_DIRECTORY ? { studioDirectory: process.env.OFFSCRIPT_STUDIO_DIRECTORY } : {}),
     ...(process.env.OFFSCRIPT_DATA_DIRECTORY === undefined ? {} : { dataDirectory: process.env.OFFSCRIPT_DATA_DIRECTORY }),
     ...(portText === undefined ? {} : { port: Number(portText) }),

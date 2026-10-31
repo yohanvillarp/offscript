@@ -14,11 +14,12 @@ Status describes the inspected source, not deployment or GitHub merge state. Che
 
 | Area | Implemented | Remaining gap |
 | --- | --- | --- |
-| Domain and contracts | Simulation/agent lifecycles, validated events, and shared setup/configuration contracts. | Start/observe/stop services and investigation result application cases. |
-| Mozaik | Concurrent controlled agents, enforced fixture-tool permissions, mapped events, and reactive assignment. | Autonomous use of real software and a complete operator-controlled session lifecycle. |
-| Persistence and delivery | SQLite snapshots/configuration, atomic setup creation, investigation outbox, and optional SQLite-backed Mozaik sessions. | Durable handler recovery, operational retention, and broader production composition. |
-| Studio | Design system, connected setup with project recognition, initial Vite URL suggestions, explicit local availability checks, compact saved configurations with a detail panel, three profiles, and editable limits. | Execution controls, live activity, evidence, and results. |
-| Local product entry | Protected Fastify health routes, local host lifecycle, shared dispatch, development entry, local npm archive launcher, and deterministic runtime demo. | Execution-control services and published distribution. |
+| Domain and contracts | Simulation/agent lifecycles, validated events, shared setup/configuration contracts, and execution status contracts. | Investigation result application cases and broader session policies. |
+| Mozaik | Concurrent controlled agents, enforced fixture-tool permissions, mapped events, reactive assignment, and controlled demo execution factory. | Autonomous use of real software and browser interaction. |
+| Persistence and delivery | SQLite snapshots/configuration, atomic setup creation, atomic aggregate lifecycle updates, investigation outbox, and optional SQLite-backed Mozaik sessions. | Durable handler recovery, operational retention, and broader production composition. |
+| Studio | Design system, connected setup with project recognition, initial Vite URL suggestions, explicit local availability checks, compact saved configurations with a detail panel, three profiles, editable limits, and controlled demo execution controls. | Live browser activity, evidence, and results. |
+| Local product entry | Protected Fastify health and execution routes, local host lifecycle, shared dispatch, development entry, local npm archive launcher, and controlled demo execution. | Browser automation and published distribution. |
+
 
 The current demo uses a simulated cart and deterministic inference. It does not explore an actual application. Transactional dispatch does not restore agent work or acknowledge handler completion.
 
@@ -30,17 +31,12 @@ Compose the existing application, SQLite, outbox, and explicitly prepared Mozaik
 
 **Implemented:** one local process starts, reports health, and shuts down with preserved data and explicit timeout/error handling. Stored state does not reactivate agents. This foundation is covered by local automated tests; distribution and Studio integration remain later work.
 
-### 2. Simulation setup and operator control — next
+### 2. Simulation setup and operator control — implemented foundation
 
-**First slice implemented:** read-only project-root/name recognition, validated setup, and atomic creation of configured simulations without starting agents. See [SIMULATION-CONFIGURATION.md](SIMULATION-CONFIGURATION.md). Creation/read/list transport and Studio form integration are now implemented, with a minimal local npm-archive launcher. Next within this milestone: explicit execution control.
+**Implemented:** read-only project recognition, validated simulation configuration, atomic creation and deletion of configured simulations, and explicit operator execution control (start, inspect, stop) against the controlled integration fixture. See [SIMULATION-CONFIGURATION.md](SIMULATION-CONFIGURATION.md) and [LOCAL-HOST.md](LOCAL-HOST.md). The local host coordinates execution through an explicit session factory, atomic aggregate persistence in SQLite, and protected HTTP endpoints. Studio provides explicit "Run controlled demo" and "Stop execution" controls with polling and status badges. Next: Milestone 3 — Authorized browser interaction.
 
-Connect target configuration, concrete goals, selected behavioral profiles, model configuration, permissions, and budgets to actual simulations. Define how an operator starts and stops exploration and how interruptions are represented. Add the minimum CLI entry and Studio visibility needed to operate the host, without waiting for a complete interface.
+### 3. Authorized browser interaction — next
 
-**Ready when:** a configured simulation can be deliberately started, observed, and stopped against the controlled fixture, with session state kept distinct from individual turns and goal achievement.
-
-The initial users remain Explorer/Raven, Impatient/Fox, and Beginner/Compass. Do not turn their avatars into tool permissions or bug specializations, or refactor the domain profile shape solely to match the conceptual model.
-
-### 3. Authorized browser interaction
 
 Introduce the Playwright adapter for web applications with real backends. Provide bounded browser interaction and attributable observations. Establish browser/session isolation and enforce target scope, allowed actions, credential handling, and destructive-action restrictions at the tool boundary.
 

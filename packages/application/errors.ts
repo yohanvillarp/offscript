@@ -17,7 +17,12 @@ export type ApplicationErrorCode =
   | "READ_FAILED"
   | "SAVE_FAILED"
   | "DELETE_FAILED"
-  | "EVENT_ID_CONFLICT";
+  | "EVENT_ID_CONFLICT"
+  | "EXECUTION_ALREADY_ACTIVE"
+  | "INVALID_EXECUTION_STATE"
+  | "EXECUTION_START_FAILED"
+  | "EXECUTION_NOT_FOUND";
+
 
 export class ApplicationError extends Error {
   readonly code: ApplicationErrorCode;

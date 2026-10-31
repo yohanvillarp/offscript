@@ -1,5 +1,6 @@
 import { realpathSync, statSync } from "node:fs";
 import { resolve } from "node:path";
+import type { ExecutionSessionFactory } from "./execution-coordinator.ts";
 
 export type LocalHostOptions = Readonly<{
   projectRoot: string;
@@ -9,7 +10,9 @@ export type LocalHostOptions = Readonly<{
   shutdownTimeoutMs?: number;
   studioDirectory?: string;
   onDiagnostic?: (code: "OUTBOX_FAILED") => void;
+  sessionFactory?: ExecutionSessionFactory;
 }>;
+
 
 export function localHostConfig(options: LocalHostOptions) {
   if (!options.projectRoot.trim()) throw new Error("An explicit project root is required.");

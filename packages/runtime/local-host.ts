@@ -17,7 +17,8 @@ import { executeDeleteConfiguredSimulation } from "../application/index.ts";
 import type { DeleteConfiguredSimulationResult } from "../application/index.ts";
 import { inspectProject, createTargetProbe } from "../projects/index.ts";
 import { ContractValidationError, parseLocalTargetUrl } from "../contracts/index.ts";
-import type { SimulationSetup } from "../contracts/index.ts";
+import type { SimulationExecutionMode, SimulationSetup } from "../contracts/index.ts";
+import { executionCoordinator } from "./execution-coordinator.ts";
 
 export type HostedSessionContext = Readonly<{ storage: HostStorage; outboxMode: "external" }>;
 
@@ -34,6 +35,7 @@ export function createLocalHost(options: LocalHostOptions) {
   let port: number | undefined;
   let origin: string | undefined;
   let closing = false;
+  let coordinator: ReturnType<typeof executionCoordinator> | undefined;
   let persistence: ReturnType<typeof openPersistence> | undefined;
   let guarded: ReturnType<typeof hostStorage> | undefined;
   let server: ReturnType<typeof createLocalServer> | undefined;
@@ -50,7 +52,7 @@ export function createLocalHost(options: LocalHostOptions) {
     releasing = (async () => {
       const errors: unknown[] = [];
       try { await server?.close(); } catch (error) { errors.push(error); }
-      const results = await Promise.allSettled([registry.close(), dispatcher?.stop()]);
+      const results = await Promise.allSettled([registry.close(), coordinator?.close(), dispatcher?.stop()]);
       for (const result of results) if (result.status === "rejected") errors.push(result.reason);
       // Stop publication before denying late storage calls. Already admitted DB
       // operations finish before the connection closes; provider work is separate.
@@ -67,6 +69,11 @@ export function createLocalHost(options: LocalHostOptions) {
       persistence = openPersistence({ projectRoot: config.projectRoot, dataDirectory: config.dataDirectory });
       persistence.migrate();
       guarded = hostStorage(persistence);
+      coordinator = executionCoordinator({
+        storage: guarded.storage,
+        prepareSession: (id, create) => registry.add(id, create),
+        factory: options.sessionFactory,
+      });
       server = createLocalServer({ token, port: () => port, allowedOrigins: config.allowedOrigins, phase: () => phase,
         configurations: api,
         ...(config.studioDirectory && studioSession ? { studioDirectory: config.studioDirectory, studioSession } : {}),
@@ -150,10 +157,25 @@ export function createLocalHost(options: LocalHostOptions) {
       simulationId(id);
       const storage = guarded?.storage;
       if (phase !== "ready" || closing || !storage) throw new Error("Host is not accepting deletion requests.");
-      if (registry.has(id) || deleting.has(id)) return "not-allowed";
+      if (registry.has(id) || deleting.has(id) || coordinator?.hasActive(id)) return "not-allowed";
       deleting.add(id);
       try { return await executeDeleteConfiguredSimulation(id, storage.configurations); }
       finally { deleting.delete(id); }
+    },
+    async startSimulation(id: SimulationId, mode: SimulationExecutionMode) {
+      if (phase !== "ready" || closing) throw new Error("Host is not accepting execution commands.");
+      if (!coordinator) throw new Error("No execution session factory configured on this host.");
+      return coordinator.start(simulationId(id), mode);
+    },
+    async stopSimulation(id: SimulationId) {
+      if (phase !== "ready" || closing) throw new Error("Host is not accepting execution commands.");
+      if (!coordinator) throw new Error("No execution session factory configured on this host.");
+      return coordinator.stop(simulationId(id));
+    },
+    async inspectExecution(id: SimulationId) {
+      if (phase !== "ready" || closing) throw new Error("Host is not accepting execution inspection.");
+      if (!coordinator) throw new Error("No execution session factory configured on this host.");
+      return coordinator.inspect(simulationId(id));
     },
     prepareSession<T extends HostedSession>(id: SimulationId, create: (context: HostedSessionContext) => T): T {
       simulationId(id);
