@@ -70,7 +70,23 @@ describe("browser tools integration", () => {
       };
       assert.equal(typeRes.success, true);
 
-      // 5. Record observation
+      // 5. Select
+      const selectTool = toolMap.get("browser_select");
+      assert.ok(selectTool);
+      const selectEl = inspectRes.elements.find((el) => el.name.includes("Shipping"));
+      assert.ok(selectEl);
+      const selectRes = (await selectTool.invoke({ ref: selectEl.ref, value: "express" })) as {
+        success: boolean;
+      };
+      assert.equal(selectRes.success, true);
+
+      // 6. Scroll
+      const scrollTool = toolMap.get("browser_scroll");
+      assert.ok(scrollTool);
+      const scrollRes = (await scrollTool.invoke({ direction: "down" })) as { success: boolean };
+      assert.equal(scrollRes.success, true);
+
+      // 7. Record observation
       const recordTool = toolMap.get("browser_record_observation");
       assert.ok(recordTool);
       const obsRes = (await recordTool.invoke({

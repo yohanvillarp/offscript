@@ -99,6 +99,41 @@ describe("browser session and lifecycle", () => {
     }
   });
 
+  it("performs scroll and select interactions on web pages", async () => {
+    const session = await manager.createSession({ targetUrl: server.origin });
+    try {
+      await session.navigate("/");
+      const snapshot = await session.inspect();
+
+      // Test select
+      const selectEl = snapshot.elements.find((el) => el.role === "combobox" || el.name.includes("Shipping"));
+      assert.ok(selectEl);
+      const selectResult = await session.select(selectEl.ref, "express");
+      assert.equal(selectResult.success, true);
+      assert.equal(selectResult.action, "select");
+
+      // Test scroll down and up
+      const scrollDown = await session.scroll("down");
+      assert.equal(scrollDown.success, true);
+      assert.equal(scrollDown.action, "scroll");
+
+      const scrollUp = await session.scroll("up");
+      assert.equal(scrollUp.success, true);
+      assert.equal(scrollUp.action, "scroll");
+
+      // Test scroll to element ref
+      const scrollRef = await session.scroll("down", selectEl.ref);
+      assert.equal(scrollRef.success, true);
+
+      // Stale or invalid ref rejection
+      const invalidScroll = await session.scroll("down", "invalid_ref");
+      assert.equal(invalidScroll.success, false);
+      assert.equal(invalidScroll.error, "INVALID_ELEMENT_REF");
+    } finally {
+      await session.close();
+    }
+  });
+
   it("detects stale element references after navigation", async () => {
     const session = await manager.createSession({ targetUrl: server.origin });
     try {

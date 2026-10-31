@@ -32,7 +32,7 @@ export type PageSnapshot = Readonly<{
 
 export type InteractionResult = Readonly<{
   success: boolean;
-  action: "navigate" | "click" | "type" | "inspect";
+  action: "navigate" | "click" | "type" | "inspect" | "scroll" | "select";
   url: string;
   error?: string | undefined;
 }>;
