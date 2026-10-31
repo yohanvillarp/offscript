@@ -1,6 +1,13 @@
 # OFFSCRIPT
 
+[![npm version](https://img.shields.io/npm/v/@nikelyh/offscript.svg)](https://www.npmjs.com/package/@nikelyh/offscript)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Documentation](https://img.shields.io/badge/Docs-offscript.nikelyh.tech-teal)](https://offscript.nikelyh.tech)
+
 **Your users don't follow a script. Neither do ours.**
+
+Current stable release: **v1.0.0** on [npm](https://www.npmjs.com/package/@nikelyh/offscript).
+Online documentation: [offscript.nikelyh.tech](https://offscript.nikelyh.tech).
 
 OFFSCRIPT brings multi-agent software exploration into a local developer workflow: configure a target and goal, choose artificial users, run a bounded session, and inspect observations, investigations and visual evidence in Studio or the terminal.
 
@@ -16,15 +23,42 @@ OFFSCRIPT brings multi-agent software exploration into a local developer workflo
 
 Six behavioral profiles are available: Explorer/Raven, Impatient/Fox, Beginner/Compass, Regular/Sparrow, Meticulous/Owl and Distrustful/Badger. Their instructions express different tendencies; the default scripted runner does not demonstrate those differences. An observation or an assigned collaborator is not a confirmed defect.
 
-## Run from npm
+## Installation & Quick start
 
-From your target project's directory, using Node.js 24 or later and npm 11.19 or later:
+### Install via npm (Recommended)
+
+Requires Node.js 24 or later and npm 11.19 or later.
+
+```sh
+npm install -g @nikelyh/offscript
+```
+
+Or run directly with `npx`:
 
 ```sh
 npx --yes @nikelyh/offscript@1.0.0 studio
 ```
 
-Studio starts locally; it does not start your target application or agents automatically. Use the matching Chromium installation instructions below before starting browser exploration.
+For browser exploration, install the required Chromium binary:
+
+```sh
+npx playwright install chromium
+```
+
+### Launch Studio
+
+In your target project's root directory:
+
+```sh
+offscript studio
+```
+
+Studio starts locally on a loopback port and opens the secure entry file in your browser. (Use `offscript studio --no-open` to print the entry link without launching the browser automatically).
+
+1. Start your web application separately (e.g. at `http://localhost:5173`).
+2. In Studio, select **New simulation**.
+3. Enter your target URL and exploration goal, pick your user profiles, and save.
+4. Run the simulation and inspect observations, investigations, and visual evidence.
 
 ## Quick start from source
 
@@ -104,7 +138,8 @@ Arguments follow the executable in an installed package, or `npm start --` in th
 | `offscript list` | List saved project configurations. |
 | `offscript results <id>` | Show observations, investigations and finding assessments. |
 | `offscript recover <id> [--cancel]` | Explicitly resolve an interrupted run; does not resume agents. |
-| `offscript --help` / `--version` | Print information without starting the host or creating storage. |
+| `offscript help [command]` | Print detailed help and option descriptions for any command. |
+| `offscript --help` / `--version` | Print general information without starting the host or creating storage. |
 
 Common options: `--project <directory>`, `--port <number>` (0 selects an available port), and `--data-directory <directory>` (relative to the target). Flags override the documented `OFFSCRIPT_*` environment values. The installation directory never determines the target project.
 
@@ -133,8 +168,8 @@ These are explanatory diagrams, not captured evidence of live model behavior. Ed
 
 | Symptom | Check |
 | --- | --- |
-| `Distribution is missing` | Run `npm run build:local` in the checkout, or rebuild/reinstall the archive. |
-| Chromium executable missing | Install the matching browser as described above. |
+| `Distribution is missing` | Run `npm install -g @nikelyh/offscript` or `npm run build:local` in the checkout. |
+| Chromium executable missing | Install Chromium using `npx playwright install chromium`. |
 | `401` when entering Studio | Open the current host's printed HTML entry; an old entry/session does not authenticate a restarted host. |
 | Connection check fails | Start the target separately; verify its actual URL/port. Checks currently support loopback targets. |
 | `ENOSPC` during install/pack | Free space on the project, npm-cache and browser-cache volumes, then retry. Do not delete project `.offscript` data to repair packaging. |
@@ -142,8 +177,8 @@ These are explanatory diagrams, not captured evidence of live model behavior. Ed
 
 ## Documentation and contributing
 
-[Architecture](https://github.com/yohanvillarp/offscript/blob/main/docs/ARCHITECTURE.md) · [Browser adapter](https://github.com/yohanvillarp/offscript/blob/main/docs/BROWSER-INTERACTION.md) · [Mozaik integration](https://github.com/yohanvillarp/offscript/blob/main/docs/MOZAIK-INTEGRATION.md) · [Known limits](https://github.com/yohanvillarp/offscript/blob/main/docs/CONSOLIDATION.md) · [Roadmap](https://github.com/yohanvillarp/offscript/blob/main/docs/ROADMAP.md) · [Contributing](https://github.com/yohanvillarp/offscript/blob/main/CONTRIBUTING.md)
+[Official Documentation](https://offscript.nikelyh.tech) · [Architecture](https://github.com/yohanvillarp/offscript/blob/main/docs/ARCHITECTURE.md) · [Browser adapter](https://github.com/yohanvillarp/offscript/blob/main/docs/BROWSER-INTERACTION.md) · [Mozaik integration](https://github.com/yohanvillarp/offscript/blob/main/docs/MOZAIK-INTEGRATION.md) · [Known limits](https://github.com/yohanvillarp/offscript/blob/main/docs/CONSOLIDATION.md) · [Roadmap](https://github.com/yohanvillarp/offscript/blob/main/docs/ROADMAP.md) · [Contributing](https://github.com/yohanvillarp/offscript/blob/main/CONTRIBUTING.md)
 
-The planned documentation site is **offscript.nikelyh.tech**; it is not deployed by this package. Development commands, checks and the separate public-release plan are documented in the repository. No browser or live model call is required for reading the guides.
+Visit the documentation portal at **[offscript.nikelyh.tech](https://offscript.nikelyh.tech)**. Development commands, checks and release notes are documented in the repository. No browser or live model call is required for reading the guides.
 
 Apache-2.0. See [LICENSE](https://github.com/yohanvillarp/offscript/blob/main/LICENSE) and [third-party notices](https://github.com/yohanvillarp/offscript/blob/main/THIRD_PARTY_NOTICES.md). Studio's bundled fonts retain their SIL Open Font License texts in the archive.
