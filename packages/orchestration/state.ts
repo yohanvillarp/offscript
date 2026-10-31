@@ -13,7 +13,9 @@ export type ToolName =
   | "browser_navigate"
   | "browser_inspect"
   | "browser_click"
-  | "browser_type";
+  | "browser_type"
+  | "browser_scroll"
+  | "browser_select";
 export type RuntimeFailure = Readonly<{ stage: string; agentId: AgentId | undefined; cause: unknown }>;
 export type TurnState = { busy: boolean; turns: number; inferenceCalls: number; pending: string[]; reservations: number };
 
