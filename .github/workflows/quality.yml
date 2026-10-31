@@ -32,7 +32,16 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
-        run: printf '%s\n' "$PR_TITLE" | npm run commitlint
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_AUTHOR_TYPE: ${{ github.event.pull_request.user.type }}
+        run: |
+          if [ "$PR_AUTHOR_TYPE" = "Bot" ] || \
+             echo "$PR_AUTHOR" | grep -qiE '(\[bot\]$|^imgbot$|^dependabot)' || \
+             echo "$PR_TITLE" | grep -qiE '^\s*\[(ImgBot|dependabot|bot)\]'; then
+            echo "::notice title=Bot Pull Request::Detected automated bot pull request from $PR_AUTHOR ('$PR_TITLE'). Skipping strict conventional commit title enforcement."
+          else
+            printf '%s\n' "$PR_TITLE" | npm run commitlint
+          fi
       - run: npm run check
 
   persistence:
