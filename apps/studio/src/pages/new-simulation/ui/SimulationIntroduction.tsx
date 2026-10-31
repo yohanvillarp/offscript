@@ -5,7 +5,10 @@ import { ExplorationGuide } from "@/pages/new-simulation/ui/ExplorationGuide";
 
 export function SimulationIntroduction({ onContinue, returning }: Readonly<{ onContinue: () => void; returning: boolean }>) {
   const headingRef = useRef<HTMLHeadingElement>(null);
-  useEffect(() => { headingRef.current?.focus(); }, []);
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    headingRef.current?.focus({ preventScroll: true });
+  }, []);
   return (
     <main id="configuration" className="mx-auto flex w-full max-w-4xl flex-col items-center px-5 py-8 text-center sm:px-8 sm:py-12">
       <RavenMascot state="observing" className="mb-6 size-40 sm:size-48" />

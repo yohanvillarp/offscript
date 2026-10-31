@@ -24,6 +24,10 @@ export function NewSimulationPage() {
   const [introduction, setIntroduction] = useState<"first-visit" | "help" | null>(() => hasSeenIntroduction() ? null : "first-visit");
   const formRef = useRef<HTMLFormElement>(null);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [introduction, setup.step]);
+
   function advance() {
     if (!setup.advance()) {
       requestAnimationFrame(() => {
@@ -44,14 +48,23 @@ export function NewSimulationPage() {
       </a>
       <StudioHeader />
       {introduction ? (
-        <SimulationIntroduction returning={introduction === "help"} onContinue={() => {
-          rememberIntroduction();
-          setIntroduction(null);
-          requestAnimationFrame(() => formRef.current?.focus());
-        }} />
+        <div key="intro-screen">
+          <SimulationIntroduction returning={introduction === "help"} onContinue={() => {
+            rememberIntroduction();
+            setIntroduction(null);
+            window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+            requestAnimationFrame(() => {
+              window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+              formRef.current?.focus({ preventScroll: true });
+            });
+          }} />
+        </div>
       ) : (
-        <>
-          <SetupSteps active={setup.step} onSelect={setup.setStep} onHelp={() => setIntroduction("help")} />
+        <div key={`config-screen-${setup.step}`}>
+          <SetupSteps active={setup.step} onSelect={setup.setStep} onHelp={() => {
+            setIntroduction("help");
+            window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+          }} />
           <main className="mx-auto w-full max-w-5xl px-5 py-8 sm:px-8">
             <h1 className="sr-only">New simulation</h1>
               {persistence.saved ? <SavedSimulation configuration={persistence.saved} /> : <form
@@ -92,7 +105,7 @@ export function NewSimulationPage() {
                 </fieldset>
               </form>}
           </main>
-        </>
+        </div>
       )}
     </div>
   );
