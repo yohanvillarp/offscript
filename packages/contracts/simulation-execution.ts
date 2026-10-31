@@ -18,6 +18,13 @@ export const simulationExecutionPhases = [
 ] as const;
 export type SimulationExecutionPhase = typeof simulationExecutionPhases[number];
 
+export type AgentActivityItem = Readonly<{
+  agentId: string;
+  action: string;
+  location?: string | undefined;
+  timestamp: string;
+}>;
+
 export type SimulationExecutionStatus = Readonly<{
   simulationId: SimulationId;
   phase: SimulationExecutionPhase;
@@ -27,6 +34,7 @@ export type SimulationExecutionStatus = Readonly<{
   failureReason?: string;
   startedAt?: string;
   stoppedAt?: string;
+  recentActivity?: readonly AgentActivityItem[];
 }>;
 
 export type StartSimulationRequest = Readonly<{
@@ -41,7 +49,7 @@ export function parseStartSimulationRequest(value: unknown): StartSimulationRequ
 
 export function parseSimulationExecutionStatus(value: unknown): SimulationExecutionStatus {
   const input = record(value, "executionStatus", [
-    "simulationId", "phase", "mode", "turnsCount", "activeAgents", "failureReason", "startedAt", "stoppedAt",
+    "simulationId", "phase", "mode", "turnsCount", "activeAgents", "failureReason", "startedAt", "stoppedAt", "recentActivity",
   ]);
   const id = simulationId(text(input.simulationId, "executionStatus.simulationId"));
   const phase = oneOf(input.phase, simulationExecutionPhases, "executionStatus.phase");
@@ -55,6 +63,23 @@ export function parseSimulationExecutionStatus(value: unknown): SimulationExecut
   const failureReason = input.failureReason !== undefined ? text(input.failureReason, "executionStatus.failureReason") : undefined;
   const startedAt = input.startedAt !== undefined ? text(input.startedAt, "executionStatus.startedAt") : undefined;
   const stoppedAt = input.stoppedAt !== undefined ? text(input.stoppedAt, "executionStatus.stoppedAt") : undefined;
+  let recentActivity: readonly AgentActivityItem[] | undefined;
+  if (input.recentActivity !== undefined) {
+    if (!Array.isArray(input.recentActivity)) {
+      throw new ContractValidationError("executionStatus.recentActivity", "Expected an array.");
+    }
+    recentActivity = Object.freeze(
+      input.recentActivity.map((item: unknown, i) => {
+        const act = record(item, `executionStatus.recentActivity[${i}]`, ["agentId", "action", "location", "timestamp"]);
+        return Object.freeze({
+          agentId: text(act.agentId, `executionStatus.recentActivity[${i}].agentId`),
+          action: text(act.action, `executionStatus.recentActivity[${i}].action`),
+          timestamp: text(act.timestamp, `executionStatus.recentActivity[${i}].timestamp`),
+          ...(act.location !== undefined ? { location: text(act.location, `executionStatus.recentActivity[${i}].location`) } : {}),
+        });
+      }),
+    );
+  }
   return Object.freeze({
     simulationId: id,
     phase,
@@ -64,5 +89,6 @@ export function parseSimulationExecutionStatus(value: unknown): SimulationExecut
     ...(failureReason ? { failureReason } : {}),
     ...(startedAt ? { startedAt } : {}),
     ...(stoppedAt ? { stoppedAt } : {}),
+    ...(recentActivity ? { recentActivity } : {}),
   });
 }

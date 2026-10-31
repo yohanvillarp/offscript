@@ -28,6 +28,7 @@ export {
   parseStartSimulationRequest, parseSimulationExecutionStatus,
 } from "./simulation-execution.ts";
 export type {
+  AgentActivityItem,
   SimulationExecutionMode, SimulationExecutionPhase, SimulationExecutionStatus, StartSimulationRequest,
 } from "./simulation-execution.ts";
 export type { SimulationResults } from "./simulation-results.ts";
