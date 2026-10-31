@@ -14,12 +14,12 @@ Status describes the inspected source, not deployment or GitHub merge state. Che
 
 | Area | Implemented | Remaining gap |
 | --- | --- | --- |
-| Domain and contracts | Simulation/agent lifecycles, validated events, shared setup/configuration contracts, and execution status contracts. | Investigation result application cases and broader session policies. |
-| Mozaik | Concurrent controlled agents, enforced fixture-tool permissions, mapped events, reactive assignment, and controlled demo execution factory. | Autonomous exploration of real software using live model inference. |
-| Browser automation | Playwright Chromium adapter in packages/browser, target scope enforcement, opaque element handles, semantic ARIA snapshots, sanitized credentials, and isolated user contexts. | Autonomous model interaction loop on real web targets. |
-| Persistence and delivery | SQLite snapshots/configuration, atomic setup creation, atomic aggregate lifecycle updates, investigation outbox, and optional SQLite-backed Mozaik sessions. | Durable handler recovery, operational retention, and broader production composition. |
-| Studio | Design system, connected setup with project recognition, initial Vite URL suggestions, explicit local availability checks, compact saved configurations with a detail panel, three profiles, editable limits, and controlled demo execution controls. | Live browser activity, evidence, and results. |
-| Local product entry | Protected Fastify health and execution routes, local host lifecycle, shared dispatch, development entry, local npm archive launcher, and controlled demo execution. | Autonomous browser exploration orchestration and published distribution. |
+| Domain and contracts | Simulation/agent lifecycles, validated events, shared setup/configuration contracts, and execution status contracts with controlled-demo and browser-exploration modes. | Investigation result application cases and broader session policies. |
+| Mozaik | Concurrent controlled agents, enforced fixture and browser tool permissions, mapped events, reactive assignment, controlled demo execution factory, and autonomous browser exploration session factory. | Collaborative investigations and live provider inference in production. |
+| Browser automation | Playwright Chromium adapter in packages/browser, target scope enforcement, opaque element handles, semantic ARIA snapshots, sanitized credentials, isolated user contexts, and autonomous exploration loop with profile-specific instructions. | Visual screen captures and broader non-web targets. |
+| Persistence and delivery | SQLite snapshots/configuration, atomic setup creation, atomic aggregate lifecycle updates, investigation outbox, observations recorded from browser exploration, and optional SQLite-backed Mozaik sessions. | Durable handler recovery, operational retention, and broader production composition. |
+| Studio | Design system, connected setup with project recognition, initial Vite URL suggestions, explicit local availability checks, compact saved configurations with a detail panel, three profiles, editable limits, and execution controls for both controlled demo and browser exploration. | Live browser activity streams, evidence previews, and investigation views. |
+| Local product entry | Protected Fastify health and execution routes, local host lifecycle, shared dispatch, development entry, local npm archive launcher, and multi-mode execution coordination (controlled-demo and browser-exploration). | Published package distribution and collaborative investigation CLI workflows. |
 
 
 The current demo uses a simulated cart and deterministic inference. It does not explore an actual application. Transactional dispatch does not restore agent work or acknowledge handler completion.
@@ -40,15 +40,11 @@ Compose the existing application, SQLite, outbox, and explicitly prepared Mozaik
 
 **Implemented:** Playwright Chromium integration (`packages/browser`), target scope enforcement restricting navigation strictly to authorized target origins, opaque element reference resolution (`elem_x`), semantic ARIA snapshot capture with visible DOM fallback, credential sanitization (passwords kept out of snapshots/logs), isolated `BrowserContext` per artificial user, observation attribution to domain entities, and hermetic automated test suites. Next: Milestone 4 — First autonomous exploration of real software.
 
-### 4. First autonomous exploration of real software — next
+### 4. First autonomous exploration of real software — implemented foundation
 
-Connect supported model inference and the initial profiles to the authorized browser tools through Mozaik's existing loop. Let multiple artificial users pursue a goal differently, react to actual application feedback, and record unexpected behavior within operator-defined limits.
+**Implemented:** autonomous multi-agent exploration against real web applications using Playwright Chromium in isolated user contexts (`BrowserContext`). Agents with initial behavioral profiles (Raven/Explorer, Fox/Impatient, Compass/Beginner) autonomously pursue exploration goals through bounded interaction tools (`browser_navigate`, `browser_inspect`, `browser_click`, `browser_type`, `record_observation`, `request_investigation`) using opaque element references (`elem_x`), scope enforcement, and password sanitization. Observations are attributed to domain agents, persisted in SQLite, and published via `observation.created` semantic events. The local host and Studio support the `"browser-exploration"` execution mode alongside the controlled demo. Hermetic automated test suites run multi-agent exploration against local targets without network leaks or orphaned Chromium processes. Next: Milestone 5 — Collaborative investigation and evidence.
 
-**Ready when:** a developer can run a bounded exploration of an authorized application with a real backend and see independent behavior from multiple users, useful observations, and a clear termination reason. The path must not be a disguised scripted test.
-
-This is the first meaningful product demonstration. Keep it narrow: one supported target type, the initial profiles, a small tool set, and basic visibility. Do not delay it for a full skills catalog, elaborate dashboards, or automatic recovery.
-
-### 5. Collaborative investigation and evidence
+### 5. Collaborative investigation and evidence — next
 
 Extend the existing request/assignment foundation with investigation results and completion application behavior. Connect evidence to observations and hypotheses, support collaborative contributions, and make supported, contradicted, and inconclusive assessments understandable. Define confirmation criteria before presenting confirmed findings.
 

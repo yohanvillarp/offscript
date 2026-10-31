@@ -116,6 +116,38 @@ test("authenticated execution routes start, inspect, and stop controlled demo ru
   assert.equal(JSON.parse(stopped.body).phase, "cancelled");
 });
 
+test("simulation execution control supports browser-exploration mode against an authorized local target", async t => {
+  const temp = hostContext(t);
+  const host = temp.host({
+    sessionFactory: () => ({
+      canAcceptEvent: () => false,
+      publishEvent() {},
+      startTurn() { return true; },
+      async close() {},
+    }),
+  });
+  const origin = await host.start();
+  const headers = { authorization: `Bearer ${host.credentials().token}`, "content-type": "application/json" };
+  const id = "browser-exec-test";
+  await http(origin, "/api/simulations", { method: "POST", headers, body: JSON.stringify({ simulationId: id, setup }) });
+
+  const started = await http(origin, `/api/simulations/${id}/start`, {
+    method: "POST", headers, body: JSON.stringify({ mode: "browser-exploration" }),
+  });
+  assert.equal(started.status, 200);
+  const status = JSON.parse(started.body);
+  assert.equal(status.phase, "running");
+  assert.equal(status.mode, "browser-exploration");
+
+  const inspected = await http(origin, `/api/simulations/${id}/execution`, { headers });
+  assert.equal(inspected.status, 200);
+  assert.equal(JSON.parse(inspected.body).mode, "browser-exploration");
+
+  const stopped = await http(origin, `/api/simulations/${id}/stop`, { method: "POST", headers, body: JSON.stringify({}) });
+  assert.equal(stopped.status, 200);
+  assert.equal(JSON.parse(stopped.body).phase, "cancelled");
+});
+
 
 test("local-file entry uses a one-time body credential and an HttpOnly API cookie; public assets expose no project files", async t => {
   const temp = hostContext(t); const assets = join(temp.root, "studio-build"); mkdirSync(join(assets, "assets"), { recursive: true });
