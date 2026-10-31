@@ -78,8 +78,10 @@ export class BrowserUserSession {
     try {
       await this.page.goto(resolvedUrl, {
         timeout: this.navigationTimeoutMs,
-        waitUntil: "domcontentloaded",
+        waitUntil: "load",
       });
+      // Allow client-side frameworks (e.g. Next.js, React) to settle initial hydration
+      await this.page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 50))).catch(() => {});
       return { success: true, action: "navigate", url: this.page.url() };
     } catch (cause) {
       return {

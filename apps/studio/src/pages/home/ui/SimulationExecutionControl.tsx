@@ -19,9 +19,10 @@ type Props = Readonly<{
   simulationId: string;
   targetUrl?: string;
   onBusy?: (busy: boolean) => void;
+  onViewResults?: () => void;
 }>;
 
-export function SimulationExecutionControl({ simulationId, targetUrl, onBusy }: Props) {
+export function SimulationExecutionControl({ simulationId, targetUrl, onBusy, onViewResults }: Props) {
   const [status, setStatus] = useState<SimulationExecutionStatus | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
@@ -128,21 +129,24 @@ export function SimulationExecutionControl({ simulationId, targetUrl, onBusy }: 
 
       {status && phase !== "idle" && (
         <dl className="mt-3 space-y-1.5 border-t border-separator pt-2 text-xs">
-          <div className="flex justify-between gap-4">
-            <dt className="text-muted">Turns executed</dt>
-            <dd className="font-mono font-medium">{status.turnsCount}</dd>
-          </div>
+          <div className="flex justify-between gap-4"><dt className="text-muted">Turns executed</dt><dd className="font-mono font-medium">{status.turnsCount}</dd></div>
           {status.activeAgents.length > 0 && (
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted">Active users</dt>
-              <dd className="font-mono">{status.activeAgents.join(", ")}</dd>
-            </div>
+            <div className="flex justify-between gap-4"><dt className="text-muted">Active users</dt><dd className="font-mono">{status.activeAgents.join(", ")}</dd></div>
           )}
         </dl>
       )}
 
       {status?.failureReason && (
         <ExecutionFailureAlert reason={status.failureReason} />
+      )}
+
+      {status && status.turnsCount > 0 && !isRunning && onViewResults && (
+        <div className="mt-3 flex items-center justify-between rounded-md bg-accent-subtle/40 px-3 py-2 text-xs text-accent border border-accent/20">
+          <span>{status.turnsCount} turns executed</span>
+          <button type="button" onClick={onViewResults} className="font-medium underline hover:text-accent-hover">
+            View Results & Findings →
+          </button>
+        </div>
       )}
 
       {status?.recentActivity && status.recentActivity.length > 0 && (

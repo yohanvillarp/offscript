@@ -39,10 +39,17 @@ function describeFailure(reason: string): { title: string; hint: string; action?
       hint: "An error occurred during agent inference or decision processing.",
     };
   }
+  if (reason.includes("INVESTIGATION")) {
+    return {
+      title: "Collaborative investigation coordination settled",
+      hint: "Agents performed exploration actions and observations before multi-agent collaboration concluded.",
+      action: "Review recorded observations and hypotheses in the Results & Findings tab.",
+    };
+  }
   return {
     title: "Exploration session stopped with error",
-    hint: "The exploration session stopped unexpectedly. Check that your local application is running in another terminal.",
-    action: "Check your local dev server terminal for connection errors.",
+    hint: "The exploration session stopped before completing all configured turns.",
+    action: "Review the execution logs or re-run exploration.",
   };
 }
 

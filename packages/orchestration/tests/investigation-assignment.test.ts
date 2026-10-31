@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ApplicationError } from "../../application/index.ts";
-import { assignInvestigation, completeInvestigation } from "../../domain/index.ts";
+import { agentId, assignInvestigation, completeInvestigation } from "../../domain/index.ts";
 import { flush, reactionContext } from "./assignment-reaction-context.ts";
 
 test("handler commits participation and queues assignment before admitting a reactive turn", async () => {
@@ -59,6 +59,20 @@ for (const outcome of ["conflict", "not-found", "throw"] as const) {
     assert.equal(context.state.failures[0]?.stage, "investigation-assignment");
   });
 }
+
+test("collaborator assignment conflict when already assigned steps aside cleanly without failure", async () => {
+  const context = reactionContext();
+  const event = context.event();
+  const record = [...context.state.investigations.values()][0];
+  assert.ok(record);
+  const peerAssigned = assignInvestigation(record.investigation, [agentId("peer-agent")], new Date().toISOString());
+  context.store.commitAssignment = async () => "conflict";
+  context.store.findInvestigation = async () => ({ investigation: peerAssigned, revision: 1 });
+  context.apply(event);
+  await flush(context.state);
+  assert.equal(context.started.length, 0);
+  assert.equal(context.state.failures.length, 0);
+});
 
 test("completed investigations cannot start work, and fabricated requests cannot bypass stored state", async () => {
   const context = reactionContext();
