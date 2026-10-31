@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertCircle, Compass, Play, Square } from "lucide-react";
+import { parseLocalTargetUrl } from "@offscript/contracts";
 import type { SimulationExecutionStatus } from "@offscript/contracts";
 import {
+  checkTarget,
   inspectExecution,
   recoverSimulation,
   startBrowserExploration,
@@ -10,6 +12,7 @@ import {
   StudioApiError,
 } from "@/shared/api/studio";
 import { LiveActivityFeed } from "./LiveActivityFeed";
+import { ExecutionFailureAlert } from "./ExecutionFailureAlert";
 
 type Props = Readonly<{
   simulationId: string;
@@ -61,6 +64,23 @@ export function SimulationExecutionControl({ simulationId, targetUrl, onBusy }: 
     setLoading(true);
     setError(undefined);
     try {
+      if (targetMode === "browser-exploration" && targetUrl) {
+        let isLocal = false;
+        try {
+          parseLocalTargetUrl(targetUrl);
+          isLocal = true;
+        } catch {
+          // Remote URLs are allowed to proceed directly
+        }
+        if (isLocal) {
+          const probe = await checkTarget(targetUrl, new AbortController().signal).catch(() => undefined);
+          if (probe?.kind === "unreachable") {
+            setError(`Cannot start exploration: target application at ${targetUrl} is unreachable. Please start your local development server (e.g. npm run dev) in another terminal.`);
+            setLoading(false);
+            return;
+          }
+        }
+      }
       const result =
         targetMode === "browser-exploration"
           ? await startBrowserExploration(simulationId)
@@ -126,7 +146,7 @@ export function SimulationExecutionControl({ simulationId, targetUrl, onBusy }: 
 
       <p className="mt-2 text-xs text-muted leading-relaxed">
         {mode === "browser-exploration" && targetUrl
-          ? `Autonomous users explore the target application at ${targetUrl}.`
+          ? `Runs automated browser exploration against ${targetUrl}. Requires your local application server to be running.`
           : "Runs against the local simulated cart fixture. Does not contact the configured Application URL."}
       </p>
 
@@ -142,13 +162,11 @@ export function SimulationExecutionControl({ simulationId, targetUrl, onBusy }: 
               <dd className="font-mono">{status.activeAgents.join(", ")}</dd>
             </div>
           )}
-          {status.failureReason && (
-            <div className="flex justify-between gap-4 text-danger">
-              <dt>Reason</dt>
-              <dd className="font-mono text-right">{status.failureReason}</dd>
-            </div>
-          )}
         </dl>
+      )}
+
+      {status?.failureReason && (
+        <ExecutionFailureAlert reason={status.failureReason} />
       )}
 
       {status?.recentActivity && status.recentActivity.length > 0 && (
