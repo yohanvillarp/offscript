@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="530" viewBox="0 0 960 530" role="img" aria-labelledby="title description">
+  <title id="title">OFFSCRIPT local architecture</title>
+  <desc id="description">The CLI and Studio use a protected local host. Application rules persist to SQLite. Mozaik coordinates concurrent users through shared exploration state and isolated Playwright contexts. Default inference is deterministic.</desc>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10" fill="#68716B"/></marker></defs>
+  <rect width="960" height="530" rx="10" fill="#F6F6F3"/>
+  <g font-family="system-ui, sans-serif" fill="#222724">
+    <text x="36" y="43" font-size="21" font-weight="600">OFFSCRIPT · local architecture</text>
+    <text x="36" y="69" font-size="13" fill="#68716B">Composition and data boundaries · default decisions use a deterministic runner</text>
+    <g stroke="#68716B" stroke-width="1.5" fill="none" marker-end="url(#arrow)">
+      <path d="M222 130 H300"/><path d="M222 200 H260 V150 H300"/>
+      <path d="M490 140 H560"/><path d="M740 140 H804"/>
+      <path d="M395 170 V255"/><path d="M280 294 H300"/>
+      <path d="M490 294 H560" marker-start="url(#arrow)"/>
+      <path d="M395 332 V390"/><path d="M490 424 H560"/><path d="M740 424 H804"/>
+    </g>
+    <g stroke="#DADDD6" fill="#FFFFFF">
+      <rect x="36" y="104" width="186" height="52" rx="6"/><rect x="36" y="174" width="186" height="52" rx="6"/>
+      <rect x="300" y="104" width="190" height="66" rx="6"/>
+      <rect x="560" y="104" width="180" height="66" rx="6"/><rect x="804" y="104" width="120" height="66" rx="6"/>
+      <rect x="36" y="265" width="244" height="58" rx="6"/>
+      <rect x="300" y="255" width="190" height="77" rx="6" fill="#E1EFE9"/>
+      <rect x="560" y="265" width="220" height="58" rx="6"/>
+      <rect x="300" y="390" width="190" height="68" rx="6"/>
+      <rect x="560" y="390" width="180" height="68" rx="6"/><rect x="804" y="390" width="120" height="68" rx="6"/>
+    </g>
+    <g font-size="14" text-anchor="middle">
+      <text x="129" y="136">offscript CLI</text><text x="129" y="206">Local Studio</text>
+      <text x="395" y="133">Protected host</text><text x="395" y="153" font-size="12" fill="#68716B">Loopback · authenticated API</text>
+      <text x="650" y="133">Application / domain</text><text x="650" y="153" font-size="12" fill="#68716B">Lifecycle and investigation rules</text>
+      <text x="864" y="133">SQLite</text><text x="864" y="153" font-size="12" fill="#68716B">Snapshots / outbox</text>
+      <text x="158" y="289">Deterministic runner</text><text x="158" y="309" font-size="12" fill="#68716B">Default browser/demo integration</text>
+      <text x="395" y="286" font-weight="600" fill="#237763">Mozaik runtime</text><text x="395" y="308" font-size="12" fill="#237763">One runtime per simulation</text>
+      <text x="670" y="289">Shared exploration state</text><text x="670" y="309" font-size="12" fill="#68716B">Observations · investigations</text>
+      <text x="395" y="417">Concurrent users</text><text x="395" y="439" font-size="12" fill="#68716B">Separate identities and memory</text>
+      <text x="650" y="417">Playwright contexts</text><text x="650" y="439" font-size="12" fill="#68716B">Isolated browser storage</text>
+      <text x="864" y="417">Target app</text><text x="864" y="439" font-size="12" fill="#68716B">Operator-authorized</text>
+    </g>
+    <text x="36" y="497" font-size="12" fill="#68716B">The host does not start target services. Shared exploration state does not grant permissions or confirm a defect.</text>
+  </g>
+</svg>

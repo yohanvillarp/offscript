@@ -9,21 +9,11 @@ Before making changes, read:
 
 Inspect actual implementation; documentation of a planned capability is not evidence that it exists.
 
-For milestone planning, also read `docs/ROADMAP.md`. It records proposed outcomes, not blanket implementation approval. Antigravity entry points are documented in `docs/ANTIGRAVITY.md`; keep shared development rules in this file.
+For milestone planning, also read `docs/ROADMAP.md`. It records proposed outcomes, not blanket implementation approval. Keep shared development rules in this file; personal agent configuration is local and untracked.
 
 ## Incremental development
 
 Implement only the task explicitly requested in the current prompt. Never implement the entire roadmap automatically. Do not create speculative features, abstractions, services, modules, or database tables.
-
-## Repository skills
-
-Use the relevant repository skill when its workflow materially applies:
-
-- Capability/readiness audits or roadmap claims: [.agents/skills/offscript-capability-audit/SKILL.md](.agents/skills/offscript-capability-audit/SKILL.md).
-- Lifecycle, evidence, finding or browser changes crossing ownership boundaries: [.agents/skills/offscript-boundary-review/SKILL.md](.agents/skills/offscript-boundary-review/SKILL.md).
-- Approved substantive feature/fix delivery: [.agents/skills/offscript-scoped-delivery/SKILL.md](.agents/skills/offscript-scoped-delivery/SKILL.md).
-
-Load only the applicable skill, not the whole catalog for every task. Skills guide execution; they do not override the user's scope, authorize external actions or require approval already supplied in the session. Antigravity discovery/use is documented in docs/ANTIGRAVITY.md.
 
 ## Respect existing architecture
 

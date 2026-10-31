@@ -12,7 +12,7 @@ Agents are not scripted test cases. A behavioral profile influences decisions; i
 
 The repository implements a local CLI/Studio configuration and results workflow, SQLite persistence, Mozaik coordination, a Playwright browser adapter, investigations, and initial visual evidence. **The normal browser-exploration CLI path currently uses a deterministic runner.** It can interact with real pages, but its scripted decisions do not demonstrate autonomous goal pursuit or profile-dependent behavior. Programmatic runner injection and an opt-in live demo are not a complete operator-facing provider setup.
 
-Read [CONSOLIDATION.md](CONSOLIDATION.md) for verified gaps, source references, and proposed acceptance criteria. The first corrective slice is finding-confirmation correctness. [ROADMAP.md](ROADMAP.md) distinguishes implemented code, integration checks, and product validation; multi-round debate is deferred.
+Read [CONSOLIDATION.md](CONSOLIDATION.md) for verified gaps, source references, and proposed acceptance criteria. C1-C3 corrective implementations are now recorded as resolved there; regression qualification and the remaining C4-C5 limits still matter. Public launch preparation is proposed in [RELEASE.md](RELEASE.md), with a feature freeze for the hackathon. [ROADMAP.md](ROADMAP.md) distinguishes implemented code, integration checks, and product validation; multi-round debate is deferred.
 
 | Area | Existing behavior |
 | --- | --- |

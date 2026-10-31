@@ -11,9 +11,29 @@ dist/
 .offscript-host-*.json
 .offscript-studio-*.html
 offscript-*.tgz
+nikelyh-offscript-*.tgz
 *.sqlite
 *.sqlite-wal
 *.sqlite-shm
 
-# private
-/context
+# Personal agent context; technical project documentation remains public.
+/context/
+/.agents/
+/.agent/
+/.gemini/
+/GEMINI.md
+/docs/ANTIGRAVITY.md
+/docs/ANTIGRAVITY-HANDOFF.md
+
+# Local authentication, generated reports, and package trials.
+/.npmrc
+/artifacts/
+playwright/.auth/
+playwright-report/
+test-results/
+blob-report/
+
+# Operating-system metadata.
+.DS_Store
+Thumbs.db
+Desktop.ini

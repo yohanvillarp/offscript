@@ -32,18 +32,18 @@ From the OFFSCRIPT checkout:
 npm pack
 ```
 
-The `prepack` script builds the complete local distribution. The current local version produces `offscript-0.0.0.tgz` in the checkout. The archive is ignored by Git. It contains the compiled server, migrations, Studio, and a minimal `offscript` executable; it excludes local project data and credentials.
+The `prepack` script builds the complete local distribution. The current local version produces `nikelyh-offscript-1.0.0.tgz` in the checkout. The archive is ignored by Git. It contains the compiled server, migrations, Studio, and a minimal `offscript` executable; it excludes local project data and credentials.
 
 From the application project's directory, run:
 
 ```sh
-npm exec --yes --package="C:/Tools/offscript/offscript-0.0.0.tgz" -- offscript
+npm exec --yes --package="C:/Tools/offscript/nikelyh-offscript-1.0.0.tgz" -- offscript
 ```
 
 Equivalent npx invocation:
 
 ```sh
-npx --yes --package="C:/Tools/offscript/offscript-0.0.0.tgz" offscript
+npx --yes --package="C:/Tools/offscript/nikelyh-offscript-1.0.0.tgz" offscript
 ```
 
 Replace the archive path with its real absolute path. On macOS/Linux use the appropriate filesystem path. Since the command runs in your application directory, that directory becomes the project root. You can still pass `--project "another/path"` explicitly.
@@ -86,16 +86,16 @@ Automated HTTP tests cover authentication, one-time exchange/replay rejection, c
 
 ```sh
 # Start Studio without opening a browser
-npm exec --yes --package="/absolute/path/offscript-0.0.0.tgz" -- offscript studio --no-open
+npm exec --yes --package="/absolute/path/nikelyh-offscript-1.0.0.tgz" -- offscript studio --no-open
 
 # Start API host only
-npm exec --yes --package="/absolute/path/offscript-0.0.0.tgz" -- offscript serve --port 4317
+npm exec --yes --package="/absolute/path/nikelyh-offscript-1.0.0.tgz" -- offscript serve --port 4317
 
 # List saved simulations directly from project SQLite storage
-npm exec --yes --package="/absolute/path/offscript-0.0.0.tgz" -- offscript list
+npm exec --yes --package="/absolute/path/nikelyh-offscript-1.0.0.tgz" -- offscript list
 
 # Inspect exploration results (findings, observations, investigations) in the terminal
-npm exec --yes --package="/absolute/path/offscript-0.0.0.tgz" -- offscript results <simulation-id>
+npm exec --yes --package="/absolute/path/nikelyh-offscript-1.0.0.tgz" -- offscript results <simulation-id>
 ```
 
 For an optional global-install trial, use `npm install --global --prefix <temporary-directory> <archive>` and run that prefix's executable (on Windows, `<prefix>/offscript.cmd`; on macOS/Linux, `<prefix>/bin/offscript`). This tests installation without modifying your normal global prefix. `npm pack` remains the primary distribution check; there is no OFFSCRIPT packaging command. Publishing to npm is a separate, unimplemented release workflow.
