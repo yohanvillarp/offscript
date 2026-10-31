@@ -6,5 +6,5 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), babel({ presets: [reactCompilerPreset()] })],
-  resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
+  resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)), "@offscript/contracts": fileURLToPath(new URL("../../packages/contracts/index.ts", import.meta.url)) } },
 });

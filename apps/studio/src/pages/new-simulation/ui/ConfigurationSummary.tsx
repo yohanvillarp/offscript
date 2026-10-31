@@ -71,7 +71,7 @@ export function ConfigurationSummary({ draft }: Readonly<{ draft: SimulationDraf
         <p>Leaving or reloading this page discards this draft.</p>
         <p id="execution-availability" className="flex items-start gap-2">
           <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" strokeWidth={1.5} />
-          Execution is not available yet. This draft does not save a simulation, grant permissions, or contact the target.
+          Saving stores this configuration locally. It does not start agents, grant permissions, or contact the target.
         </p>
       </div>
     </section>

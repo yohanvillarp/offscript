@@ -15,3 +15,6 @@ export type { InvestigationAssignmentCommitter } from "./assign-investigation/po
 export { dispatchOutboxBatch } from "./outbox/dispatch.ts";
 export { validateClaim, validateDispatch } from "./outbox/ports.ts";
 export type { OutboxEvent, OutboxError, OutboxRecord, OutboxLease, OutboxStore, OutboxPublisher, ClaimOptions, DispatchOptions } from "./outbox/ports.ts";
+export { executeConfigureSimulation } from "./configure-simulation/execute.ts";
+export { configuredSimulation } from "./configure-simulation/profiles.ts";
+export type { ProjectInspector, SimulationConfigurationStore, ConfigureSimulationCommand, ConfigureSimulationDependencies } from "./configure-simulation/ports.ts";

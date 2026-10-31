@@ -21,6 +21,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@offscript/contracts": [
+        "../../packages/contracts/index.ts"
       ]
     },
     "noUnusedLocals": true,

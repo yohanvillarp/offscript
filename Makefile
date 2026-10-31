@@ -12,7 +12,7 @@ NPM ?= npm
 # Required only by db-generate. Export without interpolating into its validator.
 export MIGRATION_NAME
 
-.PHONY: help setup install install-root install-studio hooks git-template \
+.PHONY: build-local start-local typecheck-projects test-projects help setup install install-root install-studio hooks git-template \
         dev-server dev-studio preview-studio check build lint lint-packages \
         lint-studio test typecheck typecheck-studio test-studio commitlint typecheck-domain \
         test-domain typecheck-contracts test-contracts typecheck-application test-application typecheck-orchestration test-orchestration \
@@ -40,6 +40,9 @@ git-template: ## Configure .gitmessage for this clone only.
 	git config --local commit.template .gitmessage
 
 ##@ Development (long-running; use separate terminals)
+start-local: ## Serve built Studio and API; use OFFSCRIPT_PROJECT_ROOT to select a project.
+	$(NPM) start
+
 dev-server: ## Start the protected local health host; no agents start automatically.
 	$(NPM) run dev:server
 
@@ -56,6 +59,9 @@ check: ## Run the canonical complete npm check used by CI and pre-push.
 build: ## Typecheck and build Studio for production.
 	$(NPM) run build
 
+build-local: ## Build distributable JavaScript, migrations, and Studio assets for local use.
+	$(NPM) run build:local
+
 lint: ## Lint internal packages/scripts and Studio.
 	$(NPM) run lint
 
@@ -68,7 +74,7 @@ lint-studio: ## Lint Studio.
 test: ## Run all module and Studio unit/integration tests.
 	$(NPM) test
 
-typecheck: typecheck-domain typecheck-contracts typecheck-application typecheck-orchestration typecheck-persistence typecheck-runtime typecheck-server typecheck-studio ## Typecheck all internal modules, Studio, and Studio tests.
+typecheck: typecheck-projects typecheck-domain typecheck-contracts typecheck-application typecheck-orchestration typecheck-persistence typecheck-runtime typecheck-server typecheck-studio ## Typecheck all internal modules, Studio, and Studio tests.
 
 typecheck-studio: ## Run the Studio TypeScript build and draft-test typecheck without Vite.
 	$(NPM) exec --prefix apps/studio --offline -- tsc -b apps/studio/tsconfig.json
@@ -122,6 +128,12 @@ typecheck-server: ## Typecheck server production and test sources.
 
 test-server: ## Run server tests.
 	$(NPM) run test:server
+
+typecheck-projects: ## Typecheck read-only project recognition and its tests.
+	$(NPM) run typecheck:projects
+
+test-projects: ## Test project path resolution and name recognition.
+	$(NPM) run test:projects
 
 ##@ SQLite migrations
 db-check: ## Check checked-in Drizzle migration metadata.

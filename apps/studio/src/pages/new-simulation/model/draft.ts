@@ -6,6 +6,7 @@ export type ParticipantDraft = Readonly<{
   name: string;
 }>;
 export type SimulationDraft = Readonly<{
+  limits?: ExecutionLimits;
   name: string;
   url: string;
   goal: string;
@@ -13,3 +14,4 @@ export type SimulationDraft = Readonly<{
   participants: readonly ParticipantDraft[];
 }>;
 export type DraftErrors = Readonly<Record<string, string>>;
+import type { ExecutionLimits } from "@offscript/contracts";

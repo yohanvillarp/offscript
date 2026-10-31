@@ -15,6 +15,11 @@ export function hostStorage(source: Persistence) {
     };
   }
   const storage = Object.freeze({
+    configurations: Object.freeze({
+      createConfiguredSimulation: guard(source.configurations.createConfiguredSimulation),
+      findConfiguration: guard(source.configurations.findConfiguration),
+      listConfigurations: guard(source.configurations.listConfigurations),
+    }),
     observations: Object.freeze({
       createObservation: guard(source.observations.createObservation), findObservation: guard(source.observations.findObservation),
     }),

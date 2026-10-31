@@ -11,13 +11,13 @@ const steps = [
     number: "02",
     icon: Fingerprint,
     title: "Choose users.",
-    description: "Set profiles, goals, and permitted actions.",
+    description: "Select behavioral profiles and a shared goal.",
   },
   {
     number: "03",
     icon: ScanSearch,
-    title: "Review the evidence.",
-    description: "Review interactions, observations, and supporting evidence.",
+    title: "Save the configuration.",
+    description: "Review the target, users, and limits before saving locally.",
   },
 ] as const;
 

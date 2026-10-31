@@ -7,6 +7,7 @@ export type LocalHostOptions = Readonly<{
   port?: number;
   allowedOrigins?: readonly string[];
   shutdownTimeoutMs?: number;
+  studioDirectory?: string;
   onDiagnostic?: (code: "OUTBOX_FAILED") => void;
 }>;
 
@@ -25,5 +26,6 @@ export function localHostConfig(options: LocalHostOptions) {
     if (!["http:", "https:"].includes(url.protocol) || url.origin !== origin || url.username || url.password) throw new Error("Expected a canonical HTTP origin.");
   }
   return Object.freeze({ projectRoot, dataDirectory: resolve(projectRoot, options.dataDirectory ?? ".offscript"),
+    ...(options.studioDirectory === undefined ? {} : { studioDirectory: realpathSync(resolve(options.studioDirectory)) }),
     port, allowedOrigins: Object.freeze(allowedOrigins), shutdownTimeoutMs });
 }

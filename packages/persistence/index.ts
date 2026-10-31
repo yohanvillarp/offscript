@@ -6,6 +6,7 @@ import { observationRepository } from "./repositories/observations.ts";
 import { investigationRepository } from "./repositories/investigations.ts";
 import { investigationCommitter } from "./outbox/committer.ts";
 import { outboxStore } from "./outbox/store.ts";
+import { configurationRepository } from "./repositories/configurations.ts";
 
 export function openPersistence(options: PersistenceOptions) {
   const connection = openConnection(options);
@@ -15,6 +16,7 @@ export function openPersistence(options: PersistenceOptions) {
     simulations: simulationRepository(connection.db), observations: observationRepository(connection.db),
     investigations: Object.freeze({ ...investigationRepository(connection.db), ...investigationCommitter(connection.db) }),
     outbox: outboxStore(connection.db),
+    configurations: configurationRepository(connection.db),
     close() { if (connection.client.open) connection.client.close(); },
   });
 }
