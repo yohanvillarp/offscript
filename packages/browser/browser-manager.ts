@@ -20,9 +20,19 @@ export class BrowserManager {
   private async ensureBrowser(): Promise<Browser> {
     if (this.closed) throw new Error("BrowserManager is closed.");
     if (!this.browser || !this.browser.isConnected()) {
-      this.browser = await chromium.launch({
-        headless: this.headless,
-      });
+      try {
+        this.browser = await chromium.launch({
+          headless: this.headless,
+        });
+      } catch (cause) {
+        if (cause instanceof Error && cause.message.includes("Executable doesn't exist")) {
+          throw new Error(
+            "Chromium executable is not installed. Run 'npx playwright install chromium' before launching browser sessions.",
+            { cause },
+          );
+        }
+        throw cause;
+      }
     }
     return this.browser;
   }

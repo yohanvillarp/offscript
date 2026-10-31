@@ -24,6 +24,20 @@ OFFSCRIPT interacts with web applications using an isolated, Playwright-managed 
    - `browser_type`: Resolves opaque element handle and fills text.
    - `browser_record_observation`: Records an immutable domain `Observation` entity attributed to the acting user (`agentId`) and simulation (`simulationId`), recording the current URL in `context.location`.
 
+## Setup and installation
+
+Install Chromium before running browser automation or automated tests:
+
+```bash
+npx playwright install chromium
+```
+
+In Linux/CI environments, install system dependencies as well:
+
+```bash
+npx playwright install --with-deps chromium
+```
+
 ## Verification
 
 Run typechecks and unit/integration tests:
