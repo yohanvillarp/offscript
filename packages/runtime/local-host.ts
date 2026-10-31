@@ -193,7 +193,7 @@ export function createLocalHost(options: LocalHostOptions) {
       await executeRecoverSimulation({ simulationId: simulationId(id), action, reason }, storage.simulations);
       return coordinator?.inspect(simulationId(id)) ?? Object.freeze({
         simulationId: id, phase: action === "cancel" ? "cancelled" : "failed",
-        mode: "controlled-demo", turnsCount: 0, activeAgents: [],
+        turnsCount: 0, activeAgents: [],
       });
     },
     async getSimulationResults(id: SimulationId): Promise<SimulationResults> {

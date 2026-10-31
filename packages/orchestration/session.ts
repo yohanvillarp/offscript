@@ -169,6 +169,7 @@ export function createExplorationSession(options: SessionOptions) {
       investigations: Object.freeze([...state.investigations.values()].map((entry) => entry.investigation)), failures: Object.freeze([...state.failures]),
       mappings: Object.freeze([...state.agents].map(([id, agent]) => Object.freeze({ agentId: id, participantId: agent.getId() }))),
       turns: Object.freeze([...state.turns].map(([id, turn]) => Object.freeze({ agentId: id, count: turn.turns }))),
+      activeAgents: Object.freeze([...state.turns.entries()].filter(([, t]) => t.busy || t.pending.length > 0).map(([id]) => id)),
       recentActivity: Object.freeze([...state.recentActivity]),
     });
   }

@@ -36,7 +36,10 @@ function startEvaluationServer() {
       const port = addr && typeof addr !== "string" ? addr.port : 0;
       resolve({
         origin: `http://127.0.0.1:${port}`,
-        close: () => new Promise<void>((done) => server.close(() => done())),
+        close: () => new Promise<void>((done) => {
+          server.closeAllConnections?.();
+          server.close(() => done());
+        }),
       });
     });
   });
@@ -101,18 +104,30 @@ test("controlled evaluation benchmark validates multi-profile exploration, evide
 
     // 3. Evaluate finding assessment with explicit confirmation criteria
     const parsedEvidence = (JSON.parse(firstObs.evidenceIds) as string[]).map((e) => evidenceId(e));
-    const dummyObsSummary = [{
-      id: observationId(firstObs.id),
-      simulationId: simId,
-      agentId: explorer,
-      observedAt: firstObs.observedAt,
-      description: firstObs.description,
-      context: { location: firstObs.location },
-      evidenceIds: parsedEvidence,
-    }];
-
-    // Corroborated assessment with two distinct agents and verified evidence
+    const beginnerEvidence = [evidenceId("ev-beginner-corroborated")];
     const obsId = observationId(firstObs.id);
+    const dummyObsSummary = [
+      {
+        id: obsId,
+        simulationId: simId,
+        agentId: explorer,
+        observedAt: firstObs.observedAt,
+        description: firstObs.description,
+        context: { location: firstObs.location },
+        evidenceIds: parsedEvidence,
+      },
+      {
+        id: observationId("obs-beginner-corroborated"),
+        simulationId: simId,
+        agentId: beginner,
+        observedAt: new Date().toISOString(),
+        description: "Beginner verified cart state loss upon navigation.",
+        context: { location: "/cart" },
+        evidenceIds: beginnerEvidence,
+      },
+    ];
+
+    // Corroborated assessment with two distinct observing agents and verified evidence
     const corroboratedInv: CompletedInvestigationSummary = {
       id: investigationId("inv-corroborated"),
       simulationId: simId,
@@ -129,7 +144,7 @@ test("controlled evaluation benchmark validates multi-profile exploration, evide
         result: {
           outcome: "supported",
           explanation: "Verified that navigation clears cart items.",
-          evidenceIds: parsedEvidence,
+          evidenceIds: beginnerEvidence,
         },
       },
     };
