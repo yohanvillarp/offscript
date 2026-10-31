@@ -1,15 +1,18 @@
 import { eq, sql } from "drizzle-orm";
 import { configuredSimulation } from "../../application/index.ts";
 import type { SimulationConfigurationStore } from "../../application/index.ts";
+import type { ConfiguredSimulationDeletion } from "../../application/index.ts";
 import { parseSimulationConfiguration } from "../../contracts/index.ts";
 import type { PersistenceDatabase } from "../connection.ts";
 import { simulationConfigurations } from "../schema/index.ts";
 import { PersistenceError } from "../errors.ts";
 import { json, stored } from "../codecs/values.ts";
 import { writeSimulation } from "./simulation-writes.ts";
+import { deleteConfiguration } from "./delete-configuration.ts";
 
-export function configurationRepository(db: PersistenceDatabase): SimulationConfigurationStore {
+export function configurationRepository(db: PersistenceDatabase): SimulationConfigurationStore & ConfiguredSimulationDeletion {
   return {
+    async deleteConfiguredSimulation(id) { return deleteConfiguration(db, id); },
     async listConfigurations() {
       const rows = db.select().from(simulationConfigurations).orderBy(sql`rowid desc`).limit(50).all();
       return stored(() => Object.freeze(rows.map(row => parseSimulationConfiguration(json(row.configuration)))));

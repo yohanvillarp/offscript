@@ -37,3 +37,14 @@ test("invalid project paths and malformed manifests fail without producing a par
   writeFileSync(join(root, "package.json"), "{broken");
   await assert.rejects(inspectProject(root), ProjectInspectionError);
 });
+
+test("simple Vite scripts suggest an unverified local URL without evaluating configuration or compound commands", async t => {
+  const root = project(t);
+  writeFileSync(join(root, "vite.config.ts"), "throw new Error('must not evaluate')");
+  writeFileSync(join(root, "package.json"), JSON.stringify({ scripts: { dev: "vite --port 4301 --host 0.0.0.0" } }));
+  assert.deepEqual((await inspectProject(root)).targetSuggestion, { url: "http://localhost:4301/", source: "vite-script", scriptName: "dev" });
+  writeFileSync(join(root, "package.json"), JSON.stringify({ scripts: { dev: "vite" } }));
+  assert.equal((await inspectProject(root)).targetSuggestion?.source, "vite-default");
+  writeFileSync(join(root, "package.json"), JSON.stringify({ scripts: { dev: "vite && echo unsafe" } }));
+  assert.equal((await inspectProject(root)).targetSuggestion, undefined);
+});

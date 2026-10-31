@@ -1,4 +1,8 @@
 export { ApplicationError } from "./errors.ts";
+export { executeDeleteConfiguredSimulation } from "./delete-configured-simulation.ts";
+export type { ConfiguredSimulationDeletion, DeleteConfiguredSimulationResult } from "./delete-configured-simulation.ts";
+export { executeCheckTarget } from "./check-target.ts";
+export type { TargetProbe } from "./check-target.ts";
 export type { ApplicationErrorCode } from "./errors.ts";
 export { executeRequestInvestigation } from "./request-investigation/execute.ts";
 export type {

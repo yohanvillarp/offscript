@@ -1,6 +1,7 @@
 import { open, realpath, stat } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
 import type { ProjectDescriptor } from "../contracts/index.ts";
+import { suggestTarget } from "./suggest-target.ts";
 
 export class ProjectInspectionError extends Error {
   constructor(message: string, options?: ErrorOptions) { super(message, options); this.name = "ProjectInspectionError"; }
@@ -23,8 +24,9 @@ export async function inspectProject(projectRoot: string): Promise<ProjectDescri
       const parsed: unknown = JSON.parse(await file.readFile({ encoding: "utf8" }));
       if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) throw new ProjectInspectionError("Project manifest must contain a JSON object.");
       const name: unknown = "name" in parsed ? parsed.name : undefined;
-      if (typeof name !== "string" || !name.trim()) return fallback;
-      return Object.freeze({ rootPath, suggestedName: name.trim(), nameSource: "package" });
+      const targetSuggestion = suggestTarget(parsed);
+      return Object.freeze({ ...(typeof name === "string" && name.trim() ? { rootPath, suggestedName: name.trim(), nameSource: "package" as const } : fallback),
+        ...(targetSuggestion ? { targetSuggestion } : {}) });
     } finally { await file.close(); }
   } catch (cause) {
     if (cause instanceof ProjectInspectionError) throw cause;

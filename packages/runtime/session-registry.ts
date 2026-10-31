@@ -10,6 +10,7 @@ export type HostedSession = Readonly<{
 
 export function sessionRegistry() {
   const sessions = new Map<SimulationId, HostedSession>();
+  const preparing = new Set<SimulationId>();
   let accepting = true;
   const publisher: OutboxPublisher = {
     async publish(event) {
@@ -21,12 +22,16 @@ export function sessionRegistry() {
   };
   return {
     publisher,
+    has(id: SimulationId) { return sessions.has(id) || preparing.has(id); },
     add<T extends HostedSession>(id: SimulationId, create: () => T): T {
       if (!accepting) throw new Error("Host is closing.");
-      if (sessions.has(id)) throw new Error("Simulation already has a hosted session.");
-      const session = create();
-      sessions.set(id, session);
-      return session;
+      if (sessions.has(id) || preparing.has(id)) throw new Error("Simulation already has a hosted session.");
+      preparing.add(id);
+      try {
+        const session = create();
+        sessions.set(id, session);
+        return session;
+      } finally { preparing.delete(id); }
     },
     stopAdmission() { accepting = false; },
     async close() {

@@ -12,8 +12,11 @@ import type { HostStorage } from "./host-storage.ts";
 import { sessionRegistry } from "./session-registry.ts";
 import type { HostedSession } from "./session-registry.ts";
 import { withinDeadline } from "./deadline.ts";
-import { executeConfigureSimulation } from "../application/index.ts";
-import { inspectProject } from "../projects/index.ts";
+import { executeConfigureSimulation, executeCheckTarget } from "../application/index.ts";
+import { executeDeleteConfiguredSimulation } from "../application/index.ts";
+import type { DeleteConfiguredSimulationResult } from "../application/index.ts";
+import { inspectProject, createTargetProbe } from "../projects/index.ts";
+import { ContractValidationError, parseLocalTargetUrl } from "../contracts/index.ts";
 import type { SimulationSetup } from "../contracts/index.ts";
 
 export type HostedSessionContext = Readonly<{ storage: HostStorage; outboxMode: "external" }>;
@@ -24,6 +27,9 @@ export function createLocalHost(options: LocalHostOptions) {
   const token = randomBytes(32).toString("base64url");
   const studioSession = config.studioDirectory ? createStudioSession() : undefined;
   const registry = sessionRegistry();
+  const deleting = new Set<SimulationId>();
+  const probe = createTargetProbe();
+  const probeLifetime = new AbortController();
   let phase: HostPhase = "starting";
   let port: number | undefined;
   let origin: string | undefined;
@@ -39,6 +45,7 @@ export function createLocalHost(options: LocalHostOptions) {
   function release(): Promise<void> {
     if (releasing) return releasing;
     phase = "stopping";
+    probeLifetime.abort();
     registry.stopAdmission();
     releasing = (async () => {
       const errors: unknown[] = [];
@@ -114,6 +121,14 @@ export function createLocalHost(options: LocalHostOptions) {
       if (phase !== "ready" || closing) throw new Error("Host is not accepting project inspection.");
       return inspectProject(config.projectRoot);
     },
+    async checkTarget(url: string, signal?: AbortSignal) {
+      if (phase !== "ready" || closing) throw new Error("Host is not accepting connection checks.");
+      const target = new URL(parseLocalTargetUrl(url));
+      if (Number(target.port || (target.protocol === "https:" ? 443 : 80)) === port) {
+        throw new ContractValidationError("target.url", "Select the application port, not OFFSCRIPT's port.");
+      }
+      return executeCheckTarget(url, probe, AbortSignal.any([probeLifetime.signal, ...(signal ? [signal] : [])]));
+    },
     async configureSimulation(input: Readonly<{ simulationId: SimulationId; setup: SimulationSetup }>) {
       const storage = guarded?.storage;
       if (phase !== "ready" || closing || !storage) throw new Error("Host is not accepting simulation configuration.");
@@ -131,10 +146,20 @@ export function createLocalHost(options: LocalHostOptions) {
       if (phase !== "ready" || closing || !storage) throw new Error("Host is not accepting configuration reads.");
       return storage.configurations.findConfiguration(simulationId(id));
     },
+    async deleteConfiguration(id: SimulationId): Promise<DeleteConfiguredSimulationResult> {
+      simulationId(id);
+      const storage = guarded?.storage;
+      if (phase !== "ready" || closing || !storage) throw new Error("Host is not accepting deletion requests.");
+      if (registry.has(id) || deleting.has(id)) return "not-allowed";
+      deleting.add(id);
+      try { return await executeDeleteConfiguredSimulation(id, storage.configurations); }
+      finally { deleting.delete(id); }
+    },
     prepareSession<T extends HostedSession>(id: SimulationId, create: (context: HostedSessionContext) => T): T {
       simulationId(id);
       const storage = guarded?.storage;
       if (phase !== "ready" || closing || !storage) throw new Error("Host is not accepting sessions.");
+      if (deleting.has(id)) throw new Error("Simulation deletion is in progress.");
       return registry.add(id, () => create(Object.freeze({ storage, outboxMode: "external" })));
     },
     close() {
@@ -145,6 +170,7 @@ export function createLocalHost(options: LocalHostOptions) {
         return closingTask;
       }
       closing = true;
+      probeLifetime.abort();
       registry.stopAdmission();
       phase = "stopping";
       const cleanup = (async () => { await starting?.catch(() => {}); await release(); })();

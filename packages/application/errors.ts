@@ -16,6 +16,7 @@ export type ApplicationErrorCode =
   | "ASSIGNER_NOT_RUNNING"
   | "READ_FAILED"
   | "SAVE_FAILED"
+  | "DELETE_FAILED"
   | "EVENT_ID_CONFLICT";
 
 export class ApplicationError extends Error {
