@@ -1,5 +1,6 @@
 import { parseProjectDescriptor, parseSimulationConfiguration, parseSimulationSetup } from "@offscript/contracts";
 import type { SimulationConfiguration, SimulationSetup } from "@offscript/contracts";
+import { parseTargetConnection } from "@offscript/contracts";
 
 export class StudioApiError extends Error {
   readonly code: string;
@@ -18,15 +19,25 @@ async function request(path: string, options: RequestInit = {}): Promise<unknown
   }
   if (!response.ok) {
     if (response.status === 401) throw new StudioApiError("UNAUTHORIZED", "Open the local Studio entry file printed by OFFSCRIPT to connect.");
+    if (options.method === "DELETE" && response.status === 409) throw new StudioApiError("DELETION_NOT_ALLOWED", "This simulation cannot be deleted: it has a session, execution state, or related data.");
+    if (options.method === "DELETE" && response.status === 404) throw new StudioApiError("NOT_FOUND", "This saved simulation no longer exists. Close this panel and refresh the list.");
+    if (options.method === "DELETE") throw new StudioApiError("DELETE_FAILED", "Could not confirm deletion. Refresh the list before trying again.");
     if (response.status === 409) throw new StudioApiError("ALREADY_EXISTS", "This simulation was already saved.");
     if (response.status === 400) throw new StudioApiError("INVALID_CONFIGURATION", "Review the target, selected users, and execution limits.");
     throw new StudioApiError("REQUEST_FAILED", "Could not load or save configuration. Open Studio through the OFFSCRIPT host and try again.");
   }
-  return response.json();
+  return response.status === 204 ? undefined : response.json();
+}
+
+export async function deleteConfiguration(id: string): Promise<void> {
+  await request(`/api/simulations/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
 export async function loadProject(signal?: AbortSignal) {
   return parseProjectDescriptor(await request("/api/project", signal ? { signal } : {}));
+}
+export async function checkTarget(url: string, signal: AbortSignal) {
+  return parseTargetConnection(await request("/api/target/check", { method: "POST", body: JSON.stringify({ url }), signal }));
 }
 export async function loadConfiguration(id: string) {
   return parseSimulationConfiguration(await request(`/api/simulations/${encodeURIComponent(id)}`));

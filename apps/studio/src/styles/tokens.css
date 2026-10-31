@@ -157,6 +157,7 @@
 
 :root {
   --layout-sidebar-width: 16rem;
+  --layout-detail-width: 28rem;
   --layout-header-height: 3.5rem;
   --layout-content-max: 80rem;
   --layer-base: 0;

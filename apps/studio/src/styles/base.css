@@ -11,6 +11,19 @@
   ::selection { background: var(--selection); color: var(--foreground); }
   :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
   input, textarea, select, button { font: inherit; }
+  :where(button, a[href], summary, select, input[type="checkbox"], input[type="radio"], input[type="file"]):not(:disabled):not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+  :where(label[for], label:has(input[type="checkbox"], input[type="radio"])):not(:has(:disabled)) {
+    cursor: pointer;
+  }
+  :where(button, select, input):disabled,
+  [aria-disabled="true"],
+  label:has(:disabled) { cursor: not-allowed; }
+  @media (hover: hover) {
+    :where(button):not(:disabled):not([aria-disabled="true"]):hover { background-color: var(--surface-hover); }
+    summary:hover { color: var(--accent-hover); }
+  }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
   }
