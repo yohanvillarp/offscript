@@ -42,9 +42,18 @@ test("evaluates corroborated finding when distinct agents collaborate and eviden
     {
       id: observationId("obs-1"),
       simulationId: simulationId("simulation-1"),
+      agentId: agentId("agent-1"),
+      observedAt: "2026-10-30T12:00:30.000Z",
+      description: "Cart has items before reload",
+      context: { location: "/cart" },
+      evidenceIds: [evidenceId("ev-initial")],
+    },
+    {
+      id: observationId("obs-2"),
+      simulationId: simulationId("simulation-1"),
       agentId: agentId("agent-2"),
       observedAt: "2026-10-30T12:01:30.000Z",
-      description: "Cart is empty",
+      description: "Cart is empty after reload",
       context: { location: "/cart" },
       evidenceIds: [evidenceId("ev-1")],
     },
@@ -55,6 +64,47 @@ test("evaluates corroborated finding when distinct agents collaborate and eviden
   assert.equal(assessment.outcome, "supported");
   assert.equal(assessment.uncertaintyReason, undefined);
   assert.deepEqual(assessment.participatingAgents, [agentId("agent-1"), agentId("agent-2")]);
+});
+
+test("evaluates provisional finding when observations list is empty despite cited evidence", () => {
+  const inv = sampleInvestigation();
+  const assessment = evaluateFindingAssessment(inv, []);
+
+  assert.equal(assessment.isConfirmedFinding, false);
+  assert.equal(assessment.confidence, "provisional");
+  assert.ok(assessment.uncertaintyReason?.includes("no simulation observations are available"));
+});
+
+test("evaluates provisional finding when supported outcome provides no evidence references", () => {
+  const inv = sampleInvestigation({
+    lifecycle: {
+      status: "completed",
+      agentIds: [agentId("agent-2")],
+      assignedAt: "2026-10-30T12:01:00.000Z",
+      completedAt: "2026-10-30T12:02:00.000Z",
+      completedBy: agentId("agent-2"),
+      result: {
+        outcome: "supported",
+        explanation: "Observed problem without capturing evidence.",
+        evidenceIds: [],
+      },
+    },
+  });
+  const assessment = evaluateFindingAssessment(inv, [
+    {
+      id: observationId("obs-1"),
+      simulationId: simulationId("simulation-1"),
+      agentId: agentId("agent-1"),
+      observedAt: "2026-10-30T12:00:30.000Z",
+      description: "Initial observation",
+      context: { location: "/cart" },
+      evidenceIds: [evidenceId("ev-initial")],
+    },
+  ]);
+
+  assert.equal(assessment.isConfirmedFinding, false);
+  assert.equal(assessment.confidence, "provisional");
+  assert.ok(assessment.uncertaintyReason?.includes("does not reference any supporting evidence"));
 });
 
 test("evaluates provisional finding when only one agent requested and completed without collaborators", () => {
