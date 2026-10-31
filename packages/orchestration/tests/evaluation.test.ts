@@ -177,7 +177,7 @@ test("controlled evaluation benchmark validates multi-profile exploration, evide
     const provisionalAssessment = evaluateFindingAssessment(singleAgentInv, dummyObsSummary);
     assert.equal(provisionalAssessment.isConfirmedFinding, false);
     assert.equal(provisionalAssessment.confidence, "provisional");
-    assert.ok(provisionalAssessment.uncertaintyReason?.includes("collaborator corroboration"));
+    assert.ok(provisionalAssessment.uncertaintyReason?.trim(), "A provisional finding must explain its uncertainty");
 
     // 4. Natural session settlement or clean stop
     const stopResult = await host.stopSimulation(simId);

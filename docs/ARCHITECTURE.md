@@ -2,7 +2,7 @@
 
 Read [PROJECT.md](PROJECT.md) for product semantics and implementation status.
 
-Read [CONSOLIDATION.md](CONSOLIDATION.md) before using an implemented component as evidence of readiness. Browser execution currently defaults to deterministic inference; finding confirmation, artifact integrity/privacy and lifecycle settlement have known unresolved gaps. Documentation corrections do not implement those fixes.
+Read [CONSOLIDATION.md](CONSOLIDATION.md) before using an implemented component as evidence of readiness. Browser execution currently defaults to deterministic inference. C1-C3 corrective implementations are recorded there; their existence does not replace release qualification or resolve the remaining C4-C5 limits.
 
 ## Confirmed direction
 
@@ -16,6 +16,8 @@ Read [CONSOLIDATION.md](CONSOLIDATION.md) before using an implemented component 
 - Runtime composition connecting application behavior to replaceable infrastructure adapters.
 
 The root package pins @mozaik-ai/core 4.2.0, integrated through packages/orchestration against a controlled local fixture. SQLite persistence uses exact root dependencies drizzle-orm 0.45.4 and better-sqlite3 13.0.3, with versioned migrations. Fastify 5.12.7 is installed for the local host. Playwright 1.64.1 is declared in the root manifest; packages/browser provides bounded, authorized browser interaction and observation attribution with Chromium.
+
+Studio assets are served through explicit Fastify routes using `@fastify/send` 4.2.0, with rooted paths and dotfile denial. The host does not need the glob-based discovery provided by `@fastify/static`.
 
 ## Dependency direction and responsibilities
 

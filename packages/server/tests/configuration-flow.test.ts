@@ -178,6 +178,12 @@ test("local-file entry uses a one-time body credential and an HttpOnly API cooki
   const host = temp.host({ studioDirectory: assets }); const origin = await host.start();
   assert.equal((await http(origin, "/")).status, 200);
   assert.equal((await http(origin, "/assets/app.js")).status, 200);
+  const script = await http(origin, "/assets/app.js");
+  assert.equal(script.body, "console.log('studio')");
+  assert.match(String(script.headers["content-type"]), /javascript/);
+  assert.equal((await http(origin, "/assets/missing.js")).status, 404);
+  writeFileSync(join(assets, "assets", ".env"), "PRIVATE_SECRET=not-served");
+  assert.equal((await http(origin, "/assets/.env")).status, 404);
   assert.notEqual((await http(origin, "/assets/..%2f..%2f.env")).status, 200);
   const entry = host.studioEntry();
   const exchange = (value: string, originHeader = "null") => http(origin, "/studio/session", { method: "POST",

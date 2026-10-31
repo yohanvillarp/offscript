@@ -1,5 +1,7 @@
 # Development commands
 
+The proposed public release and website sequence is in [RELEASE.md](RELEASE.md). Changesets/publishing/site jobs described there are planned, not existing npm scripts. Public/private source boundaries are documented in [PUBLIC-CONTENT.md](PUBLIC-CONTENT.md).
+
 ## Requirements and conventions
 
 Use Node.js 24, npm, Git, and GNU Make 4 or newer. Run Make from the repository root. On macOS, the preinstalled Make may be older; use a suitable GNU Make executable, sometimes named `gmake`. On Windows, GNU Make must be on PATH alongside Node/npm and Git. The recipes use these executables directly and do not require Bash, awk, grep, or Unix file commands. Make is optional: existing npm commands remain supported and are the source of application task definitions.

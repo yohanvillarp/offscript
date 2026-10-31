@@ -1,0 +1,14 @@
+sequenceDiagram
+  participant A as User A
+  participant M as Mozaik / shared state
+  participant B as User B
+  par Independent turns
+    A->>A: Inspect the controlled cart
+  and
+    B->>B: Inspect the controlled cart
+  end
+  A->>M: Record observation and request investigation
+  M->>B: Reactive investigation handler
+  B->>M: Persist assignment before contribution
+  B->>B: Inspect and contribute evidence references
+  Note over A,B: The deterministic demo verifies coordination, not autonomous reasoning.

@@ -1,9 +1,8 @@
 {
-  "name": "offscript",
-  "private": true,
+  "name": "@nikelyh/offscript",
   "type": "module",
   "scripts": {
-    "prepare": "husky",
+    "prepare": "node -e \"if (process.env.HUSKY !== '0') import('husky').then(m => m.default()).catch(() => {})\"",
     "lint": "npm run lint:packages && npm --prefix apps/studio run lint",
     "build": "npm --prefix apps/studio run build",
     "check": "npm run typecheck:domain && npm run typecheck:contracts && npm run typecheck:application && npm run typecheck:browser && npm run typecheck:orchestration && npm run typecheck:persistence && npm run typecheck:runtime && npm run typecheck:server && npm run typecheck:projects && npm run db:check && npm --prefix apps/studio run typecheck:tests && npm test && npm run lint && npm run build",
@@ -32,7 +31,7 @@
     "dev:server": "node scripts/server/run.ts",
     "typecheck:projects": "tsc -p packages/projects/tsconfig.json && tsc -p packages/projects/tests/tsconfig.json",
     "test:projects": "node --test packages/projects/tests/*.test.ts",
-    "build:local": "npm run build && tsc -p tsconfig.distribution.json && node scripts/server/distribution-assets.ts",
+    "build:local": "node scripts/server/distribution-clean.ts && npm run build && tsc -p tsconfig.distribution.json && node scripts/server/distribution-assets.ts",
     "start": "node offscript.mjs",
     "prepack": "npm run build:local"
   },
@@ -46,7 +45,7 @@
     "typescript": "~7.0.2"
   },
   "dependencies": {
-    "@fastify/static": "10.1.8",
+    "@fastify/send": "4.2.0",
     "@mozaik-ai/core": "4.2.0",
     "better-sqlite3": "13.0.3",
     "drizzle-orm": "0.45.4",
@@ -58,15 +57,46 @@
       "esbuild": "0.25.12"
     }
   },
-  "version": "0.0.0",
+  "allowScripts": {
+    "better-sqlite3": false,
+    "@google/genai@2.32.0": false,
+    "protobufjs@7.6.6": false,
+    "esbuild@0.25.12": true,
+    "esbuild@0.28.2": true
+  },
+  "version": "1.0.0",
   "bin": {
     "offscript": "offscript.mjs"
   },
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=24.0.0",
+    "npm": ">=11.19.0"
   },
   "files": [
     "offscript.mjs",
-    "dist"
-  ]
+    "dist",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "description": "Local-first software exploration with Mozaik multi-agent coordination and a local Studio.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yohanvillarp/offscript.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yohanvillarp/offscript/issues"
+  },
+  "homepage": "https://github.com/yohanvillarp/offscript#readme",
+  "keywords": [
+    "mozaik",
+    "multi-agent",
+    "software-exploration",
+    "playwright",
+    "developer-tools",
+    "local-first"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
 }

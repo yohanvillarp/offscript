@@ -1,0 +1,11 @@
+flowchart TD
+  CLI[offscript CLI] --> HOST[Protected local host]
+  STUDIO[Local Studio] --> HOST
+  HOST --> APP[Application and domain rules]
+  APP --> DB[SQLite and transactional outbox]
+  HOST --> RUNTIME[Mozaik runtime per simulation]
+  RUNNER[Deterministic inference by default] --> RUNTIME
+  RUNTIME <--> STATE[Shared exploration state]
+  RUNTIME --> USERS[Concurrent artificial users]
+  USERS --> BROWSER[Isolated Playwright contexts]
+  BROWSER --> TARGET[Authorized target application]
