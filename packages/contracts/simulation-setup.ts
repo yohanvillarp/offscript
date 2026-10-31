@@ -2,7 +2,14 @@ import type { ExecutionEnvironment } from "../domain/index.ts";
 import { ContractValidationError } from "./errors.ts";
 import { oneOf, record, text } from "./validation.ts";
 
-export const userProfileIds = ["explorer", "impatient", "beginner"] as const;
+export const userProfileIds = [
+  "explorer",
+  "impatient",
+  "beginner",
+  "regular",
+  "meticulous",
+  "distrustful",
+] as const;
 export type UserProfileId = typeof userProfileIds[number];
 export type ExecutionLimits = Readonly<{
   maxTurnsPerAgent: number; maxInferenceCallsPerTurn: number; inferenceTimeoutMs: number; durationMs: number;

@@ -24,6 +24,10 @@ test("selection uses unique behavioral profiles rather than avatar identities", 
     assert.throws(() => parseSimulationSetup({ ...setup, userProfileIds }), ContractValidationError);
   }
   assert.deepEqual(parseSimulationSetup({ ...setup, userProfileIds: ["impatient"] }).userProfileIds, ["impatient"]);
+  assert.deepEqual(
+    parseSimulationSetup({ ...setup, userProfileIds: ["regular", "meticulous", "distrustful"] }).userProfileIds,
+    ["regular", "meticulous", "distrustful"],
+  );
 });
 
 test("execution limits reject unusable budgets and timer values before persistence", () => {
