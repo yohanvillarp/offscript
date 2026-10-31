@@ -7,6 +7,12 @@ import { startupError } from "./startup-error.ts";
 
 process.env.MOZAIK_API_KEY ??= "";
 
+const originalWarn = console.warn;
+console.warn = (...args: unknown[]) => {
+  if (typeof args[0] === "string" && args[0].includes("mozaik cloud: no API key")) return;
+  originalWarn.apply(console, args);
+};
+
 let requestStop: () => void = () => {};
 const stopping = new Promise<void>(resolve => { requestStop = resolve; });
 let interrupted = false;
