@@ -1,6 +1,8 @@
 import { createLocalHost } from "../../packages/runtime/host.ts";
 import { createHostAccessFile } from "./access-file.ts";
 import { createStudioEntryFile } from "./studio-entry-file.ts";
+import { openBrowser } from "./open-browser.ts";
+import { startupError } from "./startup-error.ts";
 
 let requestStop: () => void = () => {};
 const stopping = new Promise<void>(resolve => { requestStop = resolve; });
@@ -29,12 +31,17 @@ try {
       studioEntry = createStudioEntryFile(host.config.dataDirectory, host.studioEntry());
       console.log(`Open this local file in your browser to enter Studio: ${studioEntry.path}`);
       console.log("The entry is single-use and expires in five minutes. Refreshing Studio keeps the browser session.");
+      if (process.env.OFFSCRIPT_OPEN_BROWSER === "1") {
+        void openBrowser(studioEntry.path).catch(() => {
+          if (!interrupted) console.error("Could not open a browser. Open the printed local HTML entry manually; the host is still running.");
+        });
+      }
     }
     console.log("Press Ctrl+C to stop. No exploration starts automatically.");
     await stopping;
   }
-} catch {
-  console.error("OFFSCRIPT host could not start. Check project, port, and storage configuration.");
+} catch (error) {
+  console.error(`OFFSCRIPT: ${startupError(error)}`);
   process.exitCode = 1;
 } finally {
   try { await host?.close(); } catch {

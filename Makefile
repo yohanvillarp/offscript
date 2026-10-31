@@ -158,3 +158,10 @@ audit-root: ## Run npm audit for root dependencies.
 
 audit-studio: ## Run npm audit for Studio dependencies.
 	$(NPM) --prefix apps/studio audit
+
+.PHONY: pack-local serve-local
+pack-local: ## Build and pack the unpublished npm archive for installation trials.
+	$(NPM) pack
+
+serve-local: ## Start only the compiled local API host.
+	$(NPM) start -- serve
