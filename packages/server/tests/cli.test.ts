@@ -16,11 +16,18 @@ const launcher = fileURLToPath(new URL("../../../offscript.mjs", import.meta.url
 test("help, version and rejected arguments do not create project resources", () => {
   const root = mkdtempSync(join(tmpdir(), "offscript-cli-"));
   try {
-    for (const args of [["--help"], ["--version"], ["serve", "--no-open"], ["studio", "--no-studio"],
-      ["unknown"], ["--port", "65536"], ["--project", join(root, "missing")]]) {
+    const successArgs = [["--help"], ["-h"], ["help"], ["help", "studio"], ["help", "results"], ["--version"], ["-v"]];
+    const failureArgs = [["help", "unknown"], ["serve", "--no-open"], ["studio", "--no-studio"],
+      ["unknown"], ["--port", "65536"], ["--project", join(root, "missing")]];
+    for (const args of successArgs) {
       const result = spawnSync(process.execPath, [launcher, ...args], { cwd: root, encoding: "utf8",
         env: { ...process.env, OFFSCRIPT_PROJECT_ROOT: root } });
-      assert.equal(result.status, args[0] === "--help" || args[0] === "--version" ? 0 : 1);
+      assert.equal(result.status, 0, `Expected 0 for ${args.join(" ")}`);
+    }
+    for (const args of failureArgs) {
+      const result = spawnSync(process.execPath, [launcher, ...args], { cwd: root, encoding: "utf8",
+        env: { ...process.env, OFFSCRIPT_PROJECT_ROOT: root } });
+      assert.equal(result.status, 1, `Expected 1 for ${args.join(" ")}`);
     }
     assert.deepEqual(readdirSync(root), []);
   } finally { rmSync(root, { recursive: true }); }

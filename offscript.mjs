@@ -12,34 +12,62 @@ function resolveCliScript() {
   try {
     if (statSync(dev).isFile()) return dev.href;
   } catch {}
-  throw new Error("Distribution is missing. Run npm run build:local in the OFFSCRIPT checkout, or reinstall the archive.");
+  throw new Error("Distribution is missing. Run npm install -g @nikelyh/offscript, or run npm run build:local in the source repository.");
 }
 
-try {
-  const { values, positionals } = parseArgs({ allowPositionals: true, options: {
-    project: { type: "string" }, port: { type: "string" }, "data-directory": { type: "string" },
-    "no-studio": { type: "boolean" }, "no-open": { type: "boolean" }, cancel: { type: "boolean" },
-    help: { type: "boolean", short: "h" }, version: { type: "boolean", short: "v" },
-  } });
-  const command = positionals[0];
-  const isResults = command === "results";
-  const isRecover = command === "recover";
-  const isTargeted = isResults || isRecover;
-  const validCommands = ["studio", "serve", "list", "results", "recover"];
-  if (
-    (command !== undefined && !validCommands.includes(command)) ||
-    (isTargeted && positionals.length !== 2) ||
-    (!isTargeted && positionals.length > 1)
-  ) {
-    throw new Error("Expected studio, serve, list, results <simulation-id>, or recover <simulation-id>. Use --help for usage.");
-  }
-  if ((command === "studio" && values["no-studio"]) ||
-      ((command === "serve" || values["no-studio"]) && values["no-open"]) ||
-      ((command === "list" || isTargeted) && (values["no-studio"] || values["no-open"] || values.port))) {
-    throw new Error("Conflicting options for command. Use --help for usage.");
-  }
-  if (values.help) {
-    console.log(`Usage: offscript [command] [options]
+const commandHelps = {
+  studio: `Usage: offscript studio [options]
+
+Serve the local OFFSCRIPT Studio UI and API, and open the secure local entry in your default browser.
+
+Options:
+  --project <directory>  Target project path (default: current working directory).
+  --port <number>        Loopback port to bind (default: 0 for automatic port selection).
+  --data-directory <dir> Storage directory relative to target project (default: .offscript).
+  --no-open             Print the authenticated entry URL without launching a browser.`,
+
+  serve: `Usage: offscript serve [options]
+
+Serve the headless local OFFSCRIPT API host without launching the Studio web UI.
+
+Options:
+  --project <directory>  Target project path (default: current working directory).
+  --port <number>        Loopback port to bind (default: 0 for automatic port selection).
+  --data-directory <dir> Storage directory relative to target project (default: .offscript).`,
+
+  list: `Usage: offscript list [options]
+
+List all saved simulations, configurations, and their current execution statuses in the target project.
+
+Options:
+  --project <directory>  Target project path (default: current working directory).
+  --data-directory <dir> Storage directory relative to target project (default: .offscript).`,
+
+  results: `Usage: offscript results <simulation-id> [options]
+
+Inspect attributed observations, collaborative investigations, finding assessments, and visual evidence.
+
+Arguments:
+  <simulation-id>        Unique identifier of the simulation to inspect.
+
+Options:
+  --project <directory>  Target project path (default: current working directory).
+  --data-directory <dir> Storage directory relative to target project (default: .offscript).`,
+
+  recover: `Usage: offscript recover <simulation-id> [options]
+
+Explicitly settle an interrupted or abandoned simulation to 'failed' (or 'cancelled' with --cancel).
+
+Arguments:
+  <simulation-id>        Unique identifier of the simulation to settle.
+
+Options:
+  --project <directory>  Target project path (default: current working directory).
+  --data-directory <dir> Storage directory relative to target project (default: .offscript).
+  --cancel               Mark simulation status as 'cancelled' instead of 'failed'.`,
+};
+
+const generalHelp = `Usage: offscript [command] [options]
 
 Commands:
   studio                 Serve Studio/API and open the secure local entry (default).
@@ -47,6 +75,7 @@ Commands:
   list                   List saved simulations for the project.
   results <id>           Inspect exploration results (findings, observations, investigations).
   recover <id>           Explicitly settle an interrupted simulation to failed (or cancelled with --cancel).
+  help [command]         Show help information for a command.
 
 Options:
   --project <directory>  Target project (default: current directory).
@@ -58,8 +87,53 @@ Options:
   -h, --help            Show help without starting the host.
   -v, --version         Show the package version without starting the host.
 
+Examples:
+  offscript studio                      Start Studio in the current project
+  offscript studio --project ./my-app   Start Studio for a specific project
+  offscript list                        List all simulations in the project
+  offscript results sim-123             Inspect observations and findings
+  offscript help studio                 Show detailed help for the studio command
+
 Flags override OFFSCRIPT_PROJECT_ROOT, OFFSCRIPT_PORT, OFFSCRIPT_DATA_DIRECTORY.
-No agents or target services start automatically.`);
+No agents or target services start automatically.`;
+
+try {
+  const { values, positionals } = parseArgs({ allowPositionals: true, options: {
+    project: { type: "string" }, port: { type: "string" }, "data-directory": { type: "string" },
+    "no-studio": { type: "boolean" }, "no-open": { type: "boolean" }, cancel: { type: "boolean" },
+    help: { type: "boolean", short: "h" }, version: { type: "boolean", short: "v" },
+  } });
+  const command = positionals[0];
+  const isHelp = command === "help" || Boolean(values.help);
+  const helpTarget = command === "help" ? positionals[1] : undefined;
+  const isResults = command === "results";
+  const isRecover = command === "recover";
+  const isTargeted = isResults || isRecover;
+  const validCommands = ["studio", "serve", "list", "results", "recover", "help"];
+  if (
+    (command !== undefined && !validCommands.includes(command)) ||
+    (isTargeted && positionals.length !== 2) ||
+    (!isTargeted && command !== "help" && positionals.length > 1) ||
+    (command === "help" && positionals.length > 2)
+  ) {
+    throw new Error("Expected studio, serve, list, results <simulation-id>, recover <simulation-id>, or help [command]. Use --help for usage.");
+  }
+  if (!isHelp && ((command === "studio" && values["no-studio"]) ||
+      ((command === "serve" || values["no-studio"]) && values["no-open"]) ||
+      ((command === "list" || isTargeted) && (values["no-studio"] || values["no-open"] || values.port)))) {
+    throw new Error("Conflicting options for command. Use --help for usage.");
+  }
+  if (isHelp) {
+    if (helpTarget) {
+      const targetHelp = commandHelps[helpTarget];
+      if (targetHelp) {
+        console.log(targetHelp);
+      } else {
+        throw new Error(`Unknown command "${helpTarget}". Expected studio, serve, list, results, or recover.`);
+      }
+    } else {
+      console.log(generalHelp);
+    }
   } else if (values.version) {
     console.log(JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")).version);
   } else {
@@ -88,7 +162,7 @@ No agents or target services start automatically.`);
       try {
         if (!statSync(new URL("./dist/scripts/server/run.js", import.meta.url)).isFile()) throw new Error();
         if (studio && !statSync(new URL("./dist/studio/index.html", import.meta.url)).isFile()) throw new Error();
-      } catch { throw new Error("Distribution is missing. Run npm run build:local in the OFFSCRIPT checkout, or reinstall the archive."); }
+      } catch { throw new Error("Distribution is missing. Run npm install -g @nikelyh/offscript, or run npm run build:local in the source repository."); }
       process.env.OFFSCRIPT_PROJECT_ROOT = project;
       process.env.OFFSCRIPT_PORT = port;
       if (dataDirectory !== undefined) process.env.OFFSCRIPT_DATA_DIRECTORY = dataDirectory;
