@@ -18,7 +18,13 @@ export function createLocalServer(options: AccessOptions & Readonly<{ phase: () 
   server.setErrorHandler((error, _request, reply) => {
     if (error instanceof ContractValidationError) return reply.code(400).send({ error: "INVALID_CONFIGURATION", field: error.path });
     if (error instanceof DomainError) return reply.code(400).send({ error: "INVALID_CONFIGURATION" });
-    if (error instanceof ApplicationError && error.code === "SIMULATION_ALREADY_EXISTS") return reply.code(409).send({ error: "SIMULATION_ALREADY_EXISTS" });
+    if (error instanceof ApplicationError) {
+      if (error.code === "SIMULATION_ALREADY_EXISTS") return reply.code(409).send({ error: "SIMULATION_ALREADY_EXISTS" });
+      if (error.code === "SIMULATION_NOT_FOUND") return reply.code(404).send({ error: "NOT_FOUND" });
+      if (error.code === "EXECUTION_ALREADY_ACTIVE" || error.code === "INVALID_EXECUTION_STATE") {
+        return reply.code(409).send({ error: "EXECUTION_CONFLICT" });
+      }
+    }
     const code = error && typeof error === "object" && "statusCode" in error ? error.statusCode : undefined;
     const status = typeof code === "number" && code >= 400 && code < 500 ? 400 : 500;
     return reply.code(status).send({ error: status === 400 ? "INVALID_REQUEST" : "INTERNAL_ERROR" });
