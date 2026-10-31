@@ -26,6 +26,9 @@ OFFSCRIPT interacts with web applications using an isolated, Playwright-managed 
    - `browser_select`: Selects a dropdown option value on a `<select>` element by opaque reference.
    - `browser_record_observation`: Records an immutable domain `Observation` entity attributed to the acting user (`agentId`) and simulation (`simulationId`), recording the current URL in `context.location`.
 
+6. **Visual evidence capture and local artifact retention:**
+   Upon recording an observation, the browser session captures a PNG screenshot of the current page viewport (`session.screenshot()`). The visual artifact is correlated with the generated `EvidenceId` and saved in a bounded local retention store (`.offscript/evidence/<simulationId>/<evidenceId>.png`). Password inputs remain masked and sensitive credentials are never displayed in screenshots.
+
 ## Setup and installation
 
 Install Chromium before running browser automation or automated tests:
