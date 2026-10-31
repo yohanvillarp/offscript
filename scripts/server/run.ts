@@ -1,5 +1,5 @@
 import { createLocalHost } from "../../packages/runtime/host.ts";
-import { createControlledDemoSessionFactory } from "../../packages/orchestration/index.ts";
+import { createMultiModeSessionFactory } from "../../packages/orchestration/index.ts";
 import { createHostAccessFile } from "./access-file.ts";
 import { createStudioEntryFile } from "./studio-entry-file.ts";
 import { openBrowser } from "./open-browser.ts";
@@ -20,7 +20,7 @@ try {
   const portText = process.env.OFFSCRIPT_PORT;
   if (portText !== undefined && !/^\d+$/.test(portText)) throw new Error("Invalid port configuration.");
   host = createLocalHost({ projectRoot: process.env.OFFSCRIPT_PROJECT_ROOT ?? process.cwd(),
-    sessionFactory: createControlledDemoSessionFactory(),
+    sessionFactory: createMultiModeSessionFactory(),
     ...(process.env.OFFSCRIPT_STUDIO_DIRECTORY ? { studioDirectory: process.env.OFFSCRIPT_STUDIO_DIRECTORY } : {}),
     ...(process.env.OFFSCRIPT_DATA_DIRECTORY === undefined ? {} : { dataDirectory: process.env.OFFSCRIPT_DATA_DIRECTORY }),
     ...(portText === undefined ? {} : { port: Number(portText) }),

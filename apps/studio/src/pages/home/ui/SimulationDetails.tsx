@@ -67,7 +67,7 @@ export function SimulationDetails({ item, position, total, selectedUser, onSelec
             <div className="flex justify-between gap-4"><dt>Session duration</dt><dd className="font-mono">{item.limits.durationMs / 1000} s</dd></div>
           </dl>
         </section>
-        <SimulationExecutionControl simulationId={item.simulationId} onBusy={setExecuting} />
+        <SimulationExecutionControl simulationId={item.simulationId} targetUrl={item.targetUrl} onBusy={setExecuting} />
         <div><p className="text-xs text-muted">Simulation ID</p><p className="mt-2 break-all font-mono text-xs">{item.simulationId}</p></div>
         <DeleteSimulation key={item.simulationId} id={item.simulationId} name={item.name} onBusy={setDeleting}
           onDeleted={() => { dialog.current?.close(); onDeleted(item.simulationId); }} />

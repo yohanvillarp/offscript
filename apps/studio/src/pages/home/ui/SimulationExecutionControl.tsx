@@ -1,14 +1,21 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertCircle, Play, Square } from "lucide-react";
+import { AlertCircle, Compass, Play, Square } from "lucide-react";
 import type { SimulationExecutionStatus } from "@offscript/contracts";
-import { inspectExecution, startControlledDemo, stopSimulation, StudioApiError } from "@/shared/api/studio";
+import {
+  inspectExecution,
+  startBrowserExploration,
+  startControlledDemo,
+  stopSimulation,
+  StudioApiError,
+} from "@/shared/api/studio";
 
 type Props = Readonly<{
   simulationId: string;
+  targetUrl?: string;
   onBusy?: (busy: boolean) => void;
 }>;
 
-export function SimulationExecutionControl({ simulationId, onBusy }: Props) {
+export function SimulationExecutionControl({ simulationId, targetUrl, onBusy }: Props) {
   const [status, setStatus] = useState<SimulationExecutionStatus | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
@@ -18,7 +25,9 @@ export function SimulationExecutionControl({ simulationId, onBusy }: Props) {
     unmounted.current = false;
     const abort = new AbortController();
     void inspectExecution(simulationId, abort.signal)
-      .then((result) => { if (!unmounted.current) setStatus(result); })
+      .then((result) => {
+        if (!unmounted.current) setStatus(result);
+      })
       .catch(() => {});
     return () => {
       unmounted.current = true;
@@ -28,6 +37,7 @@ export function SimulationExecutionControl({ simulationId, onBusy }: Props) {
 
   const phase = status?.phase ?? "idle";
   const isRunning = phase === "running" || phase === "starting" || phase === "stopping";
+  const mode = status?.mode ?? "browser-exploration";
 
   useEffect(() => {
     if (!isRunning) {
@@ -37,23 +47,28 @@ export function SimulationExecutionControl({ simulationId, onBusy }: Props) {
     onBusy?.(true);
     const timer = setInterval(() => {
       void inspectExecution(simulationId)
-        .then((result) => { if (!unmounted.current) setStatus(result); })
+        .then((result) => {
+          if (!unmounted.current) setStatus(result);
+        })
         .catch(() => {});
     }, 1500);
     return () => clearInterval(timer);
   }, [simulationId, isRunning, onBusy]);
 
-  async function handleStart() {
+  async function handleStart(targetMode: "browser-exploration" | "controlled-demo") {
     setLoading(true);
     setError(undefined);
     try {
-      const result = await startControlledDemo(simulationId);
+      const result =
+        targetMode === "browser-exploration"
+          ? await startBrowserExploration(simulationId)
+          : await startControlledDemo(simulationId);
       setStatus(result);
     } catch (cause) {
       if (cause instanceof StudioApiError) {
         setError(cause.code === "ALREADY_EXISTS" ? "Simulation is already executing." : cause.message);
       } else {
-        setError("Could not start controlled demo.");
+        setError("Could not start execution.");
       }
     } finally {
       setLoading(false);
@@ -74,23 +89,30 @@ export function SimulationExecutionControl({ simulationId, onBusy }: Props) {
   }
 
   return (
-    <section aria-labelledby="controlled-exploration-title" className="rounded-lg border border-separator bg-surface-subtle p-4">
+    <section aria-labelledby="execution-section-title" className="rounded-lg border border-separator bg-surface-subtle p-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 id="controlled-exploration-title" className="text-xs font-semibold text-muted uppercase tracking-wider">
-          Controlled exploration
+        <h3 id="execution-section-title" className="text-xs font-semibold text-muted uppercase tracking-wider">
+          Exploration execution
         </h3>
-        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
-          phase === "running" ? "bg-accent-subtle text-accent" :
-          phase === "completed" ? "bg-accent/10 text-accent" :
-          phase === "failed" || phase === "interrupted" ? "bg-danger-subtle text-danger" :
-          "bg-surface text-muted"
-        }`}>
-          {phase === "running" ? "Running demo" : phase}
+        <span
+          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
+            phase === "running"
+              ? "bg-accent-subtle text-accent"
+              : phase === "completed"
+              ? "bg-accent/10 text-accent"
+              : phase === "failed" || phase === "interrupted"
+              ? "bg-danger-subtle text-danger"
+              : "bg-surface text-muted"
+          }`}
+        >
+          {phase === "running" ? (mode === "browser-exploration" ? "Browser exploration" : "Running demo") : phase}
         </span>
       </div>
 
       <p className="mt-2 text-xs text-muted leading-relaxed">
-        Runs against the local simulated cart fixture. Does not contact the configured Application URL.
+        {mode === "browser-exploration" && targetUrl
+          ? `Autonomous users explore the target application at ${targetUrl}.`
+          : "Runs against the local simulated cart fixture. Does not contact the configured Application URL."}
       </p>
 
       {status && phase !== "idle" && (
@@ -99,6 +121,12 @@ export function SimulationExecutionControl({ simulationId, onBusy }: Props) {
             <dt className="text-muted">Turns executed</dt>
             <dd className="font-mono font-medium">{status.turnsCount}</dd>
           </div>
+          {status.activeAgents.length > 0 && (
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">Active users</dt>
+              <dd className="font-mono">{status.activeAgents.join(", ")}</dd>
+            </div>
+          )}
           {status.failureReason && (
             <div className="flex justify-between gap-4 text-danger">
               <dt>Reason</dt>
@@ -115,7 +143,7 @@ export function SimulationExecutionControl({ simulationId, onBusy }: Props) {
         </div>
       )}
 
-      <div className="mt-4">
+      <div className="mt-4 flex flex-col gap-2">
         {isRunning ? (
           <button
             type="button"
@@ -127,15 +155,26 @@ export function SimulationExecutionControl({ simulationId, onBusy }: Props) {
             <span>{phase === "stopping" ? "Stopping..." : "Stop execution"}</span>
           </button>
         ) : (
-          <button
-            type="button"
-            disabled={loading || phase === "completed"}
-            onClick={handleStart}
-            className="flex w-full items-center justify-center gap-2 rounded-md bg-accent px-3 py-2 text-xs font-medium text-white shadow-xs hover:bg-accent/90 disabled:opacity-50"
-          >
-            <Play aria-hidden="true" className="size-3.5 fill-current" />
-            <span>{loading ? "Starting..." : "Run controlled demo"}</span>
-          </button>
+          <>
+            <button
+              type="button"
+              disabled={loading || phase === "completed"}
+              onClick={() => handleStart("browser-exploration")}
+              className="flex w-full items-center justify-center gap-2 rounded-md bg-accent px-3 py-2 text-xs font-medium text-white shadow-xs hover:bg-accent/90 disabled:opacity-50"
+            >
+              <Compass aria-hidden="true" className="size-3.5" />
+              <span>{loading ? "Starting..." : "Run browser exploration"}</span>
+            </button>
+            <button
+              type="button"
+              disabled={loading || phase === "completed"}
+              onClick={() => handleStart("controlled-demo")}
+              className="flex w-full items-center justify-center gap-2 rounded-md border border-separator bg-surface px-3 py-1.5 text-xs font-medium text-muted hover:text-foreground disabled:opacity-50"
+            >
+              <Play aria-hidden="true" className="size-3 fill-current" />
+              <span>Run controlled demo</span>
+            </button>
+          </>
         )}
       </div>
     </section>

@@ -69,6 +69,13 @@ export async function startControlledDemo(id: string): Promise<SimulationExecuti
   return parseSimulationExecutionStatus(result);
 }
 
+export async function startBrowserExploration(id: string): Promise<SimulationExecutionStatus> {
+  const result = await request(`/api/simulations/${encodeURIComponent(id)}/start`, {
+    method: "POST", body: JSON.stringify({ mode: "browser-exploration" }),
+  });
+  return parseSimulationExecutionStatus(result);
+}
+
 export async function inspectExecution(id: string, signal?: AbortSignal): Promise<SimulationExecutionStatus> {
   const result = await request(`/api/simulations/${encodeURIComponent(id)}/execution`, signal ? { signal } : {});
   return parseSimulationExecutionStatus(result);

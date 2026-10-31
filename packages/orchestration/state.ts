@@ -5,7 +5,14 @@ import type { VersionedInvestigation } from "../application/index.ts";
 import type { SemanticEvent } from "../contracts/index.ts";
 import { createMemoryOutbox } from "./memory-outbox.ts";
 
-export type ToolName = "inspect_application" | "record_observation" | "request_investigation";
+export type ToolName =
+  | "inspect_application"
+  | "record_observation"
+  | "request_investigation"
+  | "browser_navigate"
+  | "browser_inspect"
+  | "browser_click"
+  | "browser_type";
 export type RuntimeFailure = Readonly<{ stage: string; agentId: AgentId | undefined; cause: unknown }>;
 export type TurnState = { busy: boolean; turns: number; inferenceCalls: number; pending: string[]; reservations: number };
 

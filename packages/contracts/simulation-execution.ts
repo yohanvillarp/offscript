@@ -3,7 +3,7 @@ import type { SimulationId } from "../domain/index.ts";
 import { ContractValidationError } from "./errors.ts";
 import { oneOf, record, text } from "./validation.ts";
 
-export const simulationExecutionModes = ["controlled-demo"] as const;
+export const simulationExecutionModes = ["controlled-demo", "browser-exploration"] as const;
 export type SimulationExecutionMode = typeof simulationExecutionModes[number];
 
 export const simulationExecutionPhases = [

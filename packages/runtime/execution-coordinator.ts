@@ -10,10 +10,16 @@ export type ExecutionSessionHandle = HostedSession & {
   snapshot?(): { turns?: readonly { agentId: AgentId; count: number }[] };
 };
 
+export type ExecutionSessionContext = Readonly<{
+  mode?: SimulationExecutionMode | undefined;
+  targetUrl?: string | undefined;
+}>;
+
 export type ExecutionSessionFactory = (
   simulation: Simulation,
   limits: ExecutionLimits,
   storage: HostStorage,
+  context?: ExecutionSessionContext | undefined,
 ) => ExecutionSessionHandle;
 
 type ActiveExecution = {
@@ -78,7 +84,7 @@ export function executionCoordinator(dependencies: {
   async function start(id: SimulationId, mode: SimulationExecutionMode): Promise<SimulationExecutionStatus> {
     if (closed) throw new ApplicationError("EXECUTION_START_FAILED", "Host is closing.");
     if (!factory) throw new ApplicationError("EXECUTION_START_FAILED", "No execution session factory configured on this host.");
-    if (mode !== "controlled-demo") {
+    if (mode !== "controlled-demo" && mode !== "browser-exploration") {
       throw new ApplicationError("INVALID_EXECUTION_STATE", `Unsupported execution mode: ${mode}`);
     }
     const existing = active.get(id);
@@ -121,14 +127,20 @@ export function executionCoordinator(dependencies: {
     active.set(id, record);
 
     try {
-      const session = prepareSession(id, () => factory(runningSim, config.limits, storage));
+      const session = prepareSession(id, () =>
+        factory(runningSim, config.limits, storage, { mode, targetUrl: config.targetUrl }),
+      );
       record.session = session;
       record.phase = "running";
       record.timer = setTimeout(() => { void handleBudgetExpiry(id); }, config.limits.durationMs);
 
       const firstAgent = sim.agents[0];
       if (firstAgent) {
-        session.startTurn(firstAgent.id, "Explore the local cart and check items.");
+        const initialPrompt =
+          mode === "browser-exploration"
+            ? `Explore the application at ${config.targetUrl}. Pursue the goal: ${config.goal}`
+            : "Explore the local cart and check items.";
+        session.startTurn(firstAgent.id, initialPrompt);
       }
       return toStatus(record);
     } catch (cause) {

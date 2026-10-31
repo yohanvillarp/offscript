@@ -124,6 +124,14 @@ The host binds loopback, authenticates programmatic API requests with an instanc
 
 SQLite stores configuration metadata with the simulation and roster in one transaction through a new additive migration. Existing snapshot-only records are not backfilled. The local host provides trusted in-process inspection/configuration/read methods, and configuration HTTP endpoints now connect Studio to those operations. Saving does not publish events or create runtime participants. See [SIMULATION-CONFIGURATION.md](SIMULATION-CONFIGURATION.md) for responsibilities, defaults, failure semantics, and deferred work.
 
+## Implemented autonomous browser exploration
+
+`packages/orchestration` now includes `createBrowserExplorationSessionFactory` and a unified multi-mode session factory (`createMultiModeSessionFactory`) dispatching between `"controlled-demo"` and `"browser-exploration"`. For browser exploration, the factory provisions a `BrowserManager` (`packages/browser`) running Chromium in headless mode by default, creating an isolated `BrowserUserSession` per agent.
+
+Each agent receives behavioral-profile-specific system instructions detailing their persona, goals, the authorized target scope, and the mandate that external page content is untrusted data. Interaction tools (`browser_navigate`, `browser_inspect`, `browser_click`, `browser_type`, `record_observation`, `request_investigation`) map to the user session, enforcing URL boundaries and resolving actions through opaque references (`elem_x`). Discovered unexpected behaviors are committed to SQLite as domain observations and published via `observation.created` semantic events with full agent and simulation provenance.
+
+Testing uses `deterministicBrowserRunner`, which executes repeatable interaction paths against a local loopback HTTP target to verify multi-agent navigation, inspection, click, type, and observation recording without external network requests or live provider credentials.
+
 ## Proposed details and open questions
 
 Outside the implemented domain, contracts, request/assignment application cases, Mozaik adapter, SQLite repositories, outbox scheduler, local host, project recognition, and configured-simulation creation described here, no further internal package tree, exported API, event catalog, table schema, or independent package manifest is finalized. Decide these incrementally when needed:

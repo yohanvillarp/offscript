@@ -3,7 +3,9 @@ import { createExplorationSession } from "./session.ts";
 import { deterministicRunner } from "./deterministic-runner.ts";
 import type { ExecutionSessionFactory } from "../runtime/host.ts";
 
-export function createControlledDemoSessionFactory(options?: { runner?: InferenceRunner }): ExecutionSessionFactory {
+export function createControlledDemoSessionFactory(
+  options?: { runner?: InferenceRunner | undefined },
+): ExecutionSessionFactory {
   return (simulation, limits, storage) => {
     const allowedTools = new Map(simulation.agents.map((agent) => [
       agent.id,
