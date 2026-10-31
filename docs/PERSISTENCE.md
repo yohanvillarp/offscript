@@ -50,6 +50,8 @@ Simulation lifecycle updates, observation edits, investigation completion writes
 
 `configurations` now exposes atomic configured creation and metadata reads. Existing simulation creation remains available for snapshot/bootstrap use without fabricating setup metadata. See [SIMULATION-CONFIGURATION.md](SIMULATION-CONFIGURATION.md).
 
+It also supports atomic deletion of initial saved configurations: only `created` simulations with ready users, no observations/investigations, and no outbox rows can be removed. The immediate transaction checks eligibility and deletes the configuration, scoped roster, and snapshot, with rollback on any failure. No foreign-key cascades or filesystem deletion are used; existing migrations remain unchanged. Hosted-session exclusion belongs to the runtime host rather than SQLite.
+
 ## Migrations
 
 `drizzle.config.ts` and `packages/persistence/schema` define the schema. `npm run db:generate -- --name=<change>` generates SQL and snapshots; `npm run db:check` checks the migration metadata. Review generated SQL before committing. Do not use schema push, reset, or `drizzle-kit migrate` against OFFSCRIPT data: application of migrations uses the module's explicit runner and history table.

@@ -1,18 +1,39 @@
 import type { FastifyInstance } from "fastify";
 import { simulationId } from "../domain/index.ts";
 import { parseSimulationSetup } from "../contracts/index.ts";
-import type { ProjectDescriptor, SimulationConfiguration, SimulationSetup } from "../contracts/index.ts";
+import type { ProjectDescriptor, SimulationConfiguration, SimulationSetup, TargetConnection } from "../contracts/index.ts";
+import { parseLocalTargetUrl } from "../contracts/index.ts";
+import type { DeleteConfiguredSimulationResult } from "../application/index.ts";
 
 export type ConfigurationServices = Readonly<{
   inspectProject(): Promise<ProjectDescriptor>;
+  checkTarget(url: string, signal?: AbortSignal): Promise<TargetConnection>;
   configureSimulation(input: Readonly<{ simulationId: ReturnType<typeof simulationId>; setup: SimulationSetup }>): Promise<Readonly<{ configuration: SimulationConfiguration }>>;
   findConfiguration(id: ReturnType<typeof simulationId>): Promise<SimulationConfiguration | undefined>;
   listConfigurations(): Promise<readonly SimulationConfiguration[]>;
+  deleteConfiguration(id: ReturnType<typeof simulationId>): Promise<DeleteConfiguredSimulationResult>;
 }>;
 
 export function configurationRoutes(server: FastifyInstance, services: ConfigurationServices): void {
   server.get("/api/project", async () => services.inspectProject());
+  server.post("/api/target/check", { bodyLimit: 4096 }, async (request, reply) => {
+    const body = request.body;
+    if (!body || typeof body !== "object" || Array.isArray(body) || !('url' in body) || Object.keys(body).some(key => key !== "url")) {
+      return reply.code(400).send({ error: "INVALID_REQUEST" });
+    }
+    const abort = new AbortController();
+    const disconnect = () => { if (!reply.raw.writableFinished) abort.abort(); };
+    reply.raw.once("close", disconnect);
+    try { return await services.checkTarget(parseLocalTargetUrl(body.url), abort.signal); }
+    finally { reply.raw.off("close", disconnect); }
+  });
   server.get("/api/simulations", async () => services.listConfigurations());
+  server.delete<{ Params: { id: string } }>("/api/simulations/:id", async (request, reply) => {
+    const result = await services.deleteConfiguration(simulationId(request.params.id));
+    if (result === "not-found") return reply.code(404).send({ error: "NOT_FOUND" });
+    if (result === "not-allowed") return reply.code(409).send({ error: "DELETION_NOT_ALLOWED" });
+    return reply.code(204).send();
+  });
   server.post("/api/simulations", { bodyLimit: 16_384 }, async (request, reply) => {
     const body = request.body;
     if (body === null || typeof body !== "object" || Array.isArray(body) ||

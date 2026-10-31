@@ -17,7 +17,7 @@ Status describes the inspected source, not deployment or GitHub merge state. Che
 | Domain and contracts | Simulation/agent lifecycles, validated events, and shared setup/configuration contracts. | Start/observe/stop services and investigation result application cases. |
 | Mozaik | Concurrent controlled agents, enforced fixture-tool permissions, mapped events, and reactive assignment. | Autonomous use of real software and a complete operator-controlled session lifecycle. |
 | Persistence and delivery | SQLite snapshots/configuration, atomic setup creation, investigation outbox, and optional SQLite-backed Mozaik sessions. | Durable handler recovery, operational retention, and broader production composition. |
-| Studio | Design system, connected setup with project recognition, saved configuration list, three profiles, and editable limits. | Execution controls, live activity, evidence, and results. |
+| Studio | Design system, connected setup with project recognition, initial Vite URL suggestions, explicit local availability checks, compact saved configurations with a detail panel, three profiles, and editable limits. | Execution controls, live activity, evidence, and results. |
 | Local product entry | Protected Fastify health routes, local host lifecycle, shared dispatch, development entry, local npm archive launcher, and deterministic runtime demo. | Execution-control services and published distribution. |
 
 The current demo uses a simulated cart and deterministic inference. It does not explore an actual application. Transactional dispatch does not restore agent work or acknowledge handler completion.

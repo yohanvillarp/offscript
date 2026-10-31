@@ -1,6 +1,5 @@
 import { Link } from "react-router";
 import { Plus } from "lucide-react";
-import { SimulationGuide } from "@/pages/home/ui/SimulationGuide";
 import { SimulationHistory } from "@/pages/home/ui/SimulationHistory";
 import { StudioHeader } from "@/shared/ui/studio-header";
 
@@ -34,7 +33,6 @@ export function HomePage() {
 
         <SimulationHistory />
 
-        <SimulationGuide />
       </main>
 
     </div>

@@ -16,6 +16,7 @@ export function hostStorage(source: Persistence) {
   }
   const storage = Object.freeze({
     configurations: Object.freeze({
+      deleteConfiguredSimulation: guard(source.configurations.deleteConfiguredSimulation),
       createConfiguredSimulation: guard(source.configurations.createConfiguredSimulation),
       findConfiguration: guard(source.configurations.findConfiguration),
       listConfigurations: guard(source.configurations.listConfigurations),

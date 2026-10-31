@@ -2,10 +2,12 @@ import { Globe } from "lucide-react";
 import { environments } from "@/pages/new-simulation/model/draft";
 import type { DraftErrors, SimulationDraft } from "@/pages/new-simulation/model/draft";
 import { DraftField } from "@/pages/new-simulation/ui/DraftField";
+import type { TargetSuggestion } from "@offscript/contracts";
+import { TargetConnection } from "@/pages/new-simulation/ui/TargetConnection";
 
-type Props = Readonly<{ draft: SimulationDraft; errors: DraftErrors; onChange: (patch: Partial<Omit<SimulationDraft, "participants">>) => void }>;
+type Props = Readonly<{ draft: SimulationDraft; errors: DraftErrors; onChange: (patch: Partial<Omit<SimulationDraft, "participants">>) => void; suggestion?: TargetSuggestion | undefined }>;
 
-export function TargetStep({ draft, errors, onChange }: Props) {
+export function TargetStep({ draft, errors, onChange, suggestion }: Props) {
   return (
     <section aria-labelledby="target-heading" className="w-full space-y-6 sm:space-y-7">
       <div>
@@ -15,7 +17,11 @@ export function TargetStep({ draft, errors, onChange }: Props) {
       </div>
       <div className="grid min-w-0 gap-6 lg:grid-cols-2">
         <DraftField id="name" label="Simulation name" value={draft.name} error={errors.name} onChange={(name) => onChange({ name })} />
-        <DraftField id="url" label="Application URL" type="url" value={draft.url} error={errors.url} onChange={(url) => onChange({ url })} hint="Use a complete HTTP or HTTPS address. This form does not contact the application." />
+        <div className="space-y-3">
+          <DraftField id="url" label="Application URL" type="url" value={draft.url} error={errors.url} onChange={(url) => onChange({ url })}
+            hint={suggestion && draft.url === suggestion.url ? `Suggested from ${suggestion.source === "vite-script" ? `the port in npm run ${suggestion.scriptName}` : "Vite's default port"}. Project configuration may override it.` : "Use a complete HTTP or HTTPS address."} />
+          <TargetConnection key={draft.url} url={draft.url} />
+        </div>
       </div>
       <DraftField
         id="goal"
@@ -30,7 +36,7 @@ export function TargetStep({ draft, errors, onChange }: Props) {
         <legend className="mb-3 text-sm font-medium">Environment</legend>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
           {environments.map((environment) => (
-            <label key={environment} className={`flex min-w-0 cursor-pointer items-center gap-2 rounded-md border px-3 py-2.5 text-sm capitalize ${draft.environment === environment ? "border-accent bg-accent-subtle" : "border-separator bg-surface"}`}>
+            <label key={environment} className={`flex min-w-0 items-center gap-2 rounded-md border px-3 py-2.5 text-sm capitalize ${draft.environment === environment ? "border-accent bg-accent-subtle" : "border-separator bg-surface"}`}>
               <input type="radio" name="environment" value={environment} checked={draft.environment === environment} onChange={() => onChange({ environment })} className="accent-accent" />
               {environment}
             </label>

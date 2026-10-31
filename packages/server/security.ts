@@ -26,8 +26,11 @@ export function secureLocalAccess(server: FastifyInstance, options: AccessOption
     const origin = request.headers.origin;
     const pathname = request.url.split("?")[0] ?? "";
     const entryPost = options.studioSession !== undefined && pathname === "/studio/session" && request.method === "POST";
+    // Public assets contain no project data. A local-file redirect can retain
+    // cross-site fetch metadata even after the credential exchange succeeds.
+    if (options.studioSession && publicStudioPath(request.method, pathname)) return;
     if ((origin !== undefined && !(entryPost && origin === "null") && !allowed.has(origin) && origin !== `http://${request.headers.host}`) ||
-        (origin === undefined && request.headers["sec-fetch-site"] === "cross-site")) {
+        (origin === undefined && !entryPost && request.headers["sec-fetch-site"] === "cross-site")) {
       return reply.code(403).send({ error: "ORIGIN_NOT_ALLOWED" });
     }
     if (options.studioSession && (entryPost || publicStudioPath(request.method, pathname))) return;

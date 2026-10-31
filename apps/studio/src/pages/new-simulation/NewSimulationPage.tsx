@@ -18,7 +18,9 @@ export function NewSimulationPage() {
   const context = useProject();
   const persistence = useSaveSimulation();
   const suggestName = setup.suggestName;
+  const suggestUrl = setup.suggestUrl;
   useEffect(() => { if (context.project) suggestName(context.project.suggestedName); }, [context.project, suggestName]);
+  useEffect(() => { if (context.project?.targetSuggestion) suggestUrl(context.project.targetSuggestion.url); }, [context.project, suggestUrl]);
   const [introduction, setIntroduction] = useState<"first-visit" | "help" | null>(() => hasSeenIntroduction() ? null : "first-visit");
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -67,7 +69,7 @@ export function NewSimulationPage() {
                 </div>
                 <fieldset disabled={persistence.saving} className="min-w-0">
                 {setup.step === "target" && (
-                  <TargetStep draft={setup.draft} errors={setup.errors} onChange={setup.updateTarget} />
+                  <TargetStep draft={setup.draft} errors={setup.errors} onChange={setup.updateTarget} suggestion={context.project?.targetSuggestion} />
                 )}
                 {setup.step === "participants" && (
                   <ParticipantsStep

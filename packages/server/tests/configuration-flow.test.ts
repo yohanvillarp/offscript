@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { mkdirSync, writeFileSync } from "node:fs";
-import { request } from "node:http";
+import { request, createServer } from "node:http";
 import { join } from "node:path";
 import { test } from "node:test";
 import { simulationId } from "../../domain/index.ts";
+import { parseSimulationSetup } from "../../contracts/index.ts";
 import { hostContext } from "../../runtime/tests/host-context.ts";
 
 function http(origin: string, path: string, options: { method?: string; body?: string; headers?: Record<string, string> } = {}) {
@@ -22,6 +23,16 @@ test("authenticated HTTP creation/read/list persist setup without starting agent
   const temp = hostContext(t); writeFileSync(join(temp.root, "package.json"), JSON.stringify({ name: "local-checkout" }));
   const host = temp.host(); const origin = await host.start(); const headers = { authorization: `Bearer ${host.credentials().token}`, "content-type": "application/json" };
   assert.equal((await http(origin, "/api/project")).status, 401);
+  assert.equal((await http(origin, "/api/target/check", { method: "POST", body: JSON.stringify({ url: "http://localhost:3000" }), headers: { "content-type": "application/json" } })).status, 401);
+  assert.equal((await http(origin, "/api/target/check", { method: "POST", body: JSON.stringify({ url: "http://example.com" }), headers })).status, 400);
+  assert.equal((await http(origin, "/api/target/check", { method: "POST", body: JSON.stringify({ url: origin }), headers })).status, 400);
+  const application = createServer((_request, response) => { response.writeHead(503); response.end(); });
+  await new Promise<void>(resolve => application.listen(0, "127.0.0.1", resolve));
+  t.after(() => { application.closeAllConnections(); return new Promise<void>(resolve => application.close(() => resolve())); });
+  const address = application.address(); assert.ok(address && typeof address !== "string");
+  const targetUrl = `http://127.0.0.1:${address.port}/`;
+  const checked = await http(origin, "/api/target/check", { method: "POST", headers, body: JSON.stringify({ url: targetUrl }) });
+  assert.equal(checked.status, 200); assert.deepEqual(JSON.parse(checked.body), { url: targetUrl, kind: "response", statusCode: 503 });
   const project = await http(origin, "/api/project", { headers }); assert.equal(JSON.parse(project.body).suggestedName, "local-checkout");
   const body = JSON.stringify({ simulationId: "saved-http", setup });
   const created = await http(origin, "/api/simulations", { method: "POST", headers, body });
@@ -41,6 +52,18 @@ test("authenticated HTTP creation/read/list persist setup without starting agent
   const restarted = temp.host(); const newOrigin = await restarted.start();
   const saved = await http(newOrigin, "/api/simulations/saved-http", { headers: { authorization: `Bearer ${restarted.credentials().token}` } });
   assert.deepEqual(JSON.parse(saved.body), configuration);
+  const deletePath = "/api/simulations/saved-http";
+  const auth = { authorization: `Bearer ${restarted.credentials().token}` };
+  assert.equal((await http(newOrigin, deletePath, { method: "DELETE" })).status, 401);
+  assert.equal((await http(newOrigin, deletePath, { method: "DELETE", headers: { ...auth, origin: "https://evil.test" } })).status, 403);
+  const deleted = await http(newOrigin, deletePath, { method: "DELETE", headers: auth });
+  assert.equal(deleted.status, 204); assert.equal(deleted.body, "");
+  assert.equal((await http(newOrigin, deletePath, { method: "DELETE", headers: auth })).status, 404);
+  assert.deepEqual(JSON.parse((await http(newOrigin, "/api/simulations", { headers: auth })).body), []);
+  const blockedId = simulationId("hosted-http");
+  await restarted.configureSimulation({ simulationId: blockedId, setup: parseSimulationSetup(setup) });
+  restarted.prepareSession(blockedId, () => ({ canAcceptEvent: () => false, publishEvent() {}, async close() {} }));
+  assert.equal((await http(newOrigin, "/api/simulations/hosted-http", { method: "DELETE", headers: auth })).status, 409);
 });
 
 test("local-file entry uses a one-time body credential and an HttpOnly API cookie; public assets expose no project files", async t => {
@@ -66,4 +89,14 @@ test("local-file entry uses a one-time body credential and an HttpOnly API cooki
   assert.equal((await http(origin, "/api/project", { headers: { ...authorization, origin: "https://evil.test" } })).status, 403);
   assert.equal((await exchange(entry.entry)).status, 401);
   assert.equal((await http(origin, "/health/ready", { headers: authorization })).status, 401);
+  // File navigation may omit Origin and retain cross-site metadata through 303.
+  const fileHeaders = { "content-type": "application/x-www-form-urlencoded", "sec-fetch-site": "cross-site" };
+  const withoutOrigin = (value: string) => http(origin, "/studio/session", { method: "POST", headers: fileHeaders, body: `entry=${value}` });
+  assert.equal((await withoutOrigin("x".repeat(43))).status, 401);
+  const nextEntry = host.studioEntry();
+  const fileAccepted = await withoutOrigin(nextEntry.entry); assert.equal(fileAccepted.status, 303);
+  assert.equal((await withoutOrigin(nextEntry.entry)).status, 401);
+  assert.equal((await http(origin, "/", { headers: { "sec-fetch-site": "cross-site", origin: "null" } })).status, 200);
+  assert.equal((await http(origin, "/assets/app.js", { headers: { "sec-fetch-site": "cross-site" } })).status, 200);
+  assert.equal((await http(origin, "/api/project", { headers: { ...authorization, "sec-fetch-site": "cross-site" } })).status, 403);
 });

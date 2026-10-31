@@ -17,3 +17,5 @@ export { parseSimulationSetup, parseExecutionLimits, defaultExecutionLimits, use
 export type { SimulationSetup, ExecutionLimits, UserProfileId } from "./simulation-setup.ts";
 export { parseSimulationConfiguration, parseProjectDescriptor } from "./simulation-configuration.ts";
 export type { SimulationConfiguration, ProjectDescriptor } from "./simulation-configuration.ts";
+export { parseLocalTargetUrl, parseTargetConnection, parseTargetSuggestion } from "./target-connection.ts";
+export type { TargetConnection, TargetSuggestion } from "./target-connection.ts";

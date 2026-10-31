@@ -60,6 +60,8 @@ Studio currently offers `npm run build` (TypeScript project build plus Vite), `n
 
 ## Documentation discipline
 
+For CLI/distribution changes, validate the archive produced by `npm pack` from a separate project directory. Use `studio --no-open` in unattended trials; never open a real browser as part of automated checks. Help/version must remain free of host startup and project storage effects. Preserve the host's existing resource ownership and keep credentials out of URLs.
+
 Write and maintain all project documentation in English, including READMEs, contribution guides, architectural documents, and agent instructions. Preserve this rule in future documentation changes.
 
 Update documentation when an approved architectural decision changes. Do not silently convert proposals into confirmed decisions. Keep implemented functionality clearly separated from planned functionality. Record unresolved choices rather than inventing contracts.
