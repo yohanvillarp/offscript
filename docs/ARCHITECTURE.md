@@ -33,7 +33,7 @@ flowchart TD
   RUNTIME --> ADAPTERS
 ```
 
-The diagram is conceptual. The local host now composes runtime resources and protected health routes; Studio transport is not implemented. Arrows express dependencies or composition, not a finalized message flow or module tree.
+The diagram is conceptual. The local host now serves built Studio and configuration APIs on the same origin; execution transport remains deferred. Arrows express dependencies or composition, not a finalized message flow or module tree.
 
 ## Required boundaries
 
@@ -106,21 +106,27 @@ The bridge preserves validated OFFSCRIPT envelopes inside a Mozaik event and che
 
 ## Implemented SQLite persistence foundation
 
-`packages/persistence` implements the current simulation/observation read ports, explicit snapshot creation, investigation create-if-absent, and assignment compare-and-set using SQLite/Drizzle. Six snapshot/relationship tables preserve current domain state; a seventh table stores pending investigation events. Profiles and evidence-reference arrays use validated JSON; domain/contracts/application remain independent of row and ORM types.
+`packages/persistence` implements the current simulation/observation read ports, explicit snapshot creation, investigation create-if-absent, and assignment compare-and-set using SQLite/Drizzle. Six snapshot/relationship tables preserve current domain state, the outbox stores pending investigation events, and a configuration table stores the approved setup metadata. Profiles and evidence-reference arrays use validated JSON; domain/contracts/application remain independent of row and ORM types.
 
 Connections are project-scoped, use local WAL files, foreign keys, FULL synchronization, and bounded busy timeouts. Migrations are explicit and transactional, with checksummed version history and rejection of incompatible databases. Synchronous database calls and immediate write transactions are deliberately short; this does not provide multiple simultaneous writers or distributed storage.
 
-Investigation commits atomically update snapshots/relationships and insert validated events. Reservations, fenced acknowledgements, bounded retries, and per-investigation dispatch ordering support recovery after dispatcher loss. Acceptance acknowledges dispatch rather than asynchronous processing; duplicate delivery remains possible. SQLite-backed Mozaik composition is verified with deterministic inference, without automatic participant restoration. Studio remains disconnected. The local host composes these resources; simulation-control HTTP, Studio transport, and durable handler recovery are deferred. See [PERSISTENCE.md](PERSISTENCE.md) and [OUTBOX.md](OUTBOX.md).
+Investigation commits atomically update snapshots/relationships and insert validated events. Reservations, fenced acknowledgements, bounded retries, and per-investigation dispatch ordering support recovery after dispatcher loss. Acceptance acknowledges dispatch rather than asynchronous processing; duplicate delivery remains possible. SQLite-backed Mozaik composition is verified with deterministic inference, without automatic participant restoration. Studio now consumes authenticated configuration APIs. The local host composes these resources; execution-control HTTP and durable handler recovery are deferred. See [PERSISTENCE.md](PERSISTENCE.md) and [OUTBOX.md](OUTBOX.md).
 
 ## Implemented local host
 
 `packages/runtime/host.ts` is the host composition entry point. It owns SQLite, a single dispatcher, explicitly registered session handles, and the Fastify adapter in `packages/server`. No Mozaik implementation is imported by the host: a local factory supplies a prepared session using guarded storage and external dispatch. Standalone sessions retain their own dispatcher. Startup and persisted events never construct agents automatically.
 
-The host binds loopback, authenticates health requests with an instance-specific token, validates Host/Origin, and exposes no simulation controls. Shutdown stops admission, releases HTTP/sessions/publication, drains storage, and closes SQLite. A deadline reports uncertainty without force-closing pending work. The development entry is `scripts/server/run.ts`, not a new CLI directory. See [LOCAL-HOST.md](LOCAL-HOST.md) for the contract, configuration, resource ownership, security boundary, and actual verification scope.
+The host binds loopback, authenticates programmatic API requests with an instance-specific token, validates Host/Origin, and exposes configuration creation/read/list but no execution controls. Shutdown stops admission, releases HTTP/sessions/publication, drains storage, and closes SQLite. A deadline reports uncertainty without force-closing pending work. The development entry is `scripts/server/run.ts`, not a new CLI directory. See [LOCAL-HOST.md](LOCAL-HOST.md) for the contract, configuration, resource ownership, security boundary, and actual verification scope.
+
+## Implemented simulation configuration
+
+`packages/application` now creates configured simulations through project-inspection and atomic storage ports. `packages/projects` is the read-only Node filesystem adapter for root resolution and project-name suggestions. Shared setup/configuration contracts validate the target, environment, goal, behavioral profile selection, and bounded execution limits. Existing domain factories create ready agents without granting capabilities or changing domain lifecycles.
+
+SQLite stores configuration metadata with the simulation and roster in one transaction through a new additive migration. Existing snapshot-only records are not backfilled. The local host provides trusted in-process inspection/configuration/read methods, and configuration HTTP endpoints now connect Studio to those operations. Saving does not publish events or create runtime participants. See [SIMULATION-CONFIGURATION.md](SIMULATION-CONFIGURATION.md) for responsibilities, defaults, failure semantics, and deferred work.
 
 ## Proposed details and open questions
 
-Outside the implemented domain, contracts, request/assignment application cases, Mozaik adapter, SQLite repositories, outbox scheduler, and local host described here, no further internal package tree, exported API, event catalog, table schema, or independent package manifest is finalized. Decide these incrementally when needed:
+Outside the implemented domain, contracts, request/assignment application cases, Mozaik adapter, SQLite repositories, outbox scheduler, local host, project recognition, and configured-simulation creation described here, no further internal package tree, exported API, event catalog, table schema, or independent package manifest is finalized. Decide these incrementally when needed:
 
 - CLI entry point, configuration format, and runtime lifecycle.
 - Studio transport, process topology, and event delivery/replay behavior.
@@ -131,4 +137,10 @@ Outside the implemented domain, contracts, request/assignment application cases,
 
 ## Future capabilities
 
-Adapters for non-web software and broader collaboration are future possibilities. Do not implement them speculatively. Current implementation is limited to Studio, domain, contracts, request/assignment application cases, controlled Mozaik integration, SQLite repositories, transactional investigation delivery, and the protected local host described in PROJECT.md.
+Adapters for non-web software and broader collaboration are future possibilities. Do not implement them speculatively. Current implementation is limited to Studio, domain, contracts, request/assignment application cases, controlled Mozaik integration, SQLite repositories, transactional investigation delivery, the protected local host, and persisted simulation setup described in PROJECT.md.
+
+## Connected local Studio and package trial
+
+Built Studio assets are served from a fixed distribution directory, never the selected project directory. Programmatic bearer access remains available. A one-time local HTML entry posts an expiring credential in the body and establishes an HttpOnly, SameSite=Strict API cookie; browser API calls also require a custom same-origin header. There is no credential in URLs or browser storage and no open CORS proxy. Public assets contain no project metadata.
+
+The root `offscript.mjs` entry launches compiled JavaScript and supports explicit project/port/data-directory selection. `npm run build:local` emits the server, copies immutable migrations, and includes the Studio build in the distribution. `npm pack` creates a local unpublished archive; no separate CLI package/directory or workspaces are introduced. See [LOCAL-TRIAL.md](LOCAL-TRIAL.md) for verified local usage and limitations.

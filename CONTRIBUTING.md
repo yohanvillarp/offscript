@@ -20,6 +20,8 @@ git config --local commit.template .gitmessage
 
 The first installation runs `prepare` and activates Husky for this clone. The second installs Studio independently. This project does not use workspaces. The commit template configuration is local: each contributor must run that command once. Use `git commit` without `-m` to open the template.
 
+For a real local-project trial with connected Studio, see [Local trial](docs/LOCAL-TRIAL.md). `npm pack` builds an unpublished local archive; it does not publish to npm.
+
 ## Line endings
 
 `.gitattributes` sets LF for text files on Windows, macOS, and Linux, including hooks and shell scripts. Windows `.bat` and `.cmd` scripts use CRLF in the working tree; binary files are not converted. These rules take precedence over `core.autocrlf` without requiring changes to global Git configuration.
@@ -66,6 +68,8 @@ Format: `type(optional-scope): description`. Allowed types: `feat`, `fix`, `docs
 Separate the body and footer with blank lines. Mark breaking changes with `!` and explain the migration in a `BREAKING CHANGE:` footer. Reference issues when applicable. `.gitmessage` provides these instructions when drafting a commit.
 
 ## Validation and hooks
+
+Follow [Testing strategy](docs/TESTING.md): new tests should protect uncovered behavior or material risks, not accompany every code block automatically. Existing focused checks can be sufficient for reversible presentation changes or behavior-preserving refactors. Mandatory hooks and CI remain unchanged.
 
 | Stage | Rule |
 | --- | --- |

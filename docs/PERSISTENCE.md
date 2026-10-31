@@ -27,6 +27,7 @@ The implementation uses synchronous SQLite calls behind asynchronous application
 | `investigation_observations` | Ordered, unique links to observations from the same simulation. |
 | `investigation_agents` | Ordered, unique collaborator roster within that simulation. |
 | `event_outbox` | Validated request/assignment events, revision ordering, leases, attempts, and acceptance metadata. |
+| `simulation_configurations` | Validated setup metadata committed atomically with the initial simulation and roster. |
 
 Composite foreign keys enforce simulation scope for observation authors, requesters, collaborators, and related observations. Unique constraints preserve identity and relationship positions. Indexes support observation lookup by simulation/time and investigations by simulation/status. Status/reason and JSON-shape checks complement domain/contract validation; SQL constraints alone do not certify a valid domain history.
 
@@ -46,6 +47,8 @@ Simulation loading validates profiles and summaries, reconstructs immutable snap
 Assignment acquires an immediate transaction, validates the current snapshot/revision, and verifies that the requested update is the domain's additive assignment operation. It cannot replace the hypothesis, change simulation, drop existing collaborators, or overwrite a competing revision. A failed collaborator insert rolls back both roster and revision. Missing records and conflicts preserve the existing port results. SQLite/Drizzle operation errors retain their underlying causes for application-level error mapping.
 
 Simulation lifecycle updates, observation edits, investigation completion writes, paginated history, and production runtime wiring are not exposed speculatively. Mozaik runtime state and agent memories remain session-owned. Optional `SessionOptions.storage` now supplies these durable investigation/observation/outbox adapters to an explicitly prepared session; it does not restore runtime state or resume agents. Await session closure before closing its supplied database.
+
+`configurations` now exposes atomic configured creation and metadata reads. Existing simulation creation remains available for snapshot/bootstrap use without fabricating setup metadata. See [SIMULATION-CONFIGURATION.md](SIMULATION-CONFIGURATION.md).
 
 ## Migrations
 

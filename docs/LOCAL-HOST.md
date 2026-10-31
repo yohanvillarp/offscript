@@ -2,7 +2,11 @@
 
 ## HTTP contract
 
-The host binds only to `127.0.0.1`. Every route requires `Authorization: Bearer <token>` using a fresh, random token for that host instance. The `Host` header must match `127.0.0.1` or `localhost` at the listening port. Browser origins are denied unless same-origin or explicitly allowed; CORS is not enabled. Tokens never belong in query strings, request logs, or response bodies.
+The configuration transport increment adds authenticated `GET /api/project`, `POST /api/simulations` (`{simulationId, setup}`), `GET /api/simulations/:id`, and `GET /api/simulations` (the latest 50 saved configurations). Creation returns 201 with configuration metadata, duplicates 409, missing records 404, and invalid setup 400 with a safe field path. Creation never starts agents. Existing bearer access remains supported.
+
+When built Studio assets are enabled, the host serves their fixed directory on the same origin. A local entry HTML file submits the instance credential in a POST body to `/studio/session`; it is never placed in a URL. A successful exchange rotates the entry credential and establishes a host-only HttpOnly, SameSite=Strict cookie scoped to the API. Browser API calls must send the same-origin `X-Offscript-Client: studio` header, and cross-origin exchanges remain rejected except the authenticated local-file entry POST. The public asset shell contains no project data or credentials. Failed exchanges do not set cookies. No tokens enter browser storage.
+
+The host binds only to `127.0.0.1`. Programmatic health/API access requires `Authorization: Bearer <token>` using a fresh token for that host instance. Enabled Studio assets are public, while browser configuration APIs require an authenticated session cookie and client header as described below. The `Host` header must match `127.0.0.1` or `localhost` at the listening port. Browser origins are denied unless same-origin or explicitly allowed; CORS is not enabled. Tokens never belong in query strings, request logs, or response bodies.
 
 | Method and path | Success | Unavailable |
 | --- | --- | --- |
@@ -39,7 +43,7 @@ Run `npm run dev:server` with Node.js 24. It uses the working directory as the d
 
 The entry prints the listening address and the path of an access file inside the configured data directory. It never prints the token. The uniquely named `.offscript-host-<pid>-<random>.json` contains `{origin, token}`, is created exclusively with mode 0600, and is removed on normal SIGINT/SIGTERM shutdown. Git ignores that filename pattern even in a custom data directory. POSIX mode bits do not establish Windows ACL isolation; protect the project/data directory with appropriate operating-system access controls. A crash can leave a stale file; tokens are instance-specific. Cleanup preserves a file whose contents have changed. No token is committed or returned by health routes.
 
-No origins are allowed by default except the actual same origin. Programmatic callers may omit `Origin`. Explicitly allowed origins are checked but no CORS headers or preflight support are added; browser/Studio transport is a subsequent task. Forwarded host headers are not trusted. Application/tool permissions remain separate from host authentication.
+Except for the credential-authenticated local-file entry POST, no origins are allowed by default except the actual same origin. Programmatic callers may omit `Origin`. Explicitly allowed origins are checked but no CORS headers or preflight support are added; browser/Studio transport is a subsequent task. Forwarded host headers are not trusted. Application/tool permissions remain separate from host authentication.
 
 ## Verification and deferred work
 
@@ -47,4 +51,4 @@ No origins are allowed by default except the actual same origin. Programmatic ca
 
 All checks are included in `npm run check`. The source was exercised locally on Windows; running existing CI on other operating systems remains necessary before claiming cross-platform execution for this revision. Fastify's [server](https://fastify.dev/docs/latest/Reference/Server/) and [hook](https://fastify.dev/docs/latest/Reference/Hooks/) contracts inform the adapter; tests verify the installed version.
 
-Simulation create/start/stop HTTP routes, saved setup, lifecycle mutation services, Playwright, streaming, Studio wiring, distributed membership, and automatic recovery remain deferred. The next milestone connects explicit simulation configuration and operator control to this host.
+Trusted project recognition and saved setup creation/read methods are now implemented; see [SIMULATION-CONFIGURATION.md](SIMULATION-CONFIGURATION.md). Configuration create/read/list routes and Studio wiring are now implemented; see [LOCAL-TRIAL.md](LOCAL-TRIAL.md). Simulation start/stop HTTP routes, lifecycle mutation services, Playwright, streaming, distributed membership, and automatic recovery remain deferred. The next milestone connects explicit simulation configuration and operator control to this host.

@@ -37,7 +37,7 @@ In another terminal:
 make dev-studio
 ```
 
-This starts Vite. Studio is not yet connected to the runtime host; running both does not start a simulation. Stop each process with Ctrl+C. `make preview-studio` serves an existing production build after `make build`.
+This starts standalone Vite for UI development. For the authenticated connected experience use `make build-local` then `make start-local` with `OFFSCRIPT_PROJECT_ROOT`, or the root launcher described in [LOCAL-TRIAL.md](LOCAL-TRIAL.md). Separate Vite does not receive host cookies or credentials. Stop each process with Ctrl+C. `make preview-studio` serves an existing production build after `make build`.
 
 ## Validation
 
@@ -50,7 +50,7 @@ This starts Vite. Studio is not yet connected to the runtime host; running both 
 | `make build` | Studio TypeScript project build and Vite production build. |
 | `make commitlint` | A Conventional Commit message supplied through stdin. |
 
-For focused checks, use `make test-<module>` or `make typecheck-<module>`. Supported modules are `domain`, `contracts`, `application`, `orchestration`, `persistence`, `runtime`, and `server`. Studio has `test-studio`, `typecheck-studio`, and `lint-studio`; internal lint is available as `lint-packages`.
+For focused checks, use `make test-<module>` or `make typecheck-<module>`. Supported modules are `domain`, `contracts`, `application`, `orchestration`, `persistence`, `runtime`, `server`, and `projects`. Studio has `test-studio`, `typecheck-studio`, and `lint-studio`; internal lint is available as `lint-packages`.
 
 `typecheck-studio` invokes the installed compiler against the same project references used by Studio's build, then checks draft tests. It does not run Vite. Use `make check` before publication rather than assuming a focused check covers the entire repository.
 
