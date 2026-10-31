@@ -12,9 +12,8 @@ import type { HostStorage } from "./host-storage.ts";
 import { sessionRegistry } from "./session-registry.ts";
 import type { HostedSession } from "./session-registry.ts";
 import { withinDeadline } from "./deadline.ts";
-import { executeConfigureSimulation, executeCheckTarget } from "../application/index.ts";
-import { executeDeleteConfiguredSimulation } from "../application/index.ts";
-import type { DeleteConfiguredSimulationResult } from "../application/index.ts";
+import { ApplicationError, executeConfigureSimulation, executeCheckTarget, executeDeleteConfiguredSimulation, executeRecoverSimulation } from "../application/index.ts";
+import type { DeleteConfiguredSimulationResult, RecoverSimulationAction } from "../application/index.ts";
 import { inspectProject, createTargetProbe } from "../projects/index.ts";
 import { ContractValidationError, evaluateFindingAssessment, parseLocalTargetUrl } from "../contracts/index.ts";
 import type { CompletedInvestigationSummary, SimulationExecutionMode, SimulationResults, SimulationSetup } from "../contracts/index.ts";
@@ -176,6 +175,19 @@ export function createLocalHost(options: LocalHostOptions) {
       if (phase !== "ready" || closing) throw new Error("Host is not accepting execution inspection.");
       if (!coordinator) throw new Error("No execution session factory configured on this host.");
       return coordinator.inspect(simulationId(id));
+    },
+    async recoverSimulation(id: SimulationId, action?: RecoverSimulationAction, reason?: string) {
+      if (phase !== "ready" || closing) throw new Error("Host is not accepting recovery commands.");
+      const storage = guarded?.storage;
+      if (!storage) throw new Error("Storage not initialized.");
+      if (coordinator?.hasActive(simulationId(id))) {
+        throw new ApplicationError("EXECUTION_ALREADY_ACTIVE", "Cannot recover an actively executing simulation.");
+      }
+      await executeRecoverSimulation({ simulationId: simulationId(id), action, reason }, storage.simulations);
+      return coordinator?.inspect(simulationId(id)) ?? Object.freeze({
+        simulationId: id, phase: action === "cancel" ? "cancelled" : "failed",
+        mode: "controlled-demo", turnsCount: 0, activeAgents: [],
+      });
     },
     async getSimulationResults(id: SimulationId): Promise<SimulationResults> {
       const storage = guarded?.storage;

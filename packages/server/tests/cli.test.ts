@@ -7,7 +7,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { test } from "node:test";
 import { openBrowser } from "../../../scripts/server/open-browser.ts";
 import { openPersistence } from "../../persistence/index.ts";
-import { simulationId } from "../../domain/index.ts";
+import { simulationId, transitionSimulation } from "../../domain/index.ts";
 import { parseSimulationSetup } from "../../contracts/index.ts";
 import { executeConfigureSimulation } from "../../application/index.ts";
 
@@ -68,6 +68,18 @@ test("list and results commands inspect project data and report missing records"
     assert.ok(populatedResult.stdout.includes("Simulation: CLI Test Sim (sim-cli-inspect)"));
     assert.ok(populatedResult.stdout.includes("--- Findings (0) ---"));
     assert.ok(populatedResult.stdout.includes("--- Observations (0) ---"));
+
+    // Emulate host interruption and verify recovery via CLI
+    const persistence2 = openPersistence({ projectRoot: root });
+    const simRecord = await persistence2.simulations.findSimulation(simId);
+    assert.ok(simRecord);
+    const runningSim = transitionSimulation(simRecord, { status: "running" });
+    await persistence2.simulations.updateSimulationAggregate(runningSim, { status: "created" });
+    persistence2.close();
+
+    const recoverResult = spawnSync(process.execPath, [launcher, "recover", "sim-cli-inspect", "--project", root], { encoding: "utf8" });
+    assert.equal(recoverResult.status, 0);
+    assert.ok(recoverResult.stdout.includes("recovered to failed"));
   } finally {
     try {
       rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });

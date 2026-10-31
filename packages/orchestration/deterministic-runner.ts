@@ -23,16 +23,18 @@ export function deterministicRunner(options?: { completeInvestigation?: boolean 
       const calls = current.filter((item) => item instanceof FunctionCallItem);
       const outputs = current.filter((item) => item instanceof FunctionCallOutputItem);
       const observationOutput = outputs.find((item) => item.output.text.includes("observationId"));
+      const message = items[userIndex];
+      const investigating = message instanceof UserMessageItem && message.content.text.startsWith("Investigate");
       if (!calls.length) return call("inspect_application", { phase: "before_reload" });
       if (calls.length === 1) return call("inspect_application", { phase: "after_reload" });
       if (calls.length === 2) {
         return call("record_observation", {
-          description: "The simulated cart changes from one item to zero after reload.",
+          description: investigating
+            ? "Corroborated: The simulated cart changes from one item to zero after reload."
+            : "The simulated cart changes from one item to zero after reload.",
           location: "/cart",
         });
       }
-      const message = items[userIndex];
-      const investigating = message instanceof UserMessageItem && message.content.text.startsWith("Investigate");
       if (calls.length === 3 && firstContext === input.context.id && !investigating && observationOutput) {
         const output: unknown = JSON.parse(observationOutput.output.text);
         if (output && typeof output === "object" && "observationId" in output && typeof output.observationId === "string") {

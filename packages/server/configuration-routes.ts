@@ -19,8 +19,8 @@ export type ConfigurationServices = Readonly<{
   stopSimulation(id: ReturnType<typeof simulationId>): Promise<SimulationExecutionStatus>;
   inspectExecution(id: ReturnType<typeof simulationId>): Promise<SimulationExecutionStatus>;
   getSimulationResults(id: ReturnType<typeof simulationId>): Promise<SimulationResults>;
+  recoverSimulation?(id: ReturnType<typeof simulationId>, action?: "fail" | "cancel", reason?: string): Promise<SimulationExecutionStatus>;
 }>;
-
 
 export function configurationRoutes(server: FastifyInstance, services: ConfigurationServices): void {
   server.get("/api/project", async () => services.inspectProject());
@@ -72,5 +72,13 @@ export function configurationRoutes(server: FastifyInstance, services: Configura
   });
   server.post<{ Params: { id: string } }>("/api/simulations/:id/stop", async (request) => {
     return services.stopSimulation(simulationId(request.params.id));
+  });
+  server.post<{ Params: { id: string } }>("/api/simulations/:id/recover", { bodyLimit: 4096 }, async (request, reply) => {
+    if (!services.recoverSimulation) return reply.code(501).send({ error: "NOT_IMPLEMENTED" });
+    const id = simulationId(request.params.id);
+    const body = request.body as { action?: string; reason?: string } | undefined;
+    const action = body?.action === "cancel" ? "cancel" : "fail";
+    const status = await services.recoverSimulation(id, action, body?.reason);
+    return reply.code(200).send(status);
   });
 }

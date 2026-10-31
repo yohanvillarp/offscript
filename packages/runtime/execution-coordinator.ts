@@ -1,39 +1,13 @@
 import { simulationId, transitionSimulation, updateSimulationAgent } from "../domain/index.ts";
-import type { AgentId, AgentLifecycle, Simulation, SimulationId } from "../domain/index.ts";
-import type { ExecutionLimits, SimulationExecutionMode, SimulationExecutionPhase, SimulationExecutionStatus } from "../contracts/index.ts";
+import type { AgentId, AgentLifecycle, SimulationId } from "../domain/index.ts";
+import type { SimulationExecutionMode, SimulationExecutionStatus } from "../contracts/index.ts";
 import { ApplicationError } from "../application/index.ts";
 import type { HostStorage } from "./host-storage.ts";
 import type { HostedSession } from "./session-registry.ts";
+import type { ActiveExecution, ExecutionSessionFactory, ExecutionSessionHandle } from "./execution-types.ts";
+import { settleSimulationAggregate } from "./execution-settlement.ts";
 
-export type ExecutionSessionHandle = HostedSession & {
-  startTurn(agentId: AgentId, message: string): boolean;
-  snapshot?(): { turns?: readonly { agentId: AgentId; count: number }[] };
-};
-
-export type ExecutionSessionContext = Readonly<{
-  mode?: SimulationExecutionMode | undefined;
-  targetUrl?: string | undefined;
-}>;
-
-export type ExecutionSessionFactory = (
-  simulation: Simulation,
-  limits: ExecutionLimits,
-  storage: HostStorage,
-  context?: ExecutionSessionContext | undefined,
-) => ExecutionSessionHandle;
-
-type ActiveExecution = {
-  readonly simulationId: SimulationId;
-  phase: SimulationExecutionPhase;
-  readonly mode: SimulationExecutionMode;
-  turnsCount: number;
-  readonly activeAgents: readonly string[];
-  readonly startedAt: string;
-  stoppedAt?: string;
-  failureReason?: string;
-  session?: ExecutionSessionHandle;
-  timer?: NodeJS.Timeout;
-};
+export type { ExecutionSessionContext, ExecutionSessionFactory, ExecutionSessionHandle } from "./execution-types.ts";
 
 export function executionCoordinator(dependencies: {
   storage: HostStorage;
@@ -48,16 +22,11 @@ export function executionCoordinator(dependencies: {
     let turnsCount = record.turnsCount;
     if (record.session?.snapshot) {
       const snap = record.session.snapshot();
-      if (snap.turns) {
-        turnsCount = snap.turns.reduce((sum, item) => sum + item.count, 0);
-      }
+      if (snap.turns) turnsCount = snap.turns.reduce((sum, item) => sum + item.count, 0);
     }
     return Object.freeze({
-      simulationId: record.simulationId,
-      phase: record.phase,
-      mode: record.mode,
-      turnsCount,
-      activeAgents: record.activeAgents,
+      simulationId: record.simulationId, phase: record.phase, mode: record.mode,
+      turnsCount, activeAgents: record.activeAgents,
       ...(record.failureReason ? { failureReason: record.failureReason } : {}),
       startedAt: record.startedAt,
       ...(record.stoppedAt ? { stoppedAt: record.stoppedAt } : {}),
@@ -69,16 +38,35 @@ export function executionCoordinator(dependencies: {
     if (!record || record.phase !== "running") return;
     record.phase = "stopping";
     try { await record.session?.close(); } catch { /* Session close cleanup */ }
-    try {
-      const currentSim = await storage.simulations.findSimulation(id);
-      if (currentSim && currentSim.lifecycle.status === "running") {
-        const cancelledSim = transitionSimulation(currentSim, { status: "cancelled" });
-        await storage.simulations.updateSimulationAggregate(cancelledSim, { status: "running" });
-      }
-    } catch { /* Suppress background update error */ }
+    await settleSimulationAggregate(storage, id, "cancelled");
     record.phase = "cancelled";
     record.failureReason = "SESSION_BUDGET_EXHAUSTED";
     record.stoppedAt = new Date().toISOString();
+  }
+
+  function monitorSettlement(id: SimulationId, session: ExecutionSessionHandle, durationMs: number): void {
+    if (!session.waitForIdle) return;
+    void session.waitForIdle(durationMs).then(async () => {
+      const record = active.get(id);
+      if (!record || record.phase !== "running") return;
+      if (record.timer) clearTimeout(record.timer);
+      await settleSimulationAggregate(storage, id, "completed");
+      try { await record.session?.close(); } catch { /* Safe close */ }
+      record.phase = "completed";
+      record.stoppedAt = new Date().toISOString();
+    }).catch(async (cause) => {
+      const record = active.get(id);
+      if (!record || record.phase !== "running") return;
+      if (record.timer) clearTimeout(record.timer);
+      const isTimeout = cause instanceof Error && cause.message.includes("timed out");
+      const reason = isTimeout ? "SESSION_BUDGET_EXHAUSTED" : "SESSION_EXECUTION_FAILED";
+      const outcome = isTimeout ? "cancelled" : "failed";
+      await settleSimulationAggregate(storage, id, outcome, reason);
+      try { await record.session?.close(); } catch { /* Safe close */ }
+      record.phase = outcome;
+      record.failureReason = reason;
+      record.stoppedAt = new Date().toISOString();
+    });
   }
 
   async function start(id: SimulationId, mode: SimulationExecutionMode): Promise<SimulationExecutionStatus> {
@@ -95,9 +83,7 @@ export function executionCoordinator(dependencies: {
       storage.configurations.findConfiguration(id),
       storage.simulations.findSimulation(id),
     ]);
-    if (!config || !sim) {
-      throw new ApplicationError("SIMULATION_NOT_FOUND", "Simulation configuration not found.");
-    }
+    if (!config || !sim) throw new ApplicationError("SIMULATION_NOT_FOUND", "Simulation configuration not found.");
     if (sim.lifecycle.status !== "created") {
       throw new ApplicationError("INVALID_EXECUTION_STATE", `Simulation cannot start from status ${sim.lifecycle.status}.`);
     }
@@ -133,6 +119,7 @@ export function executionCoordinator(dependencies: {
       record.session = session;
       record.phase = "running";
       record.timer = setTimeout(() => { void handleBudgetExpiry(id); }, config.limits.durationMs);
+      monitorSettlement(id, session, config.limits.durationMs);
 
       const firstAgent = sim.agents[0];
       if (firstAgent) {
@@ -144,7 +131,6 @@ export function executionCoordinator(dependencies: {
       }
       return toStatus(record);
     } catch (cause) {
-      // Partial failure containment: roll back / mark simulation as failed in storage
       if (record.session) {
         try { await record.session.close(); } catch { /* Safe cleanup */ }
       }
@@ -166,13 +152,7 @@ export function executionCoordinator(dependencies: {
       record.phase = "stopping";
       if (record.timer) clearTimeout(record.timer);
       try { await record.session?.close(); } catch { /* Ignore close error */ }
-      try {
-        const currentSim = await storage.simulations.findSimulation(id);
-        if (currentSim && currentSim.lifecycle.status === "running") {
-          const cancelledSim = transitionSimulation(currentSim, { status: "cancelled" });
-          await storage.simulations.updateSimulationAggregate(cancelledSim, { status: "running" });
-        }
-      } catch { /* Best-effort aggregate update */ }
+      await settleSimulationAggregate(storage, id, "cancelled");
       record.phase = "cancelled";
       record.stoppedAt = new Date().toISOString();
       return toStatus(record);
@@ -180,8 +160,7 @@ export function executionCoordinator(dependencies: {
     const current = await storage.simulations.findSimulation(id);
     if (!current) throw new ApplicationError("SIMULATION_NOT_FOUND", "Simulation not found.");
     if (current.lifecycle.status === "running") {
-      const cancelledSim = transitionSimulation(current, { status: "cancelled" });
-      await storage.simulations.updateSimulationAggregate(cancelledSim, { status: "running" });
+      await settleSimulationAggregate(storage, id, "cancelled");
       return Object.freeze({
         simulationId: id, phase: "cancelled", mode: "controlled-demo",
         turnsCount: 0, activeAgents: current.agents.map((agent) => agent.id),
@@ -200,12 +179,10 @@ export function executionCoordinator(dependencies: {
 
     if (sim.lifecycle.status === "created") {
       return Object.freeze({
-        simulationId: id, phase: "idle", mode: "controlled-demo",
-        turnsCount: 0, activeAgents: [],
+        simulationId: id, phase: "idle", mode: "controlled-demo", turnsCount: 0, activeAgents: [],
       });
     }
     if (sim.lifecycle.status === "running") {
-      // Running in storage but no handle in memory: interrupted by host restart
       return Object.freeze({
         simulationId: id, phase: "interrupted", mode: "controlled-demo",
         turnsCount: 0, activeAgents: sim.agents.map((agent) => agent.id),
@@ -213,11 +190,8 @@ export function executionCoordinator(dependencies: {
       });
     }
     return Object.freeze({
-      simulationId: id,
-      phase: sim.lifecycle.status,
-      mode: "controlled-demo",
-      turnsCount: 0,
-      activeAgents: sim.agents.map((agent) => agent.id),
+      simulationId: id, phase: sim.lifecycle.status, mode: "controlled-demo",
+      turnsCount: 0, activeAgents: sim.agents.map((agent) => agent.id),
       ...(sim.lifecycle.status === "failed" ? { failureReason: sim.lifecycle.reason } : {}),
     });
   }

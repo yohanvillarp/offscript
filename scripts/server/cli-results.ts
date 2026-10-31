@@ -2,6 +2,7 @@ import { simulationId } from "../../packages/domain/index.ts";
 import { openPersistence } from "../../packages/persistence/index.ts";
 import { evaluateFindingAssessment } from "../../packages/contracts/index.ts";
 import type { CompletedInvestigationSummary } from "../../packages/contracts/index.ts";
+import { executeRecoverSimulation } from "../../packages/application/index.ts";
 
 export type CliOptions = Readonly<{
   projectRoot: string;
@@ -110,6 +111,27 @@ export async function executeResultsCommand(options: CliOptions & { simulationId
       }
       console.log("");
     }
+  } finally {
+    persistence.close();
+  }
+}
+
+export async function executeRecoverCommand(
+  options: CliOptions & { simulationId: string; cancel?: boolean },
+): Promise<void> {
+  const persistence = openPersistence({
+    projectRoot: options.projectRoot,
+    ...(options.dataDirectory !== undefined ? { dataDirectory: options.dataDirectory } : {}),
+  });
+  try {
+    persistence.migrate();
+    const simId = simulationId(options.simulationId);
+    const action = options.cancel ? "cancel" : "fail";
+    const result = await executeRecoverSimulation(
+      { simulationId: simId, action, reason: "INTERRUPTED_BY_HOST_RESTART" },
+      persistence.simulations,
+    );
+    console.log(`Simulation ${options.simulationId} recovered to ${result.simulation.lifecycle.status}.`);
   } finally {
     persistence.close();
   }

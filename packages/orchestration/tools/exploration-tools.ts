@@ -42,11 +42,19 @@ export function explorationTools(
       description: text, location: text,
     }, async (value) => {
       const args = argumentsObject(value, ["description", "location"]);
+      const desc = argumentText(args.description);
+      const loc = argumentText(args.location);
+      for (const existing of state.observations.values()) {
+        if (existing.simulationId === state.simulation.id && existing.agentId === id &&
+            existing.description === desc && existing.context.location === loc) {
+          return { observationId: existing.id, evidenceId: existing.evidenceIds[0] ?? "" };
+        }
+      }
       const eid = evidenceId(`ev-${randomUUID()}`);
       const observation = createObservation({
         id: observationId(randomUUID()), simulationId: state.simulation.id, agentId: id,
-        observedAt: new Date().toISOString(), description: argumentText(args.description),
-        context: { location: argumentText(args.location) }, evidenceIds: [eid],
+        observedAt: new Date().toISOString(), description: desc,
+        context: { location: loc }, evidenceIds: [eid],
       });
       if (await storage.observations.createObservation(observation) !== "created") throw new Error("Observation identity already exists.");
       state.observations.set(observation.id, observation);

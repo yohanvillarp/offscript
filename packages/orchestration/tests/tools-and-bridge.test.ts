@@ -111,3 +111,22 @@ test("tool arguments reject malformed shapes and unsupported inspection phases",
   assert.deepEqual(await inspect.invoke({ phase: "before_reload" }), { location: "/cart", itemCount: 1, source: "simulated-fixture" });
   assert.deepEqual(await inspect.invoke({ phase: "after_reload" }), { location: "/cart", itemCount: 0, source: "simulated-fixture" });
 });
+
+test("record_observation deduplicates identical observations for the same agent, location, and description", async () => {
+  const fixture = state();
+  const published: SemanticEvent[] = [];
+  const tools = explorationTools(fixture.state, fixture.id, (event) => published.push(event));
+  const record = tools.find((tool) => tool.name === "record_observation");
+  assert.ok(record);
+
+  const first = (await record.invoke({ description: "Cart is empty", location: "/cart" })) as { observationId: string; evidenceId: string };
+  assert.ok(first.observationId);
+  assert.equal(fixture.state.observations.size, 1);
+  assert.equal(published.length, 1);
+
+  const duplicate = (await record.invoke({ description: "Cart is empty", location: "/cart" })) as { observationId: string; evidenceId: string };
+  assert.equal(duplicate.observationId, first.observationId);
+  assert.equal(duplicate.evidenceId, first.evidenceId);
+  assert.equal(fixture.state.observations.size, 1);
+  assert.equal(published.length, 1);
+});
