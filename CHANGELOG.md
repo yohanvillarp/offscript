@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.0](https://github.com/yohanvillarp/offscript/compare/offscript-v1.5.0...offscript-v1.6.0) (2026-10-31)
+
+
+### Features
+
+* add headed browser exploration, glowing CTA, and ai engine guide ([9aefda5](https://github.com/yohanvillarp/offscript/commit/9aefda5acb5486c7a898bd021655184bc5ccbfe8))
+* **studio:** add dedicated results and execution tabs to declutter details panel ([b47d6b7](https://github.com/yohanvillarp/offscript/commit/b47d6b7f777a22d21bf22176195b13b9402b5b04))
+* visual browser exploration, execution tabs, and installation guidance ([ca8faa6](https://github.com/yohanvillarp/offscript/commit/ca8faa6ba2a94e488e6cdc16e6f4471c7379ff1d))
+
 ## [1.5.0](https://github.com/yohanvillarp/offscript/compare/offscript-v1.4.0...offscript-v1.5.0) (2026-10-31)
 
 
