@@ -124,7 +124,7 @@ export function SimulationExecutionControl({ simulationId, targetUrl, onBusy }: 
   }
 
   return (
-    <section aria-labelledby="execution-section-title" className="rounded-lg border border-separator bg-surface-subtle p-4">
+    <section aria-labelledby="execution-section-title" className="rounded-lg border-2 border-accent/40 bg-surface-subtle p-5 shadow-sm">
       <div className="flex items-center justify-between gap-2">
         <h3 id="execution-section-title" className="text-xs font-semibold text-muted uppercase tracking-wider">
           Exploration execution
@@ -207,7 +207,7 @@ export function SimulationExecutionControl({ simulationId, targetUrl, onBusy }: 
               type="button"
               disabled={loading || phase === "completed"}
               onClick={() => handleStart("browser-exploration")}
-              className="flex w-full items-center justify-center gap-2 rounded-md bg-accent px-3 py-2 text-xs font-medium text-white shadow-xs hover:bg-accent/90 disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-md bg-accent px-4 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-accent/90 disabled:opacity-50 transition-colors"
             >
               <Compass aria-hidden="true" className="size-3.5" />
               <span>{loading ? "Starting..." : "Run browser exploration"}</span>

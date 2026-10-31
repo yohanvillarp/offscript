@@ -23,21 +23,32 @@ test("deletion removes configuration and scoped roster durably, preserving anoth
   assert.deepEqual(temp.raw().client.prepare("SELECT DISTINCT simulation_id FROM agents").all(), [{ simulation_id: "keep" }]);
 });
 
-test("deletion refuses noninitial lifecycles and related observations without changing configuration", async t => {
+test("deletion refuses active running lifecycles, and deletes terminal/observed simulations cleanly", async t => {
   const temp = storage(t); const db = temp.open(); db.migrate();
   const raw = temp.raw().client;
-  for (const name of ["running", "terminal", "user-not-ready", "observed"]) {
+  for (const name of ["running", "agent-running", "terminal", "observed"]) {
     await executeConfigureSimulation({ simulationId: simulationId(name), projectRoot: temp.root, setup },
       { projects: { inspectProject }, configurations: db.configurations });
   }
   raw.prepare("UPDATE simulations SET status='running' WHERE id='running'").run();
+  raw.prepare("UPDATE agents SET status='running' WHERE simulation_id='agent-running'").run();
   raw.prepare("UPDATE simulations SET status='cancelled' WHERE id='terminal'").run();
-  raw.prepare("UPDATE agents SET status='cancelled' WHERE simulation_id='user-not-ready'").run();
   await db.observations.createObservation(fixture("observed").observation);
-  for (const name of ["running", "terminal", "user-not-ready", "observed"]) {
-    assert.equal(await db.configurations.deleteConfiguredSimulation(simulationId(name)), "not-allowed");
-    assert.ok(await db.configurations.findConfiguration(simulationId(name)));
-  }
+
+  // Active running simulation or active running agent blocks deletion
+  assert.equal(await db.configurations.deleteConfiguredSimulation(simulationId("running")), "not-allowed");
+  assert.ok(await db.configurations.findConfiguration(simulationId("running")));
+  assert.equal(await db.configurations.deleteConfiguredSimulation(simulationId("agent-running")), "not-allowed");
+  assert.ok(await db.configurations.findConfiguration(simulationId("agent-running")));
+
+  // Inactive / terminal / observed simulations are deleted cleanly
+  assert.equal(await db.configurations.deleteConfiguredSimulation(simulationId("terminal")), "deleted");
+  assert.equal(await db.configurations.findConfiguration(simulationId("terminal")), undefined);
+
+  assert.equal(await db.configurations.deleteConfiguredSimulation(simulationId("observed")), "deleted");
+  assert.equal(await db.configurations.findConfiguration(simulationId("observed")), undefined);
+  assert.equal((await db.observations.listObservations(simulationId("observed"))).length, 0);
+
   const snapshot = fixture("snapshot-only").ready;
   await db.simulations.createSimulation(snapshot);
   assert.equal(await db.configurations.deleteConfiguredSimulation(snapshot.id), "not-found");

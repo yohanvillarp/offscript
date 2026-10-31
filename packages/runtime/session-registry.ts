@@ -23,6 +23,7 @@ export function sessionRegistry() {
   return {
     publisher,
     has(id: SimulationId) { return sessions.has(id) || preparing.has(id); },
+    remove(id: SimulationId) { sessions.delete(id); preparing.delete(id); },
     add<T extends HostedSession>(id: SimulationId, create: () => T): T {
       if (!accepting) throw new Error("Host is closing.");
       if (sessions.has(id) || preparing.has(id)) throw new Error("Simulation already has a hosted session.");

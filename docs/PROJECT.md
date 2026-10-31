@@ -37,14 +37,14 @@ Local-first means local execution/storage are the baseline. It does not promise 
 
 | Profile | Avatar identity | Behavior and general intention |
 | --- | --- | --- |
-| Explorer | Raven | Curious and experimental; understands software by trying alternative paths. |
-| Impatient | Fox | Fast and result-oriented; retries or seeks alternatives when progress feels slow. |
-| Beginner | Compass | Needs orientation; learns without prior product knowledge. |
-| Regular | Sparrow | Practical and habitual; expects familiar workflows. |
-| Meticulous | Owl | Attentive and precise; checks details and resulting state. |
-| Distrustful | Badger | Cautious and skeptical; questions unexpected requests and disclosures. |
+| Explorer | Alex | Curious and experimental; understands software by trying alternative paths. |
+| Impatient | Leo | Fast and result-oriented; retries or seeks alternatives when progress feels slow. |
+| Beginner | Chloe | Needs orientation; learns without prior product knowledge. |
+| Regular | David | Practical and habitual; expects familiar workflows. |
+| Meticulous | Elena | Attentive and precise; checks details and resulting state. |
+| Distrustful | Marcus | Cautious and skeptical; questions unexpected requests and disclosures. |
 
-All six exist in selection/contracts/instructions. Their behavioral differentiation is not established by deterministic tests. Distinct artwork is unfinished: Sparrow/Compass, Owl/Raven and Badger/Fox currently reuse identical assets. Adaptive and Collaborative remain candidates; Adaptive needs explicit interaction needs rather than representing every accessibility experience.
+All six exist in selection/contracts/instructions. Their behavioral differentiation is not established by deterministic tests. Each profile has a distinct, unique human character avatar (Alex, Leo, Chloe, David, Elena, Marcus). Adaptive and Collaborative remain candidates; Adaptive needs explicit interaction needs rather than representing every accessibility experience.
 
 Avatar identity is presentation metadata, not a permission or specialization. An agent conceptually combines profile, assigned goal and skills, subject to tools, externally enforced permissions and limits:
 

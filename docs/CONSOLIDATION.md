@@ -44,6 +44,6 @@ Audit verification: orchestration production/test typechecks and four existing f
 
 ## Later work and task selection
 
-Multi-round debate, additional profiles/tools, video/diff/annotation UI, managed application startup, broader authentication, npm publication, and durable handler recovery are separate proposals. They must not displace the first trustworthy exploration path. Current avatar assets for Badger/Fox, Owl/Raven, and Sparrow/Compass are identical pairs; distinct artwork is a presentation follow-up, not proof of behavior.
+Multi-round debate, additional profiles/tools, video/diff/annotation UI, managed application startup, broader authentication, npm publication, and durable handler recovery are separate proposals. They must not displace the first trustworthy exploration path. Distinct 3D human character avatars represent each profile (Alex, Leo, Chloe, David, Elena, Marcus); distinct artwork is presentation metadata, not proof of autonomous behavior.
 
 Start with **C1 only** when implementation is requested. For each subsequent slice, inspect the current source, identify dependencies, propose concrete validation, and obtain scope authorization. Update the observed gap only after evidence supports the new guarantee. See [ROADMAP.md](ROADMAP.md) and [TESTING.md](TESTING.md).

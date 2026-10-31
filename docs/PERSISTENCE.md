@@ -50,7 +50,7 @@ Aggregate lifecycle updates and investigation completion commits are implemented
 
 `configurations` now exposes atomic configured creation and metadata reads. Existing simulation creation remains available for snapshot/bootstrap use without fabricating setup metadata. See [SIMULATION-CONFIGURATION.md](SIMULATION-CONFIGURATION.md).
 
-It also supports atomic deletion of initial saved configurations: only `created` simulations with ready users, no observations/investigations, and no outbox rows can be removed. The immediate transaction checks eligibility and deletes the configuration, scoped roster, and snapshot, with rollback on any failure. No foreign-key cascades or filesystem deletion are used; existing migrations remain unchanged. Hosted-session exclusion belongs to the runtime host rather than SQLite.
+It also supports atomic deletion of saved configurations: simulations that are not actively in `running` status can be removed along with their associated roster, observations, investigations, and outbox rows. The immediate transaction checks eligibility and deletes dependent records in dependency order, with rollback on any failure. Active running exclusion belongs to the runtime host and SQLite transaction. Visual evidence on disk is purged upon successful deletion.
 
 ## Migrations
 

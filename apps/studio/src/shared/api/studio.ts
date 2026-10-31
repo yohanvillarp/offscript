@@ -25,7 +25,7 @@ async function request(path: string, options: RequestInit = {}): Promise<unknown
   }
   if (!response.ok) {
     if (response.status === 401) throw new StudioApiError("UNAUTHORIZED", "Open the local Studio entry file printed by OFFSCRIPT to connect.");
-    if (options.method === "DELETE" && response.status === 409) throw new StudioApiError("DELETION_NOT_ALLOWED", "This simulation cannot be deleted: it has a session, execution state, or related data.");
+    if (options.method === "DELETE" && response.status === 409) throw new StudioApiError("DELETION_NOT_ALLOWED", "This simulation cannot be deleted while execution is active. Stop the execution first and try again.");
     if (options.method === "DELETE" && response.status === 404) throw new StudioApiError("NOT_FOUND", "This saved simulation no longer exists. Close this panel and refresh the list.");
     if (options.method === "DELETE") throw new StudioApiError("DELETE_FAILED", "Could not confirm deletion. Refresh the list before trying again.");
     if (response.status === 409) throw new StudioApiError("ALREADY_EXISTS", "This simulation was already saved.");

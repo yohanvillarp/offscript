@@ -28,7 +28,7 @@ Readiness means host initialization succeeded and shutdown has not begun. It doe
 
 ## Ownership and startup
 
-Saved configuration deletion is available through authenticated `DELETE /api/simulations/:id`: 204 (empty body), 404 (missing configuration), or 409 `DELETION_NOT_ALLOWED`. Only initial records without related observations, investigations, or outbox data are eligible. The host excludes registered/preparing sessions and blocks registration while deletion is admitted; SQLite rechecks persisted conditions atomically. See SIMULATION-CONFIGURATION.md. This is not a stop/cancel operation or a general history-deletion endpoint.
+Saved configuration deletion is available through authenticated `DELETE /api/simulations/:id`: 204 (empty body), 404 (missing configuration), or 409 `DELETION_NOT_ALLOWED`. Simulations that are not actively running are eligible. The host excludes active/preparing sessions and blocks registration while deletion is admitted; SQLite rechecks persisted conditions and cleans up dependent records atomically. Associated evidence files on disk are removed. See SIMULATION-CONFIGURATION.md. Active executions must be stopped before deletion is admitted.
 
 `packages/runtime/host.ts` exposes `createLocalHost(options)` and host option/context types. It composes SQLite, one outbox dispatcher, an in-process session registry, and the HTTP adapter in `packages/server`. Fastify 5.12.7 is pinned in the root npm package. The existing scheduler-only entry point stays separate, so standalone Mozaik sessions do not load the HTTP/database composition through their dispatcher import.
 

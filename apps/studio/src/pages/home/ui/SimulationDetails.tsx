@@ -42,10 +42,12 @@ export function SimulationDetails({ item, position, total, selectedUser, onSelec
       <div ref={content} className="min-h-0 flex-1 space-y-7 overflow-y-auto overscroll-contain px-6 py-6">
         {user ? <SimulationUserDetails item={item} user={user} onViewSimulation={() => onSelectUser(undefined)} /> : <>
         <div>
-          <span className="rounded-sm bg-accent-subtle px-2 py-1 text-xs text-accent">Saved</span>
+          <span className="rounded-sm bg-accent-subtle px-2 py-1 text-xs text-accent">Configuration</span>
           <h2 id="simulation-detail-title" tabIndex={-1} className="mt-4 break-words text-2xl font-semibold">{item.name}</h2>
           <p className="mt-2 text-xs capitalize text-muted">{item.environment.deployment} · Local exploration</p>
         </div>
+        <SimulationExecutionControl simulationId={item.simulationId} targetUrl={item.targetUrl} onBusy={setExecuting} />
+        <SimulationResultsView simulationId={item.simulationId} refreshTrigger={executing ? "running" : "idle"} />
         <dl className="space-y-6 text-sm">
           <div><dt className="text-xs text-muted">Exploration goal</dt><dd className="mt-2 whitespace-pre-wrap break-words leading-relaxed">{item.goal}</dd></div>
           <div><dt className="text-xs text-muted">Application URL</dt><dd className="mt-2 break-all font-mono text-xs">
@@ -68,8 +70,6 @@ export function SimulationDetails({ item, position, total, selectedUser, onSelec
             <div className="flex justify-between gap-4"><dt>Session duration</dt><dd className="font-mono">{item.limits.durationMs / 1000} s</dd></div>
           </dl>
         </section>
-        <SimulationExecutionControl simulationId={item.simulationId} targetUrl={item.targetUrl} onBusy={setExecuting} />
-        <SimulationResultsView simulationId={item.simulationId} refreshTrigger={executing ? "running" : "idle"} />
         <div><p className="text-xs text-muted">Simulation ID</p><p className="mt-2 break-all font-mono text-xs">{item.simulationId}</p></div>
         <DeleteSimulation key={item.simulationId} id={item.simulationId} name={item.name} onBusy={setDeleting}
           onDeleted={() => { dialog.current?.close(); onDeleted(item.simulationId); }} />
