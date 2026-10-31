@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.1](https://github.com/yohanvillarp/offscript/compare/offscript-v1.6.0...offscript-v1.6.1) (2026-10-31)
+
+
+### Bug Fixes
+
+* investigation concurrency, SSR hydration stability, and docs version update ([29df111](https://github.com/yohanvillarp/offscript/commit/29df111a08d1db681852d2c9cbe9de067d62b5fc))
+* investigation concurrency, SSR hydration stability, and docs version update ([fe2a3ae](https://github.com/yohanvillarp/offscript/commit/fe2a3aec84e8a91ad209d53ea597a74a24f59834))
+
 ## [1.6.0](https://github.com/yohanvillarp/offscript/compare/offscript-v1.5.0...offscript-v1.6.0) (2026-10-31)
 
 
