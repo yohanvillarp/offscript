@@ -8,6 +8,8 @@ export type BrowserToolAction =
   | "browser_inspect"
   | "browser_click"
   | "browser_type"
+  | "browser_scroll"
+  | "browser_select"
   | "browser_record_observation";
 
 export type BrowserToolDefinition = Readonly<{
@@ -138,6 +140,50 @@ export function createBrowserTools(
         const result = await session.type(ref, text);
         if (!result.success) {
           return { error: result.error || "Type failed" };
+        }
+        return { success: true, currentUrl: result.url };
+      },
+    },
+    {
+      name: "browser_scroll",
+      description: "Scroll the page up or down to reveal hidden content or elements.",
+      parameters: {
+        type: "object",
+        properties: {
+          direction: { type: "string", enum: ["up", "down"], description: "Scroll direction: up or down" },
+        },
+        required: ["direction"],
+        additionalProperties: false,
+      },
+      async invoke(rawArgs: unknown) {
+        const args = asObject(rawArgs, ["direction"]);
+        const direction = args.direction === "up" ? "up" : "down";
+        const result = await session.scroll(direction);
+        if (!result.success) {
+          return { error: result.error || "Scroll failed" };
+        }
+        return { success: true, currentUrl: result.url };
+      },
+    },
+    {
+      name: "browser_select",
+      description: "Select an option in a dropdown or select element by its opaque reference and option value.",
+      parameters: {
+        type: "object",
+        properties: {
+          ref: { type: "string", description: "Opaque element reference identifier (e.g. 'elem_1')" },
+          value: { type: "string", description: "Option value to select" },
+        },
+        required: ["ref", "value"],
+        additionalProperties: false,
+      },
+      async invoke(rawArgs: unknown) {
+        const args = asObject(rawArgs, ["ref", "value"]);
+        const ref = asText(args.ref, "ref");
+        const value = asText(args.value, "value");
+        const result = await session.select(ref, value);
+        if (!result.success) {
+          return { error: result.error || "Select failed" };
         }
         return { success: true, currentUrl: result.url };
       },

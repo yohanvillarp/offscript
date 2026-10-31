@@ -26,27 +26,30 @@ Initial exploration targets web applications with real backends in explicitly au
 
 A behavioral profile describes personality, experience, decision-making tendencies, and general motivation. It does not prescribe a sequence of steps or limit who can discover a problem. Profiles may represent everyday users or focused evaluation intentions.
 
-### Initial profiles
+### Behavioral profiles
 
 | Profile | Avatar | Behavior | General intention |
 | --- | --- | --- | --- |
 | Explorer | Raven | Observant, curious, and experimental; tries alternative paths and questions unexpected results. | Understand the system through exploration. |
 | Impatient | Fox | Quick, resourceful, and focused on results; retries or finds alternatives when progress feels slow. | Complete tasks as quickly as possible. |
 | Beginner | Compass | Needs guidance and interprets instructions without prior product knowledge; may make choices the developer did not anticipate. | Learn to use the product and accomplish a goal. |
+| Regular | Sparrow | Conventional, practical, and habitual; follows familiar application patterns and expects common user flows. | Accomplish goals using standard and familiar patterns. |
+| Meticulous | Owl | Thorough, attentive, and precise; examines fine print, validates input states, and double-checks confirmations. | Verify accuracy, details, and confirm state changes. |
+| Distrustful | Badger | Skeptical, cautious, and vigilant; looks out for deceptive designs, unintended data disclosures, and unprompted charges. | Protect privacy, avoid deceitful patterns, and question unexpected actions. |
 
-Avatar and behavior are separate concepts: changing an illustration must not change the profile's semantics. These mappings are the initial product selection, not bug specializations or runtime instructions.
+Avatar and behavior are separate concepts: changing an illustration must not change the profile's semantics. These mappings are the product selection, not bug specializations or runtime instructions.
 
 An agent conceptually combines a behavioral profile, an assigned goal, and available skills, subject to externally enforced permissions and execution limits. These concerns have distinct responsibilities:
 
 - **Profile:** how an artificial user approaches software and makes decisions.
-- **Goal:** a concrete desired outcome for a simulation, such as purchasing a product. All three profiles may pursue the same goal differently; a general motivation such as speed is not that assigned goal.
+- **Goal:** a concrete desired outcome for a simulation, such as purchasing a product. All profiles may pursue the same goal differently; a general motivation such as speed is not that assigned goal.
 - **Skills:** reusable knowledge or procedures for using capabilities; skills do not themselves grant tools or authorization.
 - **Tools and declared capabilities:** available operations and capability declarations, separate from behavior and effective authorization.
 - **Permissions and limits:** operator-controlled action/target restrictions and execution budgets. An agent cannot expand these through its decisions, profile, or skills.
 
 The existing domain `AgentProfile` currently groups personality, goals, and declared capabilities. That implemented shape remains unchanged; the conceptual separation above does not claim separate domain entities, a skill system, or policy enforcement already exist.
 
-The broader candidate catalog includes Beginner, Impatient, Explorer, Regular, Distrustful, Meticulous, Adaptive, and Collaborative. Only the three initial profiles above are included in Studio. The others remain deferred; Adaptive requires more precise interaction needs or modalities before implementation and must not stand in for every accessibility experience.
+The candidate catalog now includes Beginner, Impatient, Explorer, Regular, Distrustful, and Meticulous as implemented in Studio, contracts, and autonomous runtime instructions. Adaptive and Collaborative remain deferred candidates; Adaptive requires more precise interaction needs or modalities before implementation and must not stand in for every accessibility experience.
 
 Agents should explore concurrently and share useful observations. They may investigate related behavior collaboratively rather than independently repeating every discovery. Mozaik will provide concurrent, event-driven collaboration. OFFSCRIPT must define shared-state ownership and conflict handling without duplicating its inference/tool loop. The initial Mozaik 4.2.0 adapter now demonstrates concurrent turns, controlled tools, and investigation-request reactions against a simulated cart. It uses session-owned shared state and validates event identity/correlation. A deterministic inference fixture verifies integration without model API calls; optional live inference is configured separately and has not been executed in this milestone. Real software exploration, durable handler recovery, and full investigation execution remain unimplemented; transactional event delivery alone does not provide these capabilities. See [MOZAIK-INTEGRATION.md](MOZAIK-INTEGRATION.md).
 

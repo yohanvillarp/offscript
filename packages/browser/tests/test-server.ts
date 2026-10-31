@@ -14,10 +14,16 @@ const HTML_HOME = `<!DOCTYPE html>
     <input id="password-input" type="password" value="supersecret" />
     <button id="search-btn" type="button">Search</button>
   </form>
+  <label for="shipping-select">Shipping method</label>
+  <select id="shipping-select">
+    <option value="standard">Standard</option>
+    <option value="express">Express</option>
+  </select>
   <button id="add-btn" type="button">Add Product</button>
   <button id="disabled-btn" type="button" disabled>Out of stock</button>
   <a id="cart-link" href="/cart">View Cart</a>
   <div id="output">Initial State</div>
+  <div id="scroll-target" style="margin-top: 1200px;">Footer details below fold</div>
   <script>
     document.getElementById("add-btn").addEventListener("click", () => {
       document.getElementById("output").textContent = "Product Added";

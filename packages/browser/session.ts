@@ -179,6 +179,63 @@ export class BrowserUserSession {
     }
   }
 
+  async scroll(direction: "up" | "down" = "down", ref?: string): Promise<InteractionResult> {
+    if (this.closed) return { success: false, action: "scroll", url: this.getCurrentUrl(), error: "SESSION_CLOSED" };
+    try {
+      if (ref) {
+        if (!/^elem_\d+$/.test(ref)) {
+          return { success: false, action: "scroll", url: this.getCurrentUrl(), error: "INVALID_ELEMENT_REF" };
+        }
+        const locator = this.page.locator(`[data-offscript-ref="${ref}"][data-offscript-epoch="${this.currentEpoch}"]`);
+        if ((await locator.count()) === 0) {
+          return { success: false, action: "scroll", url: this.page.url(), error: "STALE_OR_MISSING_ELEMENT_REF" };
+        }
+        await locator.first().scrollIntoViewIfNeeded({ timeout: this.actionTimeoutMs });
+      } else {
+        const delta = direction === "up" ? -400 : 400;
+        await this.page.evaluate((d) => window.scrollBy(0, d), delta);
+      }
+      return { success: true, action: "scroll", url: this.page.url() };
+    } catch (cause) {
+      return {
+        success: false,
+        action: "scroll",
+        url: this.page.url(),
+        error: cause instanceof Error ? cause.message : "SCROLL_FAILED",
+      };
+    }
+  }
+
+  async select(ref: string, value: string): Promise<InteractionResult> {
+    if (this.closed) return { success: false, action: "select", url: this.getCurrentUrl(), error: "SESSION_CLOSED" };
+    if (!/^elem_\d+$/.test(ref)) {
+      return { success: false, action: "select", url: this.getCurrentUrl(), error: "INVALID_ELEMENT_REF" };
+    }
+    const locator = this.page.locator(`[data-offscript-ref="${ref}"][data-offscript-epoch="${this.currentEpoch}"]`);
+    try {
+      if ((await locator.count()) === 0) {
+        return { success: false, action: "select", url: this.page.url(), error: "STALE_OR_MISSING_ELEMENT_REF" };
+      }
+      const isDisabled = await locator.first().isDisabled().catch(() => false);
+      if (isDisabled) {
+        return { success: false, action: "select", url: this.page.url(), error: "ELEMENT_IS_DISABLED" };
+      }
+      await locator.first().selectOption(value, { timeout: this.actionTimeoutMs });
+      const newUrl = this.page.url();
+      if (!isUrlInScope(newUrl, this.targetUrl)) {
+        return { success: false, action: "select", url: newUrl, error: `Navigation resulted in out-of-scope URL "${newUrl}".` };
+      }
+      return { success: true, action: "select", url: newUrl };
+    } catch (cause) {
+      return {
+        success: false,
+        action: "select",
+        url: this.page.url(),
+        error: cause instanceof Error ? cause.message : "SELECT_FAILED",
+      };
+    }
+  }
+
   async close(): Promise<void> {
     if (this.closed) return;
     this.closed = true;

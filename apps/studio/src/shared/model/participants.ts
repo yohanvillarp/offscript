@@ -25,6 +25,21 @@ export const participantCatalog: readonly ParticipantOption[] = [
     description: "Needs guidance and interprets instructions without prior product knowledge. May take unexpected paths.",
     intention: "Learn to use the product and accomplish a goal.",
   },
+  {
+    id: "sparrow", name: "Sparrow", profile: "Regular", profileId: "regular",
+    description: "Conventional, practical, and habitual. Follows familiar paths and expects standard application behavior.",
+    intention: "Complete typical workflows smoothly and comfortably.",
+  },
+  {
+    id: "owl", name: "Owl", profile: "Meticulous", profileId: "meticulous",
+    description: "Thorough, attentive, and precise. Examines fine print, validates input states, and double-checks confirmations.",
+    intention: "Ensure accuracy and catch subtle discrepancies.",
+  },
+  {
+    id: "badger", name: "Badger", profile: "Distrustful", profileId: "distrustful",
+    description: "Skeptical, cautious, and vigilant. Scrutinizes permissions, unexpected redirects, and unclear data collection.",
+    intention: "Protect user privacy and avoid misleading traps.",
+  },
 ];
 
 export function participantImage(id: string): string {
