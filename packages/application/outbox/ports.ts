@@ -1,6 +1,6 @@
 import type { InvestigationEvent } from "../../contracts/index.ts";
 
-export type OutboxEvent = Exclude<InvestigationEvent, { type: "investigation.completed" }>;
+export type OutboxEvent = InvestigationEvent;
 export type OutboxError = "PUBLISH_REJECTED" | "INVALID_EVENT" | "ATTEMPTS_EXHAUSTED";
 export type OutboxRecord = Readonly<{
   sequence: number; eventId: string; simulationId: string; investigationId: string; revision: number; eventJson: string;

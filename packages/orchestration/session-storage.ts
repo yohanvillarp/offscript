@@ -1,11 +1,17 @@
 import type { Investigation } from "../domain/index.ts";
 import type { Observation } from "../domain/index.ts";
-import type { InvestigationAssignmentCommitter, InvestigationRequestCommitter, ObservationReader, OutboxStore } from "../application/index.ts";
+import type {
+  InvestigationAssignmentCommitter,
+  InvestigationCompletionCommitter,
+  InvestigationRequestCommitter,
+  ObservationReader,
+  OutboxStore,
+} from "../application/index.ts";
 import type { ExplorationState } from "./state.ts";
 import { sessionInvestigationStore } from "./investigation-store.ts";
 
 export type ExplorationStorage = Readonly<{
-  investigations: InvestigationAssignmentCommitter & InvestigationRequestCommitter;
+  investigations: InvestigationAssignmentCommitter & InvestigationRequestCommitter & InvestigationCompletionCommitter;
   observations: ObservationReader & {
     createObservation(observation: Observation): Promise<"created" | "already-exists">;
   };
@@ -42,6 +48,12 @@ export function sessionStorage(state: ExplorationState, supplied?: ExplorationSt
       async commitAssignment(event, expected) {
         if (state.closed) throw new Error("Session closed before assignment commit.");
         const result = await source.investigations.commitAssignment(event, expected);
+        if (result === "saved") mirror(event.payload.investigation, expected + 1);
+        return result;
+      },
+      async commitCompletion(event, expected) {
+        if (state.closed) throw new Error("Session closed before completion commit.");
+        const result = await source.investigations.commitCompletion(event, expected);
         if (result === "saved") mirror(event.payload.investigation, expected + 1);
         return result;
       },

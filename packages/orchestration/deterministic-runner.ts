@@ -3,7 +3,7 @@ import type { InferenceInput, InferenceOutput, InferenceRunner } from "@mozaik-a
 
 // Deterministic inference fixture only. Mozaik still owns turn execution,
 // tool invocation, follow-up inference, and event fan-out.
-export function deterministicRunner(): InferenceRunner {
+export function deterministicRunner(options?: { completeInvestigation?: boolean }): InferenceRunner {
   let firstContext: string | undefined;
   function call(name: string, args: Record<string, unknown>): InferenceOutput {
     return {
@@ -39,6 +39,20 @@ export function deterministicRunner(): InferenceRunner {
           return call("request_investigation", {
             hypothesis: "Cart state may not survive reload.",
             observationIds: [output.observationId],
+          });
+        }
+      }
+      if (calls.length === 3 && investigating && options?.completeInvestigation && observationOutput) {
+        const match = message.content.text.match(/"id":"([^"]+)"/);
+        const invId = match ? match[1] : undefined;
+        const output: unknown = JSON.parse(observationOutput.output.text);
+        if (invId && output && typeof output === "object" && "observationId" in output && typeof output.observationId === "string") {
+          const eid = ("evidenceId" in output && typeof output.evidenceId === "string") ? output.evidenceId : output.observationId;
+          return call("complete_investigation", {
+            investigationId: invId,
+            outcome: "supported",
+            explanation: "Verified that cart resets to zero items after reload.",
+            evidenceIds: [eid],
           });
         }
       }

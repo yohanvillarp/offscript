@@ -31,7 +31,9 @@ export function hostStorage(source: Persistence) {
     }),
     investigations: Object.freeze({
       findInvestigation: guard(source.investigations.findInvestigation),
-      commitRequest: guard(source.investigations.commitRequest), commitAssignment: guard(source.investigations.commitAssignment),
+      commitRequest: guard(source.investigations.commitRequest),
+      commitAssignment: guard(source.investigations.commitAssignment),
+      commitCompletion: guard(source.investigations.commitCompletion),
     }),
     outbox: Object.freeze({
       claim: guard(source.outbox.claim), accept: guard(source.outbox.accept), defer: guard(source.outbox.defer),

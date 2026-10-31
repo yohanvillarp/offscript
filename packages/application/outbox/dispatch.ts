@@ -16,7 +16,7 @@ export async function dispatchOutboxBatch(dependencies: Readonly<{
     let event: OutboxEvent;
     try {
       const parsed = deserializeSemanticEvent(lease.eventJson);
-      if ((parsed.type !== "investigation.requested" && parsed.type !== "investigation.assigned") ||
+      if ((parsed.type !== "investigation.requested" && parsed.type !== "investigation.assigned" && parsed.type !== "investigation.completed") ||
           parsed.eventId !== lease.eventId || parsed.simulationId !== lease.simulationId ||
           parsed.payload.investigation.id !== lease.investigationId ||
           (parsed.type === "investigation.requested" ? lease.revision !== 0 : lease.revision < 1)) throw new Error("Outbox event identity mismatch.");

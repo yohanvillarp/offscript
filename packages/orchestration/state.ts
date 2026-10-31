@@ -9,6 +9,7 @@ export type ToolName =
   | "inspect_application"
   | "record_observation"
   | "request_investigation"
+  | "complete_investigation"
   | "browser_navigate"
   | "browser_inspect"
   | "browser_click"

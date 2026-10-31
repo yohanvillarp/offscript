@@ -13,6 +13,10 @@ export type { InvestigationSummary } from "./investigation-summary.ts";
 export { parseInvestigationSummary, parseInvestigationResult } from "./investigation-summary.ts";
 export type { InvestigationEvent, InvestigationPayloads } from "./investigation-events.ts";
 export { parseInvestigationEvent } from "./investigation-events.ts";
+export type {
+  FindingConfidence, FindingAssessment, CompletedInvestigationSummary,
+} from "./finding-assessment.ts";
+export { evaluateFindingAssessment } from "./finding-assessment.ts";
 export { parseSimulationSetup, parseExecutionLimits, defaultExecutionLimits, userProfileIds } from "./simulation-setup.ts";
 export type { SimulationSetup, ExecutionLimits, UserProfileId } from "./simulation-setup.ts";
 export { parseSimulationConfiguration, parseProjectDescriptor } from "./simulation-configuration.ts";
