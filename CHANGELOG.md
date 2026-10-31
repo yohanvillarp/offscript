@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/yohanvillarp/offscript/compare/offscript-v1.1.1...offscript-v1.2.0) (2026-10-31)
+
+
+### Features
+
+* **studio:** add input placeholders and improve connection check feedback ([1b3a7da](https://github.com/yohanvillarp/offscript/commit/1b3a7da3fc56215a74a2a52049deff75e8fe156d))
+* **studio:** add input placeholders and improve connection check feedback ([2cb13d6](https://github.com/yohanvillarp/offscript/commit/2cb13d6c61410a04efb482c528d9c80bb504378f))
+
 ## [1.1.1](https://github.com/yohanvillarp/offscript/compare/offscript-v1.1.0...offscript-v1.1.1) (2026-10-31)
 
 
