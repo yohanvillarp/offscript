@@ -6,7 +6,7 @@ import { test } from "node:test";
 import { deserializeSemanticEvent } from "../../contracts/index.ts";
 import { migrateDatabase } from "../migrate.ts";
 import { fixture, seed, storage } from "./fixtures.ts";
-import { assignmentEvent, requestEvent } from "./outbox-fixtures.ts";
+import { assignmentEvent, completionEvent, requestEvent } from "./outbox-fixtures.ts";
 
 test("request and assignment commit snapshots and exact pending events; duplicate identities never overwrite", async t => {
   const temp = storage(t); const db = temp.open(); db.migrate(); const source = fixture();
@@ -26,6 +26,14 @@ test("request and assignment commit snapshots and exact pending events; duplicat
   assert.equal(row.revision, 1); assert.equal(row.status, "pending");
   assert.deepEqual(deserializeSemanticEvent(row.eventJson), assigned);
   assert.deepEqual(await db.investigations.findInvestigation(source.investigation.id), { investigation: assigned.payload.investigation, revision: 1 });
+  const completed = completionEvent(source);
+  assert.equal(await db.investigations.commitCompletion(completed, 1), "saved");
+  assert.equal(await db.investigations.commitCompletion(completed, 1), "duplicate");
+  assert.equal(await db.investigations.commitCompletion({ ...completed, eventId: "conflict-completed" }, 1), "conflict");
+  const compRow = await db.outbox.inspect(completed.eventId); assert.ok(compRow);
+  assert.equal(compRow.revision, 2); assert.equal(compRow.status, "pending");
+  assert.deepEqual(deserializeSemanticEvent(compRow.eventJson), completed);
+  assert.deepEqual(await db.investigations.findInvestigation(source.investigation.id), { investigation: completed.payload.investigation, revision: 2 });
 });
 
 for (const operation of ["request", "assignment"] as const) {

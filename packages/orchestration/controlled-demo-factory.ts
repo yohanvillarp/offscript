@@ -9,7 +9,7 @@ export function createControlledDemoSessionFactory(
   return (simulation, limits, storage) => {
     const allowedTools = new Map(simulation.agents.map((agent) => [
       agent.id,
-      ["inspect_application", "record_observation", "request_investigation"] as const,
+      ["inspect_application", "record_observation", "request_investigation", "complete_investigation"] as const,
     ]));
     return createExplorationSession({
       simulation,

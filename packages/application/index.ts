@@ -16,6 +16,11 @@ export type {
 } from "./assign-investigation/ports.ts";
 export type { InvestigationRequestCommitter } from "./request-investigation/ports.ts";
 export type { InvestigationAssignmentCommitter } from "./assign-investigation/ports.ts";
+export { executeCompleteInvestigation } from "./complete-investigation/execute.ts";
+export type {
+  InvestigationCompletedEvent, InvestigationCompletionCommitter,
+  CompleteInvestigationCommand, CompleteInvestigationDependencies, CompleteInvestigationResult,
+} from "./complete-investigation/ports.ts";
 export { dispatchOutboxBatch } from "./outbox/dispatch.ts";
 export { validateClaim, validateDispatch } from "./outbox/ports.ts";
 export type { OutboxEvent, OutboxError, OutboxRecord, OutboxLease, OutboxStore, OutboxPublisher, ClaimOptions, DispatchOptions } from "./outbox/ports.ts";

@@ -1,4 +1,4 @@
-import { agentId, assignInvestigation } from "../../domain/index.ts";
+import { agentId, assignInvestigation, completeInvestigation, evidenceId } from "../../domain/index.ts";
 import { parseInvestigationEvent } from "../../contracts/index.ts";
 import type { DispatchOptions } from "../../application/index.ts";
 import { fixture } from "./fixtures.ts";
@@ -18,6 +18,24 @@ export function assignmentEvent(source = fixture(), eventId = "assigned-one") {
     simulationId: source.simulation.id, occurredAt: investigation.lifecycle.assignedAt,
     origin: { kind: "system" }, correlationId: "original-correlation", payload: { investigation } });
   if (event.type !== "investigation.assigned") throw new Error("Unexpected event.");
+  return event;
+}
+
+export function completionEvent(source = fixture(), eventId = "completed-one") {
+  const assigned = assignInvestigation(source.investigation, [agentId("beginner")], "2026-10-30T12:01:00.000Z");
+  const completed = completeInvestigation(
+    assigned,
+    { outcome: "supported", explanation: "Verified discrepancy.", evidenceIds: [evidenceId("cap-1")] },
+    agentId("beginner"),
+    "2026-10-30T12:02:00.000Z",
+  );
+  const event = parseInvestigationEvent({
+    eventId, type: "investigation.completed", schemaVersion: 1,
+    simulationId: source.simulation.id, occurredAt: completed.lifecycle.completedAt,
+    origin: { kind: "agent", agentId: agentId("beginner") }, correlationId: "original-correlation",
+    payload: { investigation: completed },
+  });
+  if (event.type !== "investigation.completed") throw new Error("Unexpected event.");
   return event;
 }
 

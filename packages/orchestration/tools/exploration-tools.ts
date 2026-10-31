@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
 import type { Tool } from "@mozaik-ai/core";
-import { createObservation, investigationId, observationId } from "../../domain/index.ts";
+import { createObservation, evidenceId, investigationId, observationId } from "../../domain/index.ts";
 import type { AgentId } from "../../domain/index.ts";
 import { parseSemanticEvent } from "../../contracts/index.ts";
 import type { SemanticEvent } from "../../contracts/index.ts";
-import { executeRequestInvestigation } from "../../application/index.ts";
+import { executeCompleteInvestigation, executeRequestInvestigation } from "../../application/index.ts";
 import { sessionStorage } from "../session-storage.ts";
 import type { ExplorationStorage } from "../session-storage.ts";
 import type { ExplorationState, ToolName } from "../state.ts";
@@ -42,10 +42,11 @@ export function explorationTools(
       description: text, location: text,
     }, async (value) => {
       const args = argumentsObject(value, ["description", "location"]);
+      const eid = evidenceId(`ev-${randomUUID()}`);
       const observation = createObservation({
         id: observationId(randomUUID()), simulationId: state.simulation.id, agentId: id,
         observedAt: new Date().toISOString(), description: argumentText(args.description),
-        context: { location: argumentText(args.location) }, evidenceIds: [],
+        context: { location: argumentText(args.location) }, evidenceIds: [eid],
       });
       if (await storage.observations.createObservation(observation) !== "created") throw new Error("Observation identity already exists.");
       state.observations.set(observation.id, observation);
@@ -54,7 +55,7 @@ export function explorationTools(
         simulationId: state.simulation.id, origin: { kind: "agent", agentId: id },
         correlationId: state.simulation.id, payload: { observation },
       }));
-      return { observationId: observation.id };
+      return { observationId: observation.id, evidenceId: eid };
     }),
     tool("request_investigation", "Request collaborative examination of existing observations, without assigning or confirming findings.", {
       hypothesis: text, observationIds: { type: "array", items: text, minItems: 1, uniqueItems: true },
@@ -72,6 +73,42 @@ export function explorationTools(
         investigations: storage.investigations,
       });
       return { investigationId: result.investigation.id, publication: result.publication.status };
+    }),
+    tool("complete_investigation", "Record an assessment outcome for an assigned investigation with explanation and evidence references.", {
+      investigationId: text,
+      outcome: { type: "string", enum: ["supported", "contradicted", "inconclusive"] },
+      explanation: text,
+      evidenceIds: { type: "array", items: text },
+    }, async (value) => {
+      const args = argumentsObject(value, ["investigationId", "outcome", "explanation", "evidenceIds"]);
+      if (args.outcome !== "supported" && args.outcome !== "contradicted" && args.outcome !== "inconclusive") {
+        throw new Error("Invalid investigation outcome.");
+      }
+      const evidence = Array.isArray(args.evidenceIds)
+        ? args.evidenceIds.map((item: unknown) => argumentText(item))
+        : [];
+      const result = await executeCompleteInvestigation({
+        investigationId: investigationId(argumentText(args.investigationId)),
+        simulationId: state.simulation.id,
+        completedBy: id,
+        result: {
+          outcome: args.outcome,
+          explanation: argumentText(args.explanation),
+          evidenceIds: evidence.map(evidenceId),
+        },
+        origin: { kind: "agent", agentId: id },
+        completedAt: new Date().toISOString(),
+        eventId: randomUUID(),
+        correlationId: state.simulation.id,
+      }, {
+        simulations: { async findSimulation(key) { return key === state.simulation.id ? state.simulation : undefined; } },
+        investigations: storage.investigations,
+      });
+      return {
+        investigationId: result.investigation.id,
+        outcome: result.investigation.lifecycle.result.outcome,
+        status: result.investigation.lifecycle.status,
+      };
     }),
   ];
   return tools.filter((entry) => state.permissions.get(id)?.has(entry.name as ToolName));

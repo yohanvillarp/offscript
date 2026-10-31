@@ -71,6 +71,7 @@ export function createBrowserExplorationSessionFactory(
           "browser_type",
           "record_observation",
           "request_investigation",
+          "complete_investigation",
         ] as const,
       ]),
     );

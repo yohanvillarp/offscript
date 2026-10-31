@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
-import { assignInvestigation } from "../../domain/index.ts";
+import { assignInvestigation, completeInvestigation } from "../../domain/index.ts";
 import { parseInvestigationSummary } from "../../contracts/index.ts";
-import type { RequestedInvestigation, AssignedInvestigation } from "../../domain/index.ts";
+import type { RequestedInvestigation, AssignedInvestigation, CompletedInvestigation } from "../../domain/index.ts";
 import type { PersistenceDatabase } from "../connection.ts";
 import { investigations, investigationAgents, investigationObservations } from "../schema/index.ts";
 import { readInvestigation } from "../codecs/investigation.ts";
@@ -45,5 +45,28 @@ export function writeAssignment(tx: WriteDatabase, input: AssignedInvestigation,
   tx.insert(investigationAgents).values(lifecycle.agentIds.map((id, position) => ({
     investigationId: value.id, simulationId: value.simulationId, agentId: id, position,
   }))).run();
+  return "saved";
+}
+
+export function writeCompletion(tx: WriteDatabase, input: CompletedInvestigation, expectedRevision: number): "saved" | "conflict" | "not-found" {
+  if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0 || expectedRevision === Number.MAX_SAFE_INTEGER) throw new PersistenceError("INVALID_WRITE", "Invalid revision.");
+  const value = parseInvestigationSummary(input);
+  if (value.lifecycle.status !== "completed") throw new PersistenceError("INVALID_WRITE", "Expected completed investigation.");
+  const lifecycle = value.lifecycle;
+
+  const current = readInvestigation(tx, value.id);
+  if (!current) return "not-found";
+  if (current.revision !== expectedRevision) return "conflict";
+
+  const expected = completeInvestigation(current.investigation, lifecycle.result, lifecycle.completedBy, lifecycle.completedAt);
+  if (JSON.stringify(parseInvestigationSummary(expected)) !== JSON.stringify(value)) {
+    throw new PersistenceError("INVALID_WRITE", "Completion must match domain transition from assigned state.");
+  }
+
+  const result = tx.update(investigations).set({
+    status: "completed", completedAt: lifecycle.completedAt, completedBy: lifecycle.completedBy,
+    result: JSON.stringify(lifecycle.result), revision: expectedRevision + 1,
+  }).where(and(eq(investigations.id, value.id), eq(investigations.revision, expectedRevision))).run();
+  if (!result.changes) return "conflict";
   return "saved";
 }
