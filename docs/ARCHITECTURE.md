@@ -13,7 +13,7 @@ Read [PROJECT.md](PROJECT.md) for product semantics and implementation status.
 - Explicit security policy enforcement and investigation/evidence management.
 - Runtime composition connecting application behavior to replaceable infrastructure adapters.
 
-The root package now pins @mozaik-ai/core 4.2.0, integrated through packages/orchestration against a controlled local fixture. SQLite persistence now uses exact root dependencies drizzle-orm 0.45.4 and better-sqlite3 13.0.3, with versioned migrations. Fastify 5.12.7 is installed for the local host. Playwright remains uninstalled; real browser integration is deferred.
+The root package pins @mozaik-ai/core 4.2.0, integrated through packages/orchestration against a controlled local fixture. SQLite persistence uses exact root dependencies drizzle-orm 0.45.4 and better-sqlite3 13.0.3, with versioned migrations. Fastify 5.12.7 is installed for the local host. Playwright 1.51.0 is installed; packages/browser provides bounded, authorized browser interaction and observation attribution with Chromium.
 
 ## Dependency direction and responsibilities
 
@@ -45,7 +45,7 @@ The diagram is conceptual. The local host now serves built Studio and configurat
 
 **Persistence:** SQLite and Drizzle are infrastructure concerns. Domain logic must not depend on database rows or ORM types. Create schemas only for approved functionality.
 
-**Composition:** runtime wiring selects adapters and supplies dependencies. Browser automation, storage, coordination, and any model integration should remain replaceable at meaningful boundaries without creating an interface for every class.
+**Composition:** runtime wiring selects adapters and supplies dependencies. Browser automation, storage, coordination, and any model integration should remain replaceable at meaningful boundaries without creating an interface for every class. See [BROWSER-INTERACTION.md](BROWSER-INTERACTION.md) for browser interaction and security boundaries.
 
 ## Implemented domain foundation
 

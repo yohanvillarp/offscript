@@ -6,11 +6,13 @@
     "prepare": "husky",
     "lint": "npm run lint:packages && npm --prefix apps/studio run lint",
     "build": "npm --prefix apps/studio run build",
-    "check": "npm run typecheck:domain && npm run typecheck:contracts && npm run typecheck:application && npm run typecheck:orchestration && npm run typecheck:persistence && npm run typecheck:runtime && npm run typecheck:server && npm run typecheck:projects && npm run db:check && npm --prefix apps/studio run typecheck:tests && npm test && npm run lint && npm run build",
+    "check": "npm run typecheck:domain && npm run typecheck:contracts && npm run typecheck:application && npm run typecheck:browser && npm run typecheck:orchestration && npm run typecheck:persistence && npm run typecheck:runtime && npm run typecheck:server && npm run typecheck:projects && npm run db:check && npm --prefix apps/studio run typecheck:tests && npm test && npm run lint && npm run build",
     "commitlint": "commitlint",
     "typecheck:domain": "tsc -p packages/domain/tsconfig.json && tsc -p packages/domain/tests/tsconfig.json",
     "test:domain": "node --test packages/domain/tests/*.test.ts",
-    "test": "npm run test:domain && npm run test:contracts && npm run test:application && npm run test:orchestration && npm run test:persistence && npm run test:runtime && npm run test:server && npm run test:projects && npm --prefix apps/studio test",
+    "test": "npm run test:domain && npm run test:contracts && npm run test:application && npm run test:browser && npm run test:orchestration && npm run test:persistence && npm run test:runtime && npm run test:server && npm run test:projects && npm --prefix apps/studio test",
+    "typecheck:browser": "tsc -p packages/browser/tsconfig.json && tsc -p packages/browser/tests/tsconfig.json",
+    "test:browser": "node --test packages/browser/tests/*.test.ts",
     "typecheck:application": "tsc -p packages/application/tsconfig.json && tsc -p packages/application/tests/tsconfig.json",
     "test:application": "node --test packages/application/tests/*.test.ts",
     "typecheck:contracts": "tsc -p packages/contracts/tsconfig.json && tsc -p packages/contracts/tests/tsconfig.json",
@@ -48,7 +50,8 @@
     "@mozaik-ai/core": "4.2.0",
     "better-sqlite3": "13.0.3",
     "drizzle-orm": "0.45.4",
-    "fastify": "5.12.7"
+    "fastify": "5.12.7",
+    "playwright": "1.51.0"
   },
   "overrides": {
     "@esbuild-kit/core-utils": {

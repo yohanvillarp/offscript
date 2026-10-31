@@ -15,10 +15,11 @@ Status describes the inspected source, not deployment or GitHub merge state. Che
 | Area | Implemented | Remaining gap |
 | --- | --- | --- |
 | Domain and contracts | Simulation/agent lifecycles, validated events, shared setup/configuration contracts, and execution status contracts. | Investigation result application cases and broader session policies. |
-| Mozaik | Concurrent controlled agents, enforced fixture-tool permissions, mapped events, reactive assignment, and controlled demo execution factory. | Autonomous use of real software and browser interaction. |
+| Mozaik | Concurrent controlled agents, enforced fixture-tool permissions, mapped events, reactive assignment, and controlled demo execution factory. | Autonomous exploration of real software using live model inference. |
+| Browser automation | Playwright Chromium adapter in packages/browser, target scope enforcement, opaque element handles, semantic ARIA snapshots, sanitized credentials, and isolated user contexts. | Autonomous model interaction loop on real web targets. |
 | Persistence and delivery | SQLite snapshots/configuration, atomic setup creation, atomic aggregate lifecycle updates, investigation outbox, and optional SQLite-backed Mozaik sessions. | Durable handler recovery, operational retention, and broader production composition. |
 | Studio | Design system, connected setup with project recognition, initial Vite URL suggestions, explicit local availability checks, compact saved configurations with a detail panel, three profiles, editable limits, and controlled demo execution controls. | Live browser activity, evidence, and results. |
-| Local product entry | Protected Fastify health and execution routes, local host lifecycle, shared dispatch, development entry, local npm archive launcher, and controlled demo execution. | Browser automation and published distribution. |
+| Local product entry | Protected Fastify health and execution routes, local host lifecycle, shared dispatch, development entry, local npm archive launcher, and controlled demo execution. | Autonomous browser exploration orchestration and published distribution. |
 
 
 The current demo uses a simulated cart and deterministic inference. It does not explore an actual application. Transactional dispatch does not restore agent work or acknowledge handler completion.
@@ -35,14 +36,11 @@ Compose the existing application, SQLite, outbox, and explicitly prepared Mozaik
 
 **Implemented:** read-only project recognition, validated simulation configuration, atomic creation and deletion of configured simulations, and explicit operator execution control (start, inspect, stop) against the controlled integration fixture. See [SIMULATION-CONFIGURATION.md](SIMULATION-CONFIGURATION.md) and [LOCAL-HOST.md](LOCAL-HOST.md). The local host coordinates execution through an explicit session factory, atomic aggregate persistence in SQLite, and protected HTTP endpoints. Studio provides explicit "Run controlled demo" and "Stop execution" controls with polling and status badges. Next: Milestone 3 — Authorized browser interaction.
 
-### 3. Authorized browser interaction — next
+### 3. Authorized browser interaction — implemented foundation
 
+**Implemented:** Playwright Chromium integration (`packages/browser`), target scope enforcement restricting navigation strictly to authorized target origins, opaque element reference resolution (`elem_x`), semantic ARIA snapshot capture with visible DOM fallback, credential sanitization (passwords kept out of snapshots/logs), isolated `BrowserContext` per artificial user, observation attribution to domain entities, and hermetic automated test suites. Next: Milestone 4 — First autonomous exploration of real software.
 
-Introduce the Playwright adapter for web applications with real backends. Provide bounded browser interaction and attributable observations. Establish browser/session isolation and enforce target scope, allowed actions, credential handling, and destructive-action restrictions at the tool boundary.
-
-**Ready when:** an authorized test application can be inspected and interacted with through tools, prohibited actions are rejected, and useful evidence can be attributed to the acting user. Target content must remain untrusted input.
-
-### 4. First autonomous exploration of real software
+### 4. First autonomous exploration of real software — next
 
 Connect supported model inference and the initial profiles to the authorized browser tools through Mozaik's existing loop. Let multiple artificial users pursue a goal differently, react to actual application feedback, and record unexpected behavior within operator-defined limits.
 
