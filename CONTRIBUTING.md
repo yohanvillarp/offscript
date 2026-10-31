@@ -49,7 +49,7 @@ After the required checks and review pass, merge the PR using the method appropr
 - **Squash merge:** combine work-in-progress commits into one focused commit when useful.
 - **Rebase merge:** replay clean commits onto the base branch when a linear result is preferred.
 
-No single merge method is mandatory. Keep PR titles and authored commits consistent with Conventional Commits; GitHub-generated merge commits may use GitHub's default message. Review the final message when squashing. See [GitHub's merge methods](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/about-merge-methods-on-github).
+No single merge method is mandatory. Keep PR titles and authored commits consistent with Conventional Commits; GitHub-generated merge commits may use GitHub's default message. Automated bot pull requests (such as ImgBot or Dependabot) with tool-managed formats are permitted through dedicated CI bot detection and commitlint ignore rules. Review the final message when squashing. See [GitHub's merge methods](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/about-merge-methods-on-github).
 
 GitHub deletes the remote work branch automatically after merging. Update local `main` with `git pull --ff-only`, then remove the merged local branch and prune stale remote references. Use `git branch -d <branch>`; if squash or rebase prevents Git from recognizing the merge, verify the PR and commit history before removing the local branch. Never delete a branch while its PR is open. Every merge to `main` must be production-ready; this repository does not yet configure automatic deployments.
 
