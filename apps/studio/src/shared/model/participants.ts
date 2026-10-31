@@ -11,32 +11,32 @@ export type ParticipantOption = Readonly<{
 // Presentation catalog; this does not configure runtime behavior or permissions.
 export const participantCatalog: readonly ParticipantOption[] = [
   {
-    id: "raven", name: "Raven", profile: "Explorer", profileId: "explorer",
-    description: "Observant, curious, and experimental. Tries alternative paths and questions unexpected results.",
+    id: "raven", name: "Alex", profile: "Explorer", profileId: "explorer",
+    description: "Observant, curious, and experimental. Tries alternative paths, inspects details, and discovers secondary controls.",
     intention: "Understand the system through exploration.",
   },
   {
-    id: "fox", name: "Fox", profile: "Impatient", profileId: "impatient",
-    description: "Quick, resourceful, and focused on results. Retries or finds another way when progress feels slow.",
+    id: "fox", name: "Leo", profile: "Impatient", profileId: "impatient",
+    description: "Quick, resourceful, and focused on speed. Retries rapidly or finds shortcuts when progress feels slow.",
     intention: "Complete tasks as quickly as possible.",
   },
   {
-    id: "compass", name: "Compass", profile: "Beginner", profileId: "beginner",
-    description: "Needs guidance and interprets instructions without prior product knowledge. May take unexpected paths.",
+    id: "compass", name: "Chloe", profile: "Beginner", profileId: "beginner",
+    description: "Needs guidance and interprets instructions without prior product knowledge. Relies on obvious visual cues.",
     intention: "Learn to use the product and accomplish a goal.",
   },
   {
-    id: "sparrow", name: "Sparrow", profile: "Regular", profileId: "regular",
+    id: "sparrow", name: "David", profile: "Regular", profileId: "regular",
     description: "Conventional, practical, and habitual. Follows familiar paths and expects standard application behavior.",
     intention: "Complete typical workflows smoothly and comfortably.",
   },
   {
-    id: "owl", name: "Owl", profile: "Meticulous", profileId: "meticulous",
+    id: "owl", name: "Elena", profile: "Meticulous", profileId: "meticulous",
     description: "Thorough, attentive, and precise. Examines fine print, validates input states, and double-checks confirmations.",
     intention: "Ensure accuracy and catch subtle discrepancies.",
   },
   {
-    id: "badger", name: "Badger", profile: "Distrustful", profileId: "distrustful",
+    id: "badger", name: "Marcus", profile: "Distrustful", profileId: "distrustful",
     description: "Skeptical, cautious, and vigilant. Scrutinizes permissions, unexpected redirects, and unclear data collection.",
     intention: "Protect user privacy and avoid misleading traps.",
   },
