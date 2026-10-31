@@ -1,10 +1,10 @@
-import { ArrowLeft, ArrowRight, Play } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save } from "lucide-react";
 import { Link } from "react-router";
 import type { SetupStep } from "@/pages/new-simulation/model/draft";
 
-type Props = Readonly<{ step: SetupStep; onBack: () => void }>;
+type Props = Readonly<{ step: SetupStep; onBack: () => void; saving: boolean; canSave: boolean }>;
 
-export function SetupActions({ step, onBack }: Props) {
+export function SetupActions({ step, onBack, saving, canSave }: Props) {
   return (
     <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-separator pt-5">
       {step === "target" ? (
@@ -17,13 +17,13 @@ export function SetupActions({ step, onBack }: Props) {
       )}
       {step === "summary" ? (
         <button
-          type="button"
-          disabled
+          type="submit"
+          disabled={saving || !canSave}
           aria-describedby="execution-availability"
-          className="inline-flex cursor-not-allowed items-center gap-2 rounded-md bg-disabled-surface px-4 py-2.5 text-sm font-medium text-disabled"
+          className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-disabled-surface disabled:text-disabled"
         >
-          <Play aria-hidden="true" className="size-4" strokeWidth={1.5} />
-          Start simulation
+          <Save aria-hidden="true" className="size-4" strokeWidth={1.5} />
+          {saving ? "Saving…" : "Save simulation"}
         </button>
       ) : (
         <button type="submit" className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover">

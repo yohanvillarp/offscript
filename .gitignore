@@ -8,6 +8,8 @@ dist/
 # Local project storage; migration SQL/metadata remain tracked.
 .offscript/
 .offscript-host-*.json
+.offscript-studio-*.html
+offscript-*.tgz
 *.sqlite
 *.sqlite-wal
 *.sqlite-shm

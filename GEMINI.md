@@ -12,3 +12,5 @@ Before planning or changing code, read:
 For Mozaik, read `docs/MOZAIK.md` and the locally available `context/mozaik` references. For persistence/delivery, read `docs/PERSISTENCE.md` and `docs/OUTBOX.md`. Inspect installed APIs instead of inventing guarantees.
 
 Write project documentation in English. Report actual validation and deferred work. Antigravity setup notes are in [docs/ANTIGRAVITY.md](docs/ANTIGRAVITY.md).
+
+Before adding tests, read [docs/TESTING.md](docs/TESTING.md). Choose coverage for uncovered behavior and material risk; do not generate tests for each code block or duplicate checks already owned by another suite.

@@ -1,4 +1,5 @@
 {
   "extends": "../domain/tsconfig.json",
+  "compilerOptions": { "lib": ["ES2023", "DOM"] },
   "include": ["*.ts"]
 }

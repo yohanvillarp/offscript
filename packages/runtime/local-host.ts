@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { openPersistence } from "../persistence/index.ts";
-import { createLocalServer } from "../server/index.ts";
+import { createLocalServer, createStudioSession } from "../server/index.ts";
 import type { HostPhase } from "../server/index.ts";
 import { simulationId } from "../domain/index.ts";
 import type { SimulationId } from "../domain/index.ts";
@@ -12,6 +12,9 @@ import type { HostStorage } from "./host-storage.ts";
 import { sessionRegistry } from "./session-registry.ts";
 import type { HostedSession } from "./session-registry.ts";
 import { withinDeadline } from "./deadline.ts";
+import { executeConfigureSimulation } from "../application/index.ts";
+import { inspectProject } from "../projects/index.ts";
+import type { SimulationSetup } from "../contracts/index.ts";
 
 export type HostedSessionContext = Readonly<{ storage: HostStorage; outboxMode: "external" }>;
 
@@ -19,6 +22,7 @@ export function createLocalHost(options: LocalHostOptions) {
   const config = localHostConfig(options);
   const onDiagnostic = options.onDiagnostic;
   const token = randomBytes(32).toString("base64url");
+  const studioSession = config.studioDirectory ? createStudioSession() : undefined;
   const registry = sessionRegistry();
   let phase: HostPhase = "starting";
   let port: number | undefined;
@@ -56,7 +60,10 @@ export function createLocalHost(options: LocalHostOptions) {
       persistence = openPersistence({ projectRoot: config.projectRoot, dataDirectory: config.dataDirectory });
       persistence.migrate();
       guarded = hostStorage(persistence);
-      server = createLocalServer({ token, port: () => port, allowedOrigins: config.allowedOrigins, phase: () => phase });
+      server = createLocalServer({ token, port: () => port, allowedOrigins: config.allowedOrigins, phase: () => phase,
+        configurations: api,
+        ...(config.studioDirectory && studioSession ? { studioDirectory: config.studioDirectory, studioSession } : {}),
+      });
       await server.ready();
       if (closing) throw new Error("Host closed during startup.");
       origin = await server.listen({ host: "127.0.0.1", port: config.port });
@@ -82,7 +89,7 @@ export function createLocalHost(options: LocalHostOptions) {
     }
   }
 
-  return Object.freeze({
+  const api = Object.freeze({
     config,
     phase: () => phase,
     start() {
@@ -93,6 +100,36 @@ export function createLocalHost(options: LocalHostOptions) {
     credentials() {
       if (phase !== "ready" || origin === undefined) throw new Error("Host is not ready.");
       return Object.freeze({ origin, token });
+    },
+    studioEntry() {
+      if (phase !== "ready" || !origin || !studioSession) throw new Error("Studio is not available.");
+      return Object.freeze({ origin, entry: studioSession.issueEntry() });
+    },
+    async listConfigurations() {
+      const storage = guarded?.storage;
+      if (phase !== "ready" || closing || !storage) throw new Error("Host is not accepting configuration reads.");
+      return storage.configurations.listConfigurations();
+    },
+    async inspectProject() {
+      if (phase !== "ready" || closing) throw new Error("Host is not accepting project inspection.");
+      return inspectProject(config.projectRoot);
+    },
+    async configureSimulation(input: Readonly<{ simulationId: SimulationId; setup: SimulationSetup }>) {
+      const storage = guarded?.storage;
+      if (phase !== "ready" || closing || !storage) throw new Error("Host is not accepting simulation configuration.");
+      return executeConfigureSimulation({ ...input, projectRoot: config.projectRoot }, {
+        projects: { inspectProject }, configurations: { ...storage.configurations,
+          async createConfiguredSimulation(configuration, simulation) {
+            if (phase !== "ready" || closing) throw new Error("Host closed before configuration commit.");
+            return storage.configurations.createConfiguredSimulation(configuration, simulation);
+          },
+        },
+      });
+    },
+    async findConfiguration(id: SimulationId) {
+      const storage = guarded?.storage;
+      if (phase !== "ready" || closing || !storage) throw new Error("Host is not accepting configuration reads.");
+      return storage.configurations.findConfiguration(simulationId(id));
     },
     prepareSession<T extends HostedSession>(id: SimulationId, create: (context: HostedSessionContext) => T): T {
       simulationId(id);
@@ -115,4 +152,5 @@ export function createLocalHost(options: LocalHostOptions) {
       return closingTask;
     },
   });
+  return api;
 }

@@ -14,11 +14,11 @@ Status describes the inspected source, not deployment or GitHub merge state. Che
 
 | Area | Implemented | Remaining gap |
 | --- | --- | --- |
-| Domain and contracts | Simulation/agent lifecycles, profiles, observations, investigations, and validated semantic events. | Executable simulation management and investigation result application cases. |
+| Domain and contracts | Simulation/agent lifecycles, validated events, and shared setup/configuration contracts. | Start/observe/stop services and investigation result application cases. |
 | Mozaik | Concurrent controlled agents, enforced fixture-tool permissions, mapped events, and reactive assignment. | Autonomous use of real software and a complete operator-controlled session lifecycle. |
-| Persistence and delivery | SQLite snapshots, migrations, optimistic revisions, transactional investigation outbox, and optional SQLite-backed Mozaik sessions. | Durable handler recovery, operational retention, and broader production composition. |
-| Studio | Design system, simulations screen, and a three-step configuration draft with three user profiles. | Runtime connection, saved configuration, activity, evidence, and results. |
-| Local product entry | Protected Fastify health routes, local host lifecycle, shared dispatch, development entry, and deterministic runtime demo. | Simulation-control services, CLI, and npm distribution. |
+| Persistence and delivery | SQLite snapshots/configuration, atomic setup creation, investigation outbox, and optional SQLite-backed Mozaik sessions. | Durable handler recovery, operational retention, and broader production composition. |
+| Studio | Design system, connected setup with project recognition, saved configuration list, three profiles, and editable limits. | Execution controls, live activity, evidence, and results. |
+| Local product entry | Protected Fastify health routes, local host lifecycle, shared dispatch, development entry, local npm archive launcher, and deterministic runtime demo. | Execution-control services and published distribution. |
 
 The current demo uses a simulated cart and deterministic inference. It does not explore an actual application. Transactional dispatch does not restore agent work or acknowledge handler completion.
 
@@ -31,6 +31,8 @@ Compose the existing application, SQLite, outbox, and explicitly prepared Mozaik
 **Implemented:** one local process starts, reports health, and shuts down with preserved data and explicit timeout/error handling. Stored state does not reactivate agents. This foundation is covered by local automated tests; distribution and Studio integration remain later work.
 
 ### 2. Simulation setup and operator control — next
+
+**First slice implemented:** read-only project-root/name recognition, validated setup, and atomic creation of configured simulations without starting agents. See [SIMULATION-CONFIGURATION.md](SIMULATION-CONFIGURATION.md). Creation/read/list transport and Studio form integration are now implemented, with a minimal local npm-archive launcher. Next within this milestone: explicit execution control.
 
 Connect target configuration, concrete goals, selected behavioral profiles, model configuration, permissions, and budgets to actual simulations. Define how an operator starts and stops exploration and how interruptions are represented. Add the minimum CLI entry and Studio visibility needed to operate the host, without waiting for a complete interface.
 

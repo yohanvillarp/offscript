@@ -1,10 +1,13 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import type { FastifyInstance } from "fastify";
+import type { StudioSession } from "./studio-session.ts";
+import { publicStudioPath } from "./studio-assets.ts";
 
 export type AccessOptions = Readonly<{
   token: string;
   port: () => number | undefined;
   allowedOrigins: readonly string[];
+  studioSession?: StudioSession;
 }>;
 
 export function secureLocalAccess(server: FastifyInstance, options: AccessOptions): void {
@@ -21,10 +24,14 @@ export function secureLocalAccess(server: FastifyInstance, options: AccessOption
       return reply.code(403).send({ error: "HOST_NOT_ALLOWED" });
     }
     const origin = request.headers.origin;
-    if ((origin !== undefined && !allowed.has(origin) && origin !== `http://${request.headers.host}`) ||
+    const pathname = request.url.split("?")[0] ?? "";
+    const entryPost = options.studioSession !== undefined && pathname === "/studio/session" && request.method === "POST";
+    if ((origin !== undefined && !(entryPost && origin === "null") && !allowed.has(origin) && origin !== `http://${request.headers.host}`) ||
         (origin === undefined && request.headers["sec-fetch-site"] === "cross-site")) {
       return reply.code(403).send({ error: "ORIGIN_NOT_ALLOWED" });
     }
+    if (options.studioSession && (entryPost || publicStudioPath(request.method, pathname))) return;
+    if (pathname.startsWith("/api/") && request.headers["x-offscript-client"] === "studio" && options.studioSession?.accepts(request.headers.cookie)) return;
     const authorization = request.headers.authorization;
     const token = authorization?.match(/^Bearer ([A-Za-z0-9_-]{43})$/i)?.[1];
     if (!token || !timingSafeEqual(expected, digest(token))) {

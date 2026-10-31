@@ -1,4 +1,5 @@
 {
   "extends": "../domain/tsconfig.json",
-  "include": ["outbox/*.ts", "*.ts", "request-investigation/*.ts", "assign-investigation/*.ts"]
+  "compilerOptions": { "lib": ["ES2023", "DOM"] },
+  "include": ["configure-simulation/*.ts", "outbox/*.ts", "*.ts", "request-investigation/*.ts", "assign-investigation/*.ts"]
 }
