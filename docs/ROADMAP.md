@@ -14,11 +14,11 @@ Status describes the inspected source, not deployment or GitHub merge state. Che
 
 | Area | Implemented | Remaining gap |
 | --- | --- | --- |
-| Domain and contracts | Simulation/agent lifecycles, validated events, shared setup/configuration contracts, execution status contracts, and finding assessment with confirmation criteria. | Broader multi-round session debate and verification policies. |
-| Mozaik | Concurrent controlled agents, enforced fixture and browser tool permissions, mapped events, reactive assignment, investigation completion tool, controlled demo execution factory, and autonomous browser exploration session factory. | Live provider inference in production. |
-| Browser automation | Playwright Chromium adapter in packages/browser, target scope enforcement, opaque element handles, semantic ARIA snapshots, sanitized credentials, isolated user contexts, and autonomous exploration loop with profile-specific instructions. | Visual screen captures and broader non-web targets. |
+| Domain and contracts | Simulation/agent lifecycles, validated events, shared setup/configuration contracts, execution status contracts, finding assessment with confirmation criteria, and expanded behavioral profile catalog (Explorer, Impatient, Beginner, Regular, Meticulous, Distrustful). | Broader multi-round session debate and verification policies. |
+| Mozaik | Concurrent controlled agents, enforced fixture and browser tool permissions, mapped events, reactive assignment, investigation completion tool, controlled demo execution factory, autonomous browser exploration session factory, expanded browser tooling (`browser_scroll`, `browser_select`), and profile-aware prompt heuristics. | Live provider inference in production. |
+| Browser automation | Playwright Chromium adapter in packages/browser, target scope enforcement, opaque element handles, semantic ARIA snapshots, sanitized credentials, isolated user contexts, expanded interaction tools (`scroll`, `select`), and autonomous exploration loop with profile-specific instructions. | Visual screen captures and broader non-web targets. |
 | Persistence and delivery | SQLite snapshots/configuration, atomic setup creation, atomic aggregate lifecycle updates, investigation outbox supporting completion events, observations recorded from browser exploration, and optional SQLite-backed Mozaik sessions. | Durable handler recovery, operational retention, and broader production composition. |
-| Studio | Design system, connected setup with project recognition, initial Vite URL suggestions, explicit local availability checks, compact saved configurations with a detail panel, three profiles, editable limits, execution controls for both controlled demo and browser exploration, and exploration results review (findings, observations, investigations). | Live browser activity streams and visual evidence previews. |
+| Studio | Design system, connected setup with project recognition, initial Vite URL suggestions, explicit local availability checks, compact saved configurations with a detail panel, six behavioral profiles (Raven, Fox, Compass, Sparrow, Owl, Badger), editable limits, execution controls for both controlled demo and browser exploration, and exploration results review (findings, observations, investigations). | Live browser activity streams and visual evidence previews. |
 | Local product entry | Protected Fastify health and execution routes, local host lifecycle, shared dispatch, development entry, local npm archive launcher, multi-mode execution coordination (controlled-demo and browser-exploration), and CLI inspection workflows (list, results). | Published package distribution and end-to-end investigation CLI workflows. |
 
 
@@ -56,11 +56,15 @@ Compose the existing application, SQLite, outbox, and explicitly prepared Mozaik
 
 **Implemented:** robust session settlement, explicit interruption recovery, bounded observation deduplication, and a controlled multi-profile evaluation benchmark. The runtime `executionCoordinator` monitors session completion (`waitForIdle`), settles active agents and simulation aggregate to `completed` in SQLite, clears timers, and sets `record.phase = "completed"`. Interrupted simulations left after host restart/crash are reported as `interrupted` (`INTERRUPTED_BY_HOST_RESTART`) without automatic resumption, and can be explicitly settled to `failed` or `cancelled` by operators via `POST /api/simulations/:id/recover`, CLI (`offscript recover <id> [--cancel]`), or Studio. Exploration tools enforce bounded observation deduplication to prevent duplicate events and records for identical agent observations. The evaluation suite validates behavioral profiles, attributable evidence references, and finding corroboration criteria against a benchmark application with known defects. Next: Milestone 8 — Broader capabilities.
 
-### 8. Broader capabilities — next
+### 8. Broader capabilities — implemented foundation
 
-Expand skills, tools, behavioral profiles, focused evaluation intentions, and software adapters when validated use cases justify them. The remaining candidate profiles are Regular, Distrustful, Meticulous, Adaptive, and Collaborative. Refine Adaptive around explicit interaction needs rather than treating it as a universal accessibility profile.
+**Implemented:** expanded the behavioral profile catalog across contracts, domain/application configuration, Studio selection, and prompt heuristics to support Regular (`sparrow`), Meticulous (`owl`), and Distrustful (`badger`) alongside Explorer (`raven`), Impatient (`fox`), and Beginner (`compass`). Profile-aware behavioral tendencies guide autonomous exploration prompts. Expanded browser interaction capabilities with `browser_scroll` (vertical page and element scrolling) and `browser_select` (dropdown option selection), integrated across Playwright Chromium sessions, browser tools, and orchestration execution. All additions respect strict target scope limits and authorization boundaries. Next: Milestone 9 — Visual evidence and live observability.
 
-**Ready when:** each addition has a clear user need, preserves authorization boundaries, and fits replaceable adapters without coupling domain logic to infrastructure. Non-web targets and richer collaboration remain future capabilities, not initial release requirements.
+### 9. Visual evidence and live observability — next
+
+Capture visual screen evidence (annotated viewport snapshots/clips) during exploration turns, correlate screenshots with recorded observations and finding assessments, and stream live browser interaction state to Studio.
+
+**Ready when:** visual capture does not leak sensitive target inputs (e.g., password masking maintained), storage retention bounds artifacts locally, and Studio renders responsive media previews without degrading UI responsiveness.
 
 ## How to use this map
 

@@ -22,6 +22,8 @@ OFFSCRIPT interacts with web applications using an isolated, Playwright-managed 
    - `browser_inspect`: Semantic ARIA snapshot, text summary, and opaque interactive element catalog.
    - `browser_click`: Resolves opaque element handle on current page snapshot, verifies element is enabled, and clicks.
    - `browser_type`: Resolves opaque element handle and fills text.
+   - `browser_scroll`: Vertical viewport scrolling (`up` / `down`) or scrolling a specific element into view.
+   - `browser_select`: Selects a dropdown option value on a `<select>` element by opaque reference.
    - `browser_record_observation`: Records an immutable domain `Observation` entity attributed to the acting user (`agentId`) and simulation (`simulationId`), recording the current URL in `context.location`.
 
 ## Setup and installation
